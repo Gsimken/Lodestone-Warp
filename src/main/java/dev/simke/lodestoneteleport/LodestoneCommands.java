@@ -8,13 +8,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.MessageArgument;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
-import java.util.EnumSet;
 import java.util.Optional;
 
 public final class LodestoneCommands {
@@ -71,22 +71,19 @@ public final class LodestoneCommands {
 		}
 
 		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
-		if (!consumeCost(player, cost)) {
+		if (!hasCost(player, cost)) {
 			source.sendFailure(LodestoneText.text("error.need_cost", "Necesitas %s.", LodestoneText.cost(cost)));
 			return 0;
 		}
 
-		player.teleportTo(
-			destinationLevel,
-			location.pos().getX() + 0.5D,
-			location.pos().getY() + 1.0D,
-			location.pos().getZ() + 0.5D,
-			EnumSet.noneOf(Relative.class),
-			player.getYRot(),
-			player.getXRot(),
-			true
-		);
-		source.sendSuccess(() -> LodestoneText.text(
+		ServerPlayer teleportedPlayer = teleportPlayer(player, destinationLevel, location);
+		if (teleportedPlayer == null) {
+			source.sendFailure(LodestoneText.text("error.action_failed", "No se pudo ejecutar la accion de lodestone."));
+			return 0;
+		}
+
+		consumeCost(teleportedPlayer, cost);
+		teleportedPlayer.sendSystemMessage(LodestoneText.text(
 			"arrived",
 			"Has llegado a \"%s\" (%s, %s, %s, %s).",
 			location.displayName(),
@@ -94,7 +91,7 @@ public final class LodestoneCommands {
 			location.pos().getY(),
 			location.pos().getZ(),
 			LodestoneText.dimension(location.dimension())
-		), false);
+		));
 		return 1;
 	}
 
@@ -134,7 +131,24 @@ public final class LodestoneCommands {
 		return data.all().size();
 	}
 
-	private static boolean consumeCost(ServerPlayer player, LodestoneTeleportCost cost) {
+	private static ServerPlayer teleportPlayer(ServerPlayer player, ServerLevel destinationLevel, LodestoneLocation location) {
+		Vec3 target = new Vec3(
+			location.pos().getX() + 0.5D,
+			location.pos().getY() + 1.0D,
+			location.pos().getZ() + 0.5D
+		);
+		TeleportTransition transition = new TeleportTransition(
+			destinationLevel,
+			target,
+			Vec3.ZERO,
+			player.getYRot(),
+			player.getXRot(),
+			TeleportTransition.PLACE_PORTAL_TICKET
+		);
+		return player.teleport(transition);
+	}
+
+	private static boolean hasCost(ServerPlayer player, LodestoneTeleportCost cost) {
 		if (cost.amount() <= 0 || player.isCreative()) {
 			return true;
 		}
@@ -154,16 +168,22 @@ public final class LodestoneCommands {
 		if (remaining > 0) {
 			return false;
 		}
+		return true;
+	}
 
-		remaining = cost.amount();
+	private static void consumeCost(ServerPlayer player, LodestoneTeleportCost cost) {
+		if (cost.amount() <= 0 || player.isCreative()) {
+			return;
+		}
+		Inventory inventory = player.getInventory();
+		int remaining = cost.amount();
 		for (int slot = 0; slot < inventory.getContainerSize() && remaining > 0; slot++) {
 			ItemStack stack = inventory.getItem(slot);
-			if (!stack.isEmpty() && stack.getItem() == costItem) {
+			if (!stack.isEmpty() && stack.getItem() == cost.item()) {
 				int removed = Math.min(remaining, stack.getCount());
 				stack.shrink(removed);
 				remaining -= removed;
 			}
 		}
-		return true;
 	}
 }

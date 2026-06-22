@@ -27,9 +27,11 @@ import java.util.List;
 import java.util.Optional;
 
 public final class LodestoneDialogs {
-	private static final int DESTINATION_BUTTON_WIDTH = 300;
-	private static final int GRID_COLUMNS = 1;
-	private static final int DESTINATION_LABEL_WIDTH = 30;
+	private static final int INPUT_WIDTH = 300;
+	private static final int DESTINATION_BUTTON_WIDTH = 250;
+	private static final int EDIT_BUTTON_WIDTH = 40;
+	private static final int GRID_COLUMNS = 2;
+	private static final int DESTINATION_LABEL_WIDTH = 25;
 
 	private LodestoneDialogs() {
 	}
@@ -43,8 +45,10 @@ public final class LodestoneDialogs {
 		List<ActionButton> buttons = new ArrayList<>();
 		int limit = LodestoneConfig.get().maxDialogDestinations;
 		String cleanQuery = query == null ? "" : query.trim();
+		int destinationCount = 0;
 
 		buttons.add(searchButton(current.id()));
+		buttons.add(spacerButton());
 
 		for (LodestoneLocation destination : data.all()) {
 			if (destination.id().equals(current.id())) {
@@ -53,13 +57,16 @@ public final class LodestoneDialogs {
 			if (!matches(destination, cleanQuery)) {
 				continue;
 			}
-			if (buttons.size() > limit) {
+			if (destinationCount >= limit) {
 				break;
 			}
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);
 			buttons.add(customButton(Component.literal(destinationLabel(destination, cost)), Optional.of(LodestoneText.cost(cost)), "tp", destination.id()));
+			buttons.add(editButton(destination));
+			destinationCount++;
 		}
-		buttons.add(customButton(LodestoneText.text("button.rename_current", "Renombrar esta lodestone").withStyle(ChatFormatting.GOLD), "edit", current.id()));
+		buttons.add(customButton(LodestoneText.text("button.rename_current", "Renombrar este warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
+		buttons.add(spacerButton());
 
 		CommonDialogData common = new CommonDialogData(
 			LodestoneText.title(),
@@ -67,8 +74,8 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(bodyText(current, cleanQuery, buttons.size() <= 2), 300)),
-			List.of(new Input("query", new TextInput(300, LodestoneText.text("input.search", "Buscar"), true, cleanQuery, 48, Optional.empty())))
+			List.of(new PlainMessage(bodyText(current, cleanQuery, destinationCount == 0), INPUT_WIDTH)),
+			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Buscar"), true, cleanQuery, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), GRID_COLUMNS));
 	}
@@ -80,12 +87,12 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(LodestoneText.text("rename.body", "Elige un nombre para esta lodestone."), 300)),
-			List.of(new Input("name", new TextInput(300, LodestoneText.text("input.name", "Nombre"), true, location.displayName(), 48, Optional.empty())))
+			List.of(new PlainMessage(LodestoneText.text("rename.body", "Elige un nombre para esta lodestone."), INPUT_WIDTH)),
+			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.text("input.name", "Nombre"), true, location.displayName(), 48, Optional.empty())))
 		);
 
 		ActionButton confirm = new ActionButton(
-			new CommonButtonData(LodestoneText.text("button.save", "Guardar"), DESTINATION_BUTTON_WIDTH),
+			new CommonButtonData(LodestoneText.text("button.save", "Guardar"), INPUT_WIDTH),
 			Optional.of(renameAction(location.id()))
 		);
 		send(player, new NoticeDialog(common, confirm));
@@ -102,7 +109,7 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.<DialogBody>of(new PlainMessage(Component.literal(message), 300)),
+			List.<DialogBody>of(new PlainMessage(Component.literal(message), INPUT_WIDTH)),
 			List.of()
 		);
 		send(player, new NoticeDialog(common, action));
@@ -117,12 +124,31 @@ public final class LodestoneDialogs {
 	}
 
 	private static ActionButton customButton(Component label, Optional<Component> tooltip, String action, String id) {
+		return customButton(label, tooltip, DESTINATION_BUTTON_WIDTH, action, id);
+	}
+
+	private static ActionButton customButton(Component label, Optional<Component> tooltip, int width, String action, String id) {
 		CompoundTag payload = new CompoundTag();
 		payload.putString("action", action);
 		payload.putString("id", id);
 		return new ActionButton(
-			new CommonButtonData(label, tooltip, DESTINATION_BUTTON_WIDTH),
+			new CommonButtonData(label, tooltip, width),
 			Optional.of(new StaticAction(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))))
+		);
+	}
+
+	private static ActionButton editButton(LodestoneLocation location) {
+		return editButton(location, LodestoneText.text("button.rename", "Renombrar %s", location.displayName()));
+	}
+
+	private static ActionButton editButton(LodestoneLocation location, Component tooltip) {
+		return customButton(Component.literal("\u270e").withStyle(ChatFormatting.GOLD), Optional.of(tooltip), EDIT_BUTTON_WIDTH, "edit", location.id());
+	}
+
+	private static ActionButton spacerButton() {
+		return new ActionButton(
+			new CommonButtonData(Component.empty(), EDIT_BUTTON_WIDTH),
+			Optional.empty()
 		);
 	}
 
