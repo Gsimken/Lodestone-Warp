@@ -4,6 +4,7 @@
 	"version": "${version}",
 	"name": "Lodestone Warps",
 	"description": "Server-side lodestone warp network for Minecraft 26.2.",
+	"icon": "assets/lodestone_teleport/icon.png",
 	"authors": [
 		"simke"
 	],
