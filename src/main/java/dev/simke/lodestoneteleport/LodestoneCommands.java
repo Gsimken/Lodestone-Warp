@@ -69,6 +69,10 @@ public final class LodestoneCommands {
 			source.sendFailure(LodestoneText.text("error.destination_removed", "El destino ya no tiene una lodestone y fue eliminado."));
 			return 0;
 		}
+		if (!isNearRegisteredLodestone(player, data)) {
+			source.sendFailure(LodestoneText.text("error.need_near_lodestone", "Debes estar cerca de una lodestone registrada para teletransportarte."));
+			return 0;
+		}
 
 		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
 		if (!hasCost(player, cost)) {
@@ -129,6 +133,27 @@ public final class LodestoneCommands {
 			source.sendSystemMessage(LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayName(), LodestoneText.dimension(location.dimension())));
 		}
 		return data.all().size();
+	}
+
+	private static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
+		int range = LodestoneConfig.get().teleportSourceRange;
+		if (range <= 0) {
+			return true;
+		}
+		double maxDistance = range * range;
+		ServerLevel level = (ServerLevel) player.level();
+		for (LodestoneLocation location : data.all()) {
+			if (!location.dimension().equals(level.dimension())) {
+				continue;
+			}
+			if (player.blockPosition().distSqr(location.pos()) > maxDistance) {
+				continue;
+			}
+			if (level.getBlockState(location.pos()).is(Blocks.LODESTONE)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static ServerPlayer teleportPlayer(ServerPlayer player, ServerLevel destinationLevel, LodestoneLocation location) {

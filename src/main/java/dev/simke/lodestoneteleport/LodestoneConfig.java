@@ -27,6 +27,7 @@ public final class LodestoneConfig {
 	public int maxCost = 64;
 	public boolean allowCrossDimension = true;
 	public int maxDialogDestinations = 24;
+	public int teleportSourceRange = 8;
 
 	private LodestoneConfig() {
 	}
@@ -73,6 +74,7 @@ public final class LodestoneConfig {
 		config.crossDimensionMultiplier = Math.max(0.0D, config.crossDimensionMultiplier);
 		config.maxCost = Math.max(0, config.maxCost);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
+		config.teleportSourceRange = Math.max(0, config.teleportSourceRange);
 		return config;
 	}
 

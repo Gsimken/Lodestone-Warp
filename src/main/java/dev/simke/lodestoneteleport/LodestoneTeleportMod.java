@@ -11,6 +11,7 @@ public final class LodestoneTeleportMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LodestoneConfig.load();
+		LodestoneNetworking.register();
 		LodestoneEvents.register();
 		LodestoneCommands.register();
 		LOGGER.info("Lodestone Warps v0 initialized.");

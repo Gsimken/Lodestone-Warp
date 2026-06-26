@@ -43,7 +43,7 @@ public final class LodestoneEvents {
 			LodestoneSavedData data = LodestoneSavedData.from(level);
 			LodestoneLocation location = data.at(level.dimension(), hit.getBlockPos())
 				.orElseGet(() -> data.register(level.dimension(), hit.getBlockPos(), player.getUUID(), player.getName().getString()));
-			LodestoneDialogs.showDestinations(serverPlayer, location);
+			LodestoneUi.showDestinations(serverPlayer, location);
 			return InteractionResult.SUCCESS_SERVER;
 		}
 
@@ -80,7 +80,7 @@ public final class LodestoneEvents {
 			LodestoneLocation location = LodestoneSavedData.from(level).register(level.dimension(), placed, player.getUUID(), player.getName().getString());
 			player.sendSystemMessage(LodestoneText.text("registered", "Lodestone registrada: %s", location.displayName()));
 			if (pending.rename()) {
-				LodestoneDialogs.showRename(player, location);
+				LodestoneUi.showRename(player, location);
 			}
 		}
 	}

@@ -13,6 +13,9 @@
 	"entrypoints": {
 		"main": [
 			"dev.simke.lodestoneteleport.LodestoneTeleportMod"
+		],
+		"client": [
+			"dev.simke.lodestoneteleport.client.LodestoneTeleportClient"
 		]
 	},
 	"mixins": [
