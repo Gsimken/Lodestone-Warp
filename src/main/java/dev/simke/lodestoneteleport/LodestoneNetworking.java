@@ -35,6 +35,7 @@ public final class LodestoneNetworking {
 		root.putInt("currentX", current.pos().getX());
 		root.putInt("currentY", current.pos().getY());
 		root.putInt("currentZ", current.pos().getZ());
+		root.putBoolean("canRename", LodestonePermissions.canRename(player));
 
 		ListTag destinations = new ListTag();
 		for (LodestoneLocation destination : LodestoneSavedData.from(player.level()).all()) {

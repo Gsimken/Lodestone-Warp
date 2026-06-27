@@ -20,7 +20,7 @@ config/lodestone_teleport.json
   "allowCrossDimension": true,
   "maxDialogDestinations": 24,
   "teleportSourceRange": 8,
-  "requirePermissions": true,
+  "requirePermissions": false,
   "commandName": "warp",
   "fallbackCommandName": "lodestone_warp",
   "serverLanguage": "en_us"
@@ -96,6 +96,22 @@ El jugador debe estar cerca de una Lodestone registrada para teletransportarse.
 
 - `true`: usa LuckPerms/Fabric Permissions API.
 - `false`: todos pueden usar y renombrar Lodestones.
+
+## Overrides de Permisos para Desarrollo
+
+Para debug local, `runClient` y `runServer` pueden simular permisos sin LuckPerms:
+
+```powershell
+.\gradlew.bat runClient -Plodestone_teleport.use=true -Plodestone_teleport.rename=false
+```
+
+También se pueden pasar como system properties de JVM:
+
+```powershell
+.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.rename=true
+```
+
+Estos overrides son solo para desarrollo y tienen prioridad sobre `requirePermissions`.
 
 ## Comandos
 

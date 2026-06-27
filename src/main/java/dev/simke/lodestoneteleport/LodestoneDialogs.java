@@ -45,10 +45,14 @@ public final class LodestoneDialogs {
 		List<ActionButton> buttons = new ArrayList<>();
 		int limit = LodestoneConfig.get().maxDialogDestinations;
 		String cleanQuery = query == null ? "" : query.trim();
+		boolean canRename = LodestonePermissions.canRename(player);
+		int columns = canRename ? GRID_COLUMNS : 1;
 		int destinationCount = 0;
 
 		buttons.add(searchButton(current.id()));
-		buttons.add(spacerButton());
+		if (canRename) {
+			buttons.add(spacerButton());
+		}
 
 		for (LodestoneLocation destination : data.all()) {
 			if (destination.id().equals(current.id())) {
@@ -62,11 +66,15 @@ public final class LodestoneDialogs {
 			}
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);
 			buttons.add(customButton(Component.literal(destinationLabel(destination, cost)), Optional.of(LodestoneText.cost(cost)), "tp", destination.id()));
-			buttons.add(editButton(destination));
+			if (canRename) {
+				buttons.add(editButton(destination));
+			}
 			destinationCount++;
 		}
-		buttons.add(customButton(LodestoneText.text("button.rename_current", "Renombrar este warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
-		buttons.add(spacerButton());
+		if (canRename) {
+			buttons.add(customButton(LodestoneText.text("button.rename_current", "Renombrar este warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
+			buttons.add(spacerButton());
+		}
 
 		CommonDialogData common = new CommonDialogData(
 			LodestoneText.title(),
@@ -77,7 +85,7 @@ public final class LodestoneDialogs {
 			List.of(new PlainMessage(bodyText(current, cleanQuery, destinationCount == 0), INPUT_WIDTH)),
 			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Buscar"), true, cleanQuery, 48, Optional.empty())))
 		);
-		send(player, new MultiActionDialog(common, buttons, Optional.empty(), GRID_COLUMNS));
+		send(player, new MultiActionDialog(common, buttons, Optional.empty(), columns));
 	}
 
 	public static void showRename(ServerPlayer player, LodestoneLocation location) {

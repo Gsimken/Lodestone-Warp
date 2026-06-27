@@ -33,6 +33,15 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.release = 25
 }
 
+tasks.withType(JavaExec).configureEach {
+	for (String permissionProperty : ['lodestone_teleport.use', 'lodestone_teleport.rename']) {
+		def value = providers.gradleProperty(permissionProperty).orElse(providers.systemProperty(permissionProperty))
+		if (value.present) {
+			systemProperty permissionProperty, value.get()
+		}
+	}
+}
+
 java {
 	withSourcesJar()
 	sourceCompatibility = JavaVersion.VERSION_25

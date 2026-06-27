@@ -28,7 +28,7 @@ public final class LodestoneConfig {
 	public boolean allowCrossDimension = true;
 	public int maxDialogDestinations = 24;
 	public int teleportSourceRange = 8;
-	public boolean requirePermissions = true;
+	public boolean requirePermissions = false;
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
 	public String serverLanguage = "en_us";

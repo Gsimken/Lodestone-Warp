@@ -32,6 +32,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private final String currentId;
 	private final String currentName;
 	private final String currentSubtitle;
+	private final boolean canRename;
 	private final List<Destination> destinations;
 	private final List<Button> destinationButtons = new ArrayList<>();
 	private final List<VisibleRow> visibleRows = new ArrayList<>();
@@ -44,6 +45,7 @@ public final class LodestoneWarpScreen extends Screen {
 		this.currentId = data.getStringOr("currentId", "");
 		this.currentName = data.getStringOr("currentName", "");
 		this.currentSubtitle = formatPosition(data, "current");
+		this.canRename = data.getBooleanOr("canRename", false);
 		this.destinations = readDestinations(data.getListOrEmpty("destinations"));
 	}
 
@@ -63,9 +65,11 @@ public final class LodestoneWarpScreen extends Screen {
 		});
 		addRenderableWidget(this.searchBox);
 
-		addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Renombrar este warp"), button -> {
-			this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, this.currentId, this.currentName, this.currentId));
-		}).bounds(left, this.height - 38, PANEL_WIDTH, 20).build());
+		if (this.canRename) {
+			addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Renombrar este warp"), button -> {
+				this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, this.currentId, this.currentName, this.currentId));
+			}).bounds(left, this.height - 38, PANEL_WIDTH, 20).build());
+		}
 
 		refreshDestinations();
 	}
@@ -106,20 +110,23 @@ public final class LodestoneWarpScreen extends Screen {
 
 		for (int index = start; index < end; index++) {
 			Destination destination = filtered.get(index);
+			int teleportWidth = this.canRename ? PANEL_WIDTH - 52 : PANEL_WIDTH;
 			Button teleport = Button.builder(Component.empty(), button -> {
 				sendAction("tp", destination.id(), "");
 				this.minecraft.setScreenAndShow(null);
 			})
-				.bounds(left, y, PANEL_WIDTH - 52, ROW_HEIGHT)
+				.bounds(left, y, teleportWidth, ROW_HEIGHT)
 				.build();
-			Button edit = Button.builder(Component.literal("\u270e"), button -> {
-				this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, destination.id(), destination.name(), this.currentId));
-			}).bounds(left + PANEL_WIDTH - 47, y, 47, ROW_HEIGHT).build();
 			this.destinationButtons.add(teleport);
-			this.destinationButtons.add(edit);
 			this.visibleRows.add(new VisibleRow(destination, y));
 			addRenderableWidget(teleport);
-			addRenderableWidget(edit);
+			if (this.canRename) {
+				Button edit = Button.builder(Component.literal("\u270e"), button -> {
+					this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, destination.id(), destination.name(), this.currentId));
+				}).bounds(left + PANEL_WIDTH - 47, y, 47, ROW_HEIGHT).build();
+				this.destinationButtons.add(edit);
+				addRenderableWidget(edit);
+			}
 			y += ROW_HEIGHT + GAP;
 			shown++;
 		}
