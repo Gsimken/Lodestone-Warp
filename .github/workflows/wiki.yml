@@ -33,6 +33,7 @@ jobs:
           mkdir -p build/wiki
 
           cp docs/wiki/Home.md build/wiki/Home.md
+          cp docs/wiki/_Sidebar.md build/wiki/_Sidebar.md
           cp docs/wiki/Installation.md build/wiki/Installation.md
           cp docs/wiki/Configuration.md build/wiki/Configuration.md
           cp docs/wiki/Commands.md build/wiki/Commands.md
