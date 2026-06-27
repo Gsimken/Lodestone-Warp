@@ -10,15 +10,15 @@
 - [User Interfaces](User-Interfaces.md)
 - [Troubleshooting](Troubleshooting.md)
 
-## Espanol
+## Español
 
 - [Inicio](es/Inicio.md)
-- [Instalacion](es/Instalacion.md)
-- [Configuracion](es/Configuracion.md)
+- [Instalación](es/Instalacion.md)
+- [Configuración](es/Configuracion.md)
 - [Comandos](es/Comandos.md)
 - [Permisos](es/Permisos.md)
 - [Interfaces](es/Interfaces.md)
-- [Solucion de problemas](es/Solucion-de-problemas.md)
+- [Solución de problemas](es/Solucion-de-problemas.md)
 
 ## Project
 
