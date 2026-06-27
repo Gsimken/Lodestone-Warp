@@ -13,7 +13,7 @@ The mod is designed for servers that want immersive teleportation without requir
 The most up-to-date documentation is kept in the wiki:
 
 - [English Wiki](https://github.com/Gsimken/Lodestone-Warp/wiki)
-- [Wiki en Espanol](https://github.com/Gsimken/Lodestone-Warp/wiki/Espanol-Inicio)
+- [Wiki en Español](https://github.com/Gsimken/Lodestone-Warp/wiki/Inicio)
 
 Use the README as the public project overview for Modrinth and CurseForge. Use the wiki for setup details, config, permissions, commands, and troubleshooting.
 

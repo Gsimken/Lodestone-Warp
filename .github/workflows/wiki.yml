@@ -42,7 +42,7 @@ jobs:
           cp docs/wiki/Troubleshooting.md build/wiki/Troubleshooting.md
           cp ROADMAP.md build/wiki/Roadmap.md
 
-          cp docs/wiki/es/Inicio.md build/wiki/Espanol-Inicio.md
+          cp docs/wiki/es/Inicio.md build/wiki/Inicio.md
           cp docs/wiki/es/Instalacion.md build/wiki/Espanol-Instalacion.md
           cp docs/wiki/es/Configuracion.md build/wiki/Espanol-Configuracion.md
           cp docs/wiki/es/Comandos.md build/wiki/Espanol-Comandos.md
