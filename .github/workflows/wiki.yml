@@ -1,0 +1,68 @@
+name: wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/wiki/**'
+      - '.github/workflows/wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare wiki pages
+        run: |
+          set -euo pipefail
+          rm -rf build/wiki
+          mkdir -p build/wiki
+
+          cp docs/wiki/Home.md build/wiki/Home.md
+          cp docs/wiki/Installation.md build/wiki/Installation.md
+          cp docs/wiki/Configuration.md build/wiki/Configuration.md
+          cp docs/wiki/Commands.md build/wiki/Commands.md
+          cp docs/wiki/Permissions.md build/wiki/Permissions.md
+          cp docs/wiki/User-Interfaces.md build/wiki/User-Interfaces.md
+          cp docs/wiki/Troubleshooting.md build/wiki/Troubleshooting.md
+          cp ROADMAP.md build/wiki/Roadmap.md
+
+          cp docs/wiki/es/Inicio.md build/wiki/Espanol-Inicio.md
+          cp docs/wiki/es/Instalacion.md build/wiki/Espanol-Instalacion.md
+          cp docs/wiki/es/Configuracion.md build/wiki/Espanol-Configuracion.md
+          cp docs/wiki/es/Comandos.md build/wiki/Espanol-Comandos.md
+          cp docs/wiki/es/Permisos.md build/wiki/Espanol-Permisos.md
+          cp docs/wiki/es/Interfaces.md build/wiki/Espanol-Interfaces.md
+          cp docs/wiki/es/Solucion-de-problemas.md build/wiki/Espanol-Solucion-de-problemas.md
+
+          python3 .github/wiki/rewrite_links.py build/wiki
+
+      - name: Publish wiki
+        run: |
+          set -euo pipefail
+          find wiki -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
+          cp build/wiki/*.md wiki/
+          cd wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "Wiki already up to date."
+            exit 0
+          fi
+          git commit -m "Sync wiki from repository docs"
+          git push
