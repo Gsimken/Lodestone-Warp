@@ -37,6 +37,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private final List<VisibleRow> visibleRows = new ArrayList<>();
 	private EditBox searchBox;
 	private String query = "";
+	private int page = 0;
 
 	public LodestoneWarpScreen(CompoundTag data) {
 		super(LodestoneText.title());
@@ -49,7 +50,7 @@ public final class LodestoneWarpScreen extends Screen {
 	@Override
 	protected void init() {
 		int left = (this.width - PANEL_WIDTH) / 2;
-		int top = Math.max(28, (this.height - 210) / 2);
+		int top = top();
 
 		this.searchBox = new EditBox(this.font, left, top + 58, PANEL_WIDTH, 20, LodestoneText.text("input.search", "Buscar ubicacion"));
 		this.searchBox.setHint(LodestoneText.text("input.search", "Buscar ubicacion"));
@@ -57,6 +58,7 @@ public final class LodestoneWarpScreen extends Screen {
 		this.searchBox.setValue(this.query);
 		this.searchBox.setResponder(value -> {
 			this.query = value;
+			this.page = 0;
 			refreshDestinations();
 		});
 		addRenderableWidget(this.searchBox);
@@ -72,7 +74,7 @@ public final class LodestoneWarpScreen extends Screen {
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		this.extractTransparentBackground(graphics);
 		int left = (this.width - PANEL_WIDTH) / 2;
-		int top = Math.max(28, (this.height - 210) / 2);
+		int top = top();
 		graphics.fill(left - 10, top - 18, left + PANEL_WIDTH + 10, this.height - 12, 0xCC101010);
 		graphics.outline(left - 10, top - 18, PANEL_WIDTH + 20, this.height - top + 6, 0xFF595959);
 		graphics.centeredText(this.font, this.title, this.width / 2, top - 9, 0xFFFFFFFF);
@@ -91,19 +93,19 @@ public final class LodestoneWarpScreen extends Screen {
 		this.visibleRows.clear();
 
 		int left = (this.width - PANEL_WIDTH) / 2;
-		int y = Math.max(28, (this.height - 210) / 2) + 98;
-		int bottom = this.height - 46;
+		int y = top() + 98;
+		int bottom = this.height - 76;
 		String needle = this.query.toLowerCase(Locale.ROOT).trim();
+		List<Destination> filtered = filteredDestinations(needle);
+		int rowsPerPage = Math.max(1, (bottom - y + GAP) / (ROW_HEIGHT + GAP));
+		int totalPages = Math.max(1, (int) Math.ceil(filtered.size() / (double) rowsPerPage));
+		this.page = Math.min(this.page, totalPages - 1);
+		int start = this.page * rowsPerPage;
+		int end = Math.min(filtered.size(), start + rowsPerPage);
 		int shown = 0;
 
-		for (Destination destination : this.destinations) {
-			if (!needle.isEmpty() && !destination.searchText().contains(needle)) {
-				continue;
-			}
-			if (y + ROW_HEIGHT > bottom) {
-				break;
-			}
-
+		for (int index = start; index < end; index++) {
+			Destination destination = filtered.get(index);
 			Button teleport = Button.builder(Component.empty(), button -> {
 				sendAction("tp", destination.id(), "");
 				this.minecraft.setScreenAndShow(null);
@@ -129,6 +131,46 @@ public final class LodestoneWarpScreen extends Screen {
 			this.destinationButtons.add(empty);
 			addRenderableWidget(empty);
 		}
+		addPaginationButtons(left, totalPages);
+	}
+
+	private List<Destination> filteredDestinations(String needle) {
+		if (needle.isEmpty()) {
+			return this.destinations;
+		}
+		List<Destination> filtered = new ArrayList<>();
+		for (Destination destination : this.destinations) {
+			if (destination.searchText().contains(needle)) {
+				filtered.add(destination);
+			}
+		}
+		return filtered;
+	}
+
+	private void addPaginationButtons(int left, int totalPages) {
+		int y = this.height - 66;
+		Button previous = Button.builder(LodestoneText.text("client.page.previous", "Anterior"), button -> {
+			this.page = Math.max(0, this.page - 1);
+			refreshDestinations();
+		}).bounds(left, y, 100, 20).build();
+		previous.active = this.page > 0;
+
+		Button label = Button.builder(LodestoneText.text("client.page", "Pagina %s / %s", this.page + 1, totalPages), button -> {
+		}).bounds(left + 110, y, PANEL_WIDTH - 220, 20).build();
+		label.active = false;
+
+		Button next = Button.builder(LodestoneText.text("client.page.next", "Siguiente"), button -> {
+			this.page = Math.min(totalPages - 1, this.page + 1);
+			refreshDestinations();
+		}).bounds(left + PANEL_WIDTH - 100, y, 100, 20).build();
+		next.active = this.page < totalPages - 1;
+
+		this.destinationButtons.add(previous);
+		this.destinationButtons.add(label);
+		this.destinationButtons.add(next);
+		addRenderableWidget(previous);
+		addRenderableWidget(label);
+		addRenderableWidget(next);
 	}
 
 	private void drawTableHeader(GuiGraphicsExtractor graphics, int left, int y) {
@@ -163,6 +205,10 @@ public final class LodestoneWarpScreen extends Screen {
 			return value;
 		}
 		return this.font.plainSubstrByWidth(value, Math.max(1, width - this.font.width("..."))) + "...";
+	}
+
+	private int top() {
+		return Math.max(8, (this.height - 230) / 2 - 55);
 	}
 
 	static void sendAction(String action, String id, String name) {
