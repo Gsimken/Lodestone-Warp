@@ -1,32 +1,133 @@
 # Lodestone Warps
 
-Fabric server-side mod for Minecraft 26.2.
+**Last updated:** 2026-06-27
 
-Version 0 implements a first playable lodestone-based warp network:
+**Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft `26.2`.
 
-- Minecraft 26.2
-- Java 25
-- Fabric Loader 0.19.3
-- Fabric API 0.152.2+26.2
-- Mojang/unobfuscated names, matching Fabric guidance for 26.1+
+Players can place Lodestones to register warp points, then use those Lodestones to travel through a shared network. Vanilla clients use Minecraft's built-in Dialog UI, while players who install the mod on their client get an enhanced custom interface with search, pagination, item-cost icons, destination editing, and cleaner table-style information.
 
-Gameplay loop:
+The mod is designed for servers that want immersive teleportation without requiring every player to install a client mod.
 
-1. Register a lodestone when a player places it.
-2. Remove it when the block is broken.
-3. Open a vanilla dialog when a player right-clicks a registered lodestone with an empty hand.
-4. Consume the configured item cost.
-5. Warp to the selected registered lodestone.
+## Wiki
 
-Sneak while placing a lodestone to open a vanilla rename dialog. Existing lodestones are registered automatically the first time they are used with an empty hand.
+The most up-to-date documentation is kept in the wiki:
 
-Server config is generated at `config/lodestone_teleport.json` on first run.
+- [English Wiki](docs/wiki/Home.md)
+- [Wiki en Espanol](docs/wiki/es/Inicio.md)
 
-Teleport cost is dynamic by default:
+Use the README as the public project overview for Modrinth and CurseForge. Use the wiki for setup details, config, permissions, commands, and troubleshooting.
 
-- `baseCost`: minimum item cost.
-- `blocksPerExtraCost`: adds 1 cost per this many same-dimension blocks.
-- `crossDimensionMultiplier`: multiplier for cross-dimension teleports.
-- `maxCost`: caps the final cost when greater than 0.
+## Features
 
-V2 note: keep the vanilla dialog flow for clients without the mod, and consider adding a custom client UI for players who do install Lodestone Warps client-side.
+- Server-side Lodestone warp network.
+- Vanilla client support through Minecraft Dialogs.
+- Optional enhanced UI for players with the mod installed client-side.
+- Automatic Lodestone registration when placed.
+- Auto-registration for old or untracked Lodestones when interacted with.
+- Removes registered Lodestones when broken.
+- Searchable destination list.
+- Pagination in the custom mod UI.
+- Rename Lodestones from the UI.
+- Teleport cost with configurable item and dynamic distance scaling.
+- Item icons for cost display in the custom mod UI.
+- Cross-dimensional teleport support.
+- Configurable requirement to stand near a registered Lodestone before teleporting.
+- Configurable command name, defaulting to `/warp`.
+- Safe fallback command, defaulting to `/lodestone_warp`.
+- LuckPerms-compatible permissions through Fabric Permissions API.
+- Optional config to disable permission checks for open servers.
+- Server-side language fallback for vanilla UI text.
+
+## Requirements
+
+- Minecraft `26.2`
+- Java `25+`
+- Fabric Loader `0.19.3+`
+- Fabric API
+- Fabric Permissions API
+- Optional: LuckPerms for permission management
+
+## Client Support
+
+The mod can be installed in two ways:
+
+- **Server only:** vanilla clients can use Lodestone Warps through the vanilla Dialog UI.
+- **Server + client:** players with the mod installed get the enhanced custom UI.
+
+Players without the client mod are still supported.
+
+## Basic Usage
+
+1. Place a Lodestone to register it as a warp.
+2. Right-click a registered Lodestone with an empty hand.
+3. Choose a destination from the UI.
+4. Pay the configured cost.
+5. Teleport to the selected Lodestone.
+
+Sneak while placing a Lodestone to open the rename flow.
+
+## Commands
+
+Default command:
+
+```mcfunction
+/warp
+```
+
+Fallback command:
+
+```mcfunction
+/lodestone_warp
+```
+
+Subcommands:
+
+```mcfunction
+/warp tp <id or name>
+/warp rename <id> <name>
+/warp edit <id>
+/warp list
+```
+
+If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` available as a safer fallback.
+
+## Permissions
+
+LuckPerms/Fabric Permissions API nodes:
+
+```text
+lodestone_teleport.use
+lodestone_teleport.rename
+```
+
+If permissions are enabled, players need `lodestone_teleport.use` to use warps and `lodestone_teleport.rename` to rename Lodestones.
+
+Permission checks can be disabled in the server config.
+
+## Configuration
+
+The config is generated on first run:
+
+```text
+config/lodestone_teleport.json
+```
+
+See the wiki for the current full config reference:
+
+[Configuration Wiki](docs/wiki/Configuration.md)
+
+## Current Status
+
+Current release line: `0.1.x`
+
+This is still an early mod, but the core gameplay loop is playable:
+
+- register Lodestones
+- open UI
+- search destinations
+- teleport with cost
+- rename destinations
+- use permissions
+- support vanilla and modded clients
+
+Feedback from real server usage is welcome.

@@ -1,11 +1,17 @@
 package dev.simke.lodestoneteleport;
 
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.MessageArgument;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -15,6 +21,8 @@ import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public final class LodestoneCommands {
@@ -23,21 +31,49 @@ public final class LodestoneCommands {
 
 	public static void register() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-			dispatcher.register(root("lodestone_warps"));
-			dispatcher.register(root("lodestone_teleport"));
-			dispatcher.register(root("waystone_teleport"));
+			registerConfiguredCommand(dispatcher);
 		});
+	}
+
+	private static void registerConfiguredCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+		LodestoneConfig config = LodestoneConfig.get();
+		String commandName = config.commandName;
+		String fallback = config.fallbackCommandName;
+
+		if (isAvailable(dispatcher, fallback)) {
+			dispatcher.register(root(fallback));
+			LodestoneTeleportMod.LOGGER.info("Registered Lodestone Warps fallback command /{}.", fallback);
+		} else {
+			LodestoneTeleportMod.LOGGER.warn("Could not register Lodestone Warps fallback command /{} because it is already in use.", fallback);
+		}
+
+		if (commandName.equals(fallback)) {
+			return;
+		}
+		if (isAvailable(dispatcher, commandName)) {
+			dispatcher.register(root(commandName));
+			LodestoneTeleportMod.LOGGER.info("Registered Lodestone Warps command /{}.", commandName);
+			return;
+		}
+		LodestoneTeleportMod.LOGGER.warn("Command /{} was already registered; use /{} instead.", commandName, fallback);
+	}
+
+	private static boolean isAvailable(CommandDispatcher<CommandSourceStack> dispatcher, String commandName) {
+		return dispatcher.getRoot().getChild(commandName) == null;
 	}
 
 	private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> root(String command) {
 		return Commands.literal(command)
 				.then(Commands.literal("tp")
-					.then(Commands.argument("id", StringArgumentType.word())
-						.executes(context -> teleport(context.getSource(), StringArgumentType.getString(context, "id")))))
+					.requires(LodestonePermissions::canUse)
+					.then(Commands.argument("destination", StringArgumentType.greedyString())
+						.executes(context -> teleport(context.getSource(), StringArgumentType.getString(context, "destination")))))
 				.then(Commands.literal("edit")
+					.requires(LodestonePermissions::canRename)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.executes(context -> edit(context.getSource(), StringArgumentType.getString(context, "id")))))
 				.then(Commands.literal("rename")
+					.requires(LodestonePermissions::canRename)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.then(Commands.argument("name", MessageArgument.message())
 							.executes(context -> rename(context.getSource(), StringArgumentType.getString(context, "id"), MessageArgument.getMessage(context, "name").getString())))))
@@ -45,12 +81,15 @@ public final class LodestoneCommands {
 					.executes(context -> list(context.getSource())));
 	}
 
-	static int teleport(CommandSourceStack source, String id) throws CommandSyntaxException {
+	static int teleport(CommandSourceStack source, String destination) throws CommandSyntaxException {
 		ServerPlayer player = source.getPlayerOrException();
+		if (!LodestonePermissions.canUse(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.use", "No tienes permiso para usar lodestones."));
+			return 0;
+		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
-		Optional<LodestoneLocation> maybeLocation = data.get(id);
+		Optional<LodestoneLocation> maybeLocation = resolveTeleportDestination(source, data, destination);
 		if (maybeLocation.isEmpty()) {
-			source.sendFailure(LodestoneText.text("error.missing_destination", "Ese destino ya no existe."));
 			return 0;
 		}
 
@@ -99,7 +138,56 @@ public final class LodestoneCommands {
 		return 1;
 	}
 
+	private static Optional<LodestoneLocation> resolveTeleportDestination(CommandSourceStack source, LodestoneSavedData data, String destination) {
+		String clean = destination.trim();
+		Optional<LodestoneLocation> byId = data.get(clean);
+		if (byId.isPresent()) {
+			return byId;
+		}
+
+		List<LodestoneLocation> matches = new ArrayList<>();
+		for (LodestoneLocation location : data.all()) {
+			if (location.displayName().equalsIgnoreCase(clean)) {
+				matches.add(location);
+			}
+		}
+		if (matches.size() == 1) {
+			return Optional.of(matches.getFirst());
+		}
+		if (matches.size() > 1) {
+			sendDuplicateDestinationMessage(source, clean, matches);
+			return Optional.empty();
+		}
+		source.sendFailure(LodestoneText.text("error.missing_destination", "Ese destino ya no existe."));
+		return Optional.empty();
+	}
+
+	private static void sendDuplicateDestinationMessage(CommandSourceStack source, String name, List<LodestoneLocation> matches) {
+		source.sendFailure(LodestoneText.text("error.duplicate_destination_name", "Hay mas de una lodestone llamada \"%s\". Elige una:", name));
+		for (LodestoneLocation location : matches) {
+			CompoundTag payload = new CompoundTag();
+			payload.putString("action", "tp");
+			payload.putString("id", location.id());
+			MutableComponent entry = Component.literal("- " + location.displayName() + " ")
+				.withStyle(ChatFormatting.YELLOW)
+				.append(Component.literal("(" + location.pos().getX() + ", " + location.pos().getY() + ", " + location.pos().getZ() + ", ")
+					.withStyle(ChatFormatting.GRAY))
+				.append(LodestoneText.dimension(location.dimension()).copy().withStyle(ChatFormatting.GRAY))
+				.append(Component.literal(") ")
+					.withStyle(ChatFormatting.GRAY))
+				.append(LodestoneText.text("button.teleport", "[TP]").withStyle(style -> style
+					.withColor(ChatFormatting.AQUA)
+					.withUnderlined(true)
+					.withClickEvent(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))));
+			source.sendSystemMessage(entry);
+		}
+	}
+
 	static int rename(CommandSourceStack source, String id, String name) {
+		if (!LodestonePermissions.canRename(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.rename", "No tienes permiso para renombrar lodestones."));
+			return 0;
+		}
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if (!data.rename(id, name)) {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "No encontre esa lodestone."));
@@ -112,6 +200,10 @@ public final class LodestoneCommands {
 
 	static int edit(CommandSourceStack source, String id) throws CommandSyntaxException {
 		ServerPlayer player = source.getPlayerOrException();
+		if (!LodestonePermissions.canRename(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.rename", "No tienes permiso para renombrar lodestones."));
+			return 0;
+		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
 		Optional<LodestoneLocation> location = data.get(id);
 		if (location.isEmpty()) {

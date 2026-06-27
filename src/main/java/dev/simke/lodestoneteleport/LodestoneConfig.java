@@ -28,6 +28,10 @@ public final class LodestoneConfig {
 	public boolean allowCrossDimension = true;
 	public int maxDialogDestinations = 24;
 	public int teleportSourceRange = 8;
+	public boolean requirePermissions = true;
+	public String commandName = "warp";
+	public String fallbackCommandName = "lodestone_warp";
+	public String serverLanguage = "en_us";
 
 	private LodestoneConfig() {
 	}
@@ -75,7 +79,32 @@ public final class LodestoneConfig {
 		config.maxCost = Math.max(0, config.maxCost);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
 		config.teleportSourceRange = Math.max(0, config.teleportSourceRange);
+		config.commandName = cleanCommandName(config.commandName, "warp");
+		config.fallbackCommandName = cleanCommandName(config.fallbackCommandName, "lodestone_warp");
+		config.serverLanguage = cleanLanguage(config.serverLanguage);
 		return config;
+	}
+
+	private static String cleanCommandName(String value, String fallback) {
+		if (value == null) {
+			return fallback;
+		}
+		String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
+		if (!clean.matches("[a-z0-9_\\-.]+")) {
+			return fallback;
+		}
+		return clean;
+	}
+
+	private static String cleanLanguage(String value) {
+		if (value == null) {
+			return "en_us";
+		}
+		String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
+		return switch (clean) {
+			case "es", "es_es", "spanish" -> "es_es";
+			default -> "en_us";
+		};
 	}
 
 	private static void save(Path path, LodestoneConfig config) {
