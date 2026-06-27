@@ -1,6 +1,6 @@
 # Permisos
 
-**Ultima actualizacion:** 2026-06-27
+**Última actualización:** 2026-06-27
 
 Lodestone Warps usa Fabric Permissions API y es compatible con LuckPerms.
 
@@ -56,10 +56,10 @@ Permitir ambos permisos a un jugador:
 
 ## Desactivar Permisos
 
-Para servidores pequenos o abiertos:
+Para servidores pequeños o abiertos:
 
 ```json
 "requirePermissions": false
 ```
 
-Cuando esta desactivado, todos pueden usar y renombrar Lodestones.
+Cuando está desactivado, todos pueden usar y renombrar Lodestones.

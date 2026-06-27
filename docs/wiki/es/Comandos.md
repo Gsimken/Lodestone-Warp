@@ -1,6 +1,6 @@
 # Comandos
 
-**Ultima actualizacion:** 2026-06-27
+**Última actualización:** 2026-06-27
 
 ## Comando Principal
 
@@ -30,7 +30,7 @@ Renombrar:
 /warp rename <id> <nombre>
 ```
 
-Abrir edicion:
+Abrir edición:
 
 ```mcfunction
 /warp edit <id>
@@ -54,4 +54,4 @@ Ejemplos:
 /warp tp Base Principal
 ```
 
-Si hay varias Lodestones con el mismo nombre, el mod muestra opciones clickeables para elegir el destino exacto.
+Si hay varias Lodestones con el mismo nombre, el mod muestra opciones clicables para elegir el destino exacto.

@@ -1,6 +1,6 @@
 # Interfaces
 
-**Ultima actualizacion:** 2026-06-27
+**Última actualización:** 2026-06-27
 
 ## UI Vanilla
 
@@ -11,9 +11,9 @@ Se usa cuando el jugador no tiene Lodestone Warps instalado en el cliente.
 Incluye:
 
 - botones de destinos
-- busqueda
+- búsqueda
 - renombrado
-- validacion server-side
+- validación server-side
 - no requiere mod en cliente
 
 Como los clientes vanilla no tienen los archivos de idioma del mod, los textos dependen de:
@@ -22,7 +22,7 @@ Como los clientes vanilla no tienen los archivos de idioma del mod, los textos d
 "serverLanguage": "en_us"
 ```
 
-Para espanol:
+Para español:
 
 ```json
 "serverLanguage": "es_es"
@@ -35,12 +35,12 @@ La UI de mod es la pantalla custom que aparece cuando el jugador tiene Lodestone
 Incluye:
 
 - tabla de destinos
-- busqueda
-- paginacion
-- iconos del costo
-- botones de edicion
-- actualizacion instantanea despues de renombrar
+- búsqueda
+- paginación
+- íconos del costo
+- botones de edición
+- actualización instantánea después de renombrar
 
-El servidor detecta automaticamente si el cliente soporta la UI de mod.
+El servidor detecta automáticamente si el cliente soporta la UI de mod.
 
 Los jugadores sin el mod siguen usando la UI vanilla.

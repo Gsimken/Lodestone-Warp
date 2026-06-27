@@ -1,25 +1,25 @@
 # Wiki de Lodestone Warps
 
-**Ultima actualizacion:** 2026-06-27
+**Última actualización:** 2026-06-27
 
-Bienvenido a la wiki de Lodestone Warps. Esta es la documentacion viva para duenos de servidores, creadores de modpacks y contribuidores.
+Bienvenido a la wiki de Lodestone Warps. Esta es la documentación viva para dueños de servidores, creadores de modpacks y contribuidores.
 
 ## Idiomas
 
 - [English](../Home.md)
-- [Espanol](Inicio.md)
+- [Español](Inicio.md)
 
-## Paginas
+## Páginas
 
-- [Instalacion](Instalacion.md)
-- [Configuracion](Configuracion.md)
+- [Instalación](Instalacion.md)
+- [Configuración](Configuracion.md)
 - [Comandos](Comandos.md)
 - [Permisos](Permisos.md)
 - [Interfaces](Interfaces.md)
-- [Solucion de problemas](Solucion-de-problemas.md)
+- [Solución de problemas](Solucion-de-problemas.md)
 - [Roadmap](../../../ROADMAP.md)
 
-## Resumen Rapido
+## Resumen Rápido
 
 Lodestone Warps convierte las Lodestones vanilla en una red de warps.
 
@@ -28,7 +28,7 @@ Lodestone Warps convierte las Lodestones vanilla en una red de warps.
 - Los teleports se validan en el servidor.
 - Costos, comandos, permisos y textos fallback son configurables.
 
-## Terminos Importantes
+## Términos Importantes
 
 **UI vanilla:** la UI de Dialogs de Minecraft que se muestra a clientes sin el mod instalado.
 

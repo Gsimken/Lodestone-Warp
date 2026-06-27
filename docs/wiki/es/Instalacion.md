@@ -1,6 +1,6 @@
-# Instalacion
+# Instalación
 
-**Ultima actualizacion:** 2026-06-27
+**Última actualización:** 2026-06-27
 
 ## Requisitos del Servidor
 
@@ -15,27 +15,27 @@
 - LuckPerms para administrar permisos.
 - Lodestone Warps instalado en el cliente para activar la UI de mod.
 
-## Instalacion Solo Servidor
+## Instalación Solo Servidor
 
 1. Instala Fabric Loader en el servidor.
 2. Agrega Fabric API.
 3. Agrega Fabric Permissions API.
 4. Agrega `lodestone-warps-<version>.jar`.
-5. Inicia el servidor una vez para generar la configuracion.
+5. Inicia el servidor una vez para generar la configuración.
 6. Edita `config/lodestone_teleport.json` si lo necesitas.
 
 Los jugadores vanilla pueden entrar sin instalar el mod.
 
-## Instalacion en Cliente
+## Instalación en Cliente
 
-Los jugadores tambien pueden instalar Lodestone Warps en el cliente.
+Los jugadores también pueden instalar Lodestone Warps en el cliente.
 
 Esto activa la UI de mod con:
 
 - tabla de destinos
-- busqueda
-- paginacion
-- iconos del costo
-- botones de edicion
+- búsqueda
+- paginación
+- íconos del costo
+- botones de edición
 
 Los jugadores sin el mod siguen usando la UI vanilla.

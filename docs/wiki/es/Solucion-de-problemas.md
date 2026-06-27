@@ -1,10 +1,10 @@
-# Solucion de Problemas
+# Solución de Problemas
 
-**Ultima actualizacion:** 2026-06-27
+**Última actualización:** 2026-06-27
 
-## La UI Vanilla Sale en Ingles o Espanol
+## La UI Vanilla Sale en Inglés o Español
 
-Los clientes vanilla no tienen los archivos de idioma del mod, asi que usan los textos fallback del servidor.
+Los clientes vanilla no tienen los archivos de idioma del mod, así que usan los textos fallback del servidor.
 
 Configura:
 
@@ -24,8 +24,8 @@ Revisa:
 
 - `requirePermissions`
 - permisos de LuckPerms
-- si el jugador esta cerca de una Lodestone registrada
-- si la Lodestone existe fisicamente
+- si el jugador está cerca de una Lodestone registrada
+- si la Lodestone existe físicamente
 
 Permiso:
 
