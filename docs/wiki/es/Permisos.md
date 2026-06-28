@@ -48,7 +48,7 @@ Permite:
 Permite:
 
 - registrar Lodestones al colocarlas
-- auto-registrar Lodestones antiguas o no registradas al interactuar con ellas
+- auto-registrar Lodestones antiguas o no registradas al interactuar con ellas, si está activado en la config
 
 ## Remover
 
@@ -57,6 +57,7 @@ Permite:
 Permite:
 
 - romper Lodestones registradas y removerlas de la red de warps
+- desvincular warps registrados con `/warp remove <id>` o `/warp unlink <id>`
 
 ## Admin
 
@@ -78,7 +79,7 @@ Permite teletransportarse sin esperar el cooldown.
 
 `lodestone_teleport.bypass_max_warps`
 
-Reservado para el futuro límite máximo de warps.
+Permite registrar Lodestones incluso cuando se alcanzó `maxLodestonesGlobal` o `maxLodestonesPerPlayer`.
 
 ## Modos
 

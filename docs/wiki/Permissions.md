@@ -48,7 +48,7 @@ Allows:
 Allows:
 
 - registering Lodestones when placed
-- auto-registering old or untracked Lodestones when interacted with
+- auto-registering old or untracked Lodestones when interacted with, if enabled in config
 
 ## Remove Permission
 
@@ -57,6 +57,7 @@ Allows:
 Allows:
 
 - breaking registered Lodestones and removing them from the warp network
+- unlinking registered Lodestone warps with `/warp remove <id>` or `/warp unlink <id>`
 
 ## Admin Permission
 
@@ -78,7 +79,7 @@ Allows teleporting without waiting for teleport cooldown.
 
 `lodestone_teleport.bypass_max_warps`
 
-Reserved for the future max warps limit.
+Allows registering Lodestones even when `maxLodestonesGlobal` or `maxLodestonesPerPlayer` has been reached.
 
 ## Mode Permissions
 

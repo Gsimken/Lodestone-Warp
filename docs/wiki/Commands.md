@@ -36,11 +36,19 @@ Open edit flow:
 /warp edit <id>
 ```
 
-Remove a stale Lodestone entry:
+Unlink a Lodestone warp from the network:
 
 ```mcfunction
 /warp remove <id>
 ```
+
+Alias:
+
+```mcfunction
+/warp unlink <id>
+```
+
+The physical Lodestone block is left in the world. By default, it will not re-register when clicked.
 
 List registered Lodestones:
 
@@ -52,7 +60,7 @@ List registered Lodestones:
 
 - `[TP]`: teleport to the Lodestone.
 - `[✎]`: open the rename flow.
-- `[X]`: remove the entry only if the physical Lodestone block no longer exists.
+- `[X]`: unlink the warp entry while leaving the physical Lodestone block in place.
 
 ## Teleport by Name
 

@@ -36,11 +36,19 @@ Abrir edición:
 /warp edit <id>
 ```
 
-Remover una entrada antigua:
+Desvincular un warp de Lodestone de la red:
 
 ```mcfunction
 /warp remove <id>
 ```
+
+Alias:
+
+```mcfunction
+/warp unlink <id>
+```
+
+El bloque fisico de Lodestone queda en el mundo. Por defecto, no se volvera a registrar al hacer click.
 
 Listar Lodestones registradas:
 
@@ -52,7 +60,7 @@ Listar Lodestones registradas:
 
 - `[TP]`: teletransportarse a la Lodestone.
 - `[✎]`: abrir el flujo de renombrado.
-- `[X]`: remover la entrada solo si el bloque físico de Lodestone ya no existe.
+- `[X]`: desvincular el warp y dejar el bloque físico de Lodestone en su lugar.
 
 ## Teleport por Nombre
 

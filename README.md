@@ -20,8 +20,9 @@ The most up-to-date documentation is kept in the wiki:
 - Server-side Lodestone warp network.
 - Vanilla client support through Minecraft Dialogs.
 - Optional enhanced UI for players with the mod installed client-side.
-- Automatic Lodestone registration when placed.
-- Auto-registration for old or untracked Lodestones when interacted with.
+- Sneak-place Lodestones to register them as warps by default.
+- Optional auto-registration for old or untracked Lodestones when interacted with.
+- Configurable global and per-player Lodestone registration limits.
 - Removes registered Lodestones when broken.
 - Searchable destination list.
 - Pagination in the custom mod UI.
@@ -59,7 +60,7 @@ Players without the client mod are still supported.
 
 ## Basic Usage
 
-1. Place a Lodestone to register it as a warp.
+1. Sneak-place a Lodestone to register it as a warp.
 2. Right-click a registered Lodestone with an empty hand.
 3. Choose a destination from the UI.
 4. Pay the configured cost.
@@ -79,6 +80,7 @@ Available subcommands:
 - `/warp rename <id> <name>`
 - `/warp edit <id>`
 - `/warp remove <id>`
+- `/warp unlink <id>`
 - `/warp list`
 
 If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` available as a safer fallback.
@@ -96,8 +98,9 @@ Permission nodes:
 - `lodestone_teleport.admin`
 - `lodestone_teleport.bypass_cost`
 - `lodestone_teleport.bypass_cooldown`
+- `lodestone_teleport.bypass_max_warps`
 
-If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to remove registered Lodestones.
+If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
 
 Permission checks can be disabled in the server config.
 

@@ -20,6 +20,10 @@ Cuando se carga una configuración existente, Lodestone Warps rellena las opcion
   "crossDimensionMultiplier": 2.0,
   "maxCost": 64,
   "allowCrossDimension": true,
+  "maxLodestonesGlobal": 0,
+  "maxLodestonesPerPlayer": 0,
+  "registerPlacedLodestonesOnlyWhenSneaking": true,
+  "autoRegisterUntrackedLodestones": false,
   "maxDialogDestinations": 24,
   "teleportSourceRange": 8,
   "teleportCastSeconds": 2,
@@ -84,6 +88,36 @@ Multiplicador para teleports entre dimensiones.
 `maxCost`
 
 Costo máximo final. Usa `0` para no limitarlo.
+
+## Registro de Lodestones
+
+`maxLodestonesGlobal`
+
+Cantidad maxima de Lodestones registradas en el servidor.
+
+- `0`: ilimitado.
+- Valores positivos limitan toda la red global.
+
+`maxLodestonesPerPlayer`
+
+Cantidad maxima de Lodestones registradas por cada jugador.
+
+- `0`: ilimitado.
+- Jugadores con `lodestone_teleport.bypass_max_warps` ignoran este limite y el limite global.
+
+`registerPlacedLodestonesOnlyWhenSneaking`
+
+Controla el registro automatico al colocar una Lodestone.
+
+- `true`: solo colocar agachado registra la Lodestone como warp.
+- `false`: toda Lodestone colocada se registra.
+
+`autoRegisterUntrackedLodestones`
+
+Controla que pasa cuando un jugador hace click derecho con la mano vacia sobre una Lodestone no registrada.
+
+- `false`: el bloque queda vanilla y no se registra.
+- `true`: el bloque se registra al usarlo si el jugador puede crear Lodestones y los limites lo permiten.
 
 ## Reglas de Teleport
 

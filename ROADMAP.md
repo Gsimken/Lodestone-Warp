@@ -5,7 +5,7 @@
 - [x] Require players to be near a registered lodestone before allowing teleport actions, including manual `/lodestone_warps tp <id>` usage.
 - [x] Add configurable cost item.
 - [x] Add server-side cooldown.
-- [ ] Add maximum possible warps.
+- [x] Add maximum possible warps.
 - [ ] Add Lodestone discovery modes:
   - [ ] `all`: players can see and teleport to every registered Lodestone.
   - [ ] `discover`: players can only see and teleport to Lodestones they have discovered.
@@ -25,7 +25,7 @@
   - [x] `lodestone_teleport.admin`
   - [x] `lodestone_teleport.bypass_cost`
   - [x] `lodestone_teleport.bypass_cooldown`
-  - [ ] `lodestone_teleport.bypass_max_warps`
+  - [x] `lodestone_teleport.bypass_max_warps`
   - [ ] `lodestone_teleport.mode.all`
   - [ ] `lodestone_teleport.mode.discover`
 - [ ] Add configurable permission backend:
