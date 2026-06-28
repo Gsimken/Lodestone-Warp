@@ -118,7 +118,7 @@ Full config reference:
 
 ## Current Status
 
-Current release line: **0.2.x**
+Current release line: **0.4.x**
 
 This is still an early mod, but the core gameplay loop is playable:
 
