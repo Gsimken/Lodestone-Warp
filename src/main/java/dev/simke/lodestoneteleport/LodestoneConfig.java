@@ -2,6 +2,9 @@ package dev.simke.lodestoneteleport;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -55,8 +58,10 @@ public final class LodestoneConfig {
 		}
 
 		try (Reader reader = Files.newBufferedReader(path)) {
-			LodestoneConfig loaded = GSON.fromJson(reader, LodestoneConfig.class);
+			JsonObject merged = mergeDefaults(JsonParser.parseReader(reader));
+			LodestoneConfig loaded = GSON.fromJson(merged, LodestoneConfig.class);
 			INSTANCE = sanitize(loaded == null ? defaults() : loaded);
+			save(path, INSTANCE);
 		} catch (IOException | JsonSyntaxException exception) {
 			LodestoneTeleportMod.LOGGER.warn("Failed to load {}, using defaults.", FILE_NAME, exception);
 			INSTANCE = defaults();
@@ -73,6 +78,17 @@ public final class LodestoneConfig {
 
 	private static LodestoneConfig defaults() {
 		return new LodestoneConfig();
+	}
+
+	private static JsonObject mergeDefaults(JsonElement loaded) {
+		JsonObject merged = GSON.toJsonTree(defaults()).getAsJsonObject();
+		if (loaded == null || !loaded.isJsonObject()) {
+			return merged;
+		}
+		for (var entry : loaded.getAsJsonObject().entrySet()) {
+			merged.add(entry.getKey(), entry.getValue());
+		}
+		return merged;
 	}
 
 	private static LodestoneConfig sanitize(LodestoneConfig config) {
