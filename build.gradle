@@ -34,7 +34,18 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.withType(JavaExec).configureEach {
-	for (String permissionProperty : ['lodestone_teleport.use', 'lodestone_teleport.rename']) {
+	for (String permissionProperty : [
+		'lodestone_teleport.use',
+		'lodestone_teleport.rename',
+		'lodestone_teleport.create',
+		'lodestone_teleport.remove',
+		'lodestone_teleport.admin',
+		'lodestone_teleport.bypass_cost',
+		'lodestone_teleport.bypass_cooldown',
+		'lodestone_teleport.bypass_max_warps',
+		'lodestone_teleport.mode.all',
+		'lodestone_teleport.mode.discover'
+	]) {
 		def value = providers.gradleProperty(permissionProperty).orElse(providers.systemProperty(permissionProperty))
 		if (value.present) {
 			systemProperty permissionProperty, value.get()

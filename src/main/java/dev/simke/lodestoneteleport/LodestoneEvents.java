@@ -19,16 +19,19 @@ import net.minecraft.world.phys.BlockHitResult;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class LodestoneEvents {
 	private static final List<PendingPlacement> PENDING_PLACEMENTS = new ArrayList<>();
+	private static final List<PendingRemoval> PENDING_REMOVALS = new ArrayList<>();
 
 	private LodestoneEvents() {
 	}
 
 	public static void register() {
 		UseBlockCallback.EVENT.register(LodestoneEvents::onUseBlock);
+		PlayerBlockBreakEvents.BEFORE.register(LodestoneEvents::beforeBlockBreak);
 		PlayerBlockBreakEvents.AFTER.register(LodestoneEvents::afterBlockBreak);
 		ServerTickEvents.END_SERVER_TICK.register(LodestoneEvents::onEndServerTick);
 	}
@@ -45,8 +48,12 @@ public final class LodestoneEvents {
 				return InteractionResult.SUCCESS_SERVER;
 			}
 			LodestoneSavedData data = LodestoneSavedData.from(level);
-			LodestoneLocation location = data.at(level.dimension(), hit.getBlockPos())
-				.orElseGet(() -> data.register(level.dimension(), hit.getBlockPos(), player.getUUID(), player.getName().getString()));
+			Optional<LodestoneLocation> existing = data.at(level.dimension(), hit.getBlockPos());
+			if (existing.isEmpty() && !LodestonePermissions.canCreate(serverPlayer)) {
+				serverPlayer.sendSystemMessage(LodestoneText.text("error.no_permission.create", "You do not have permission to register lodestones."));
+				return InteractionResult.SUCCESS_SERVER;
+			}
+			LodestoneLocation location = existing.orElseGet(() -> data.register(level.dimension(), hit.getBlockPos(), player.getUUID(), player.getName().getString()));
 			LodestoneUi.showDestinations(serverPlayer, location);
 			return InteractionResult.SUCCESS_SERVER;
 		}
@@ -59,6 +66,21 @@ public final class LodestoneEvents {
 		return InteractionResult.PASS;
 	}
 
+	private static boolean beforeBlockBreak(Level level, Player player, BlockPos pos, BlockState state, net.minecraft.world.level.block.entity.BlockEntity blockEntity) {
+		if (level.isClientSide() || !state.is(Blocks.LODESTONE) || !(player instanceof ServerPlayer serverPlayer)) {
+			return true;
+		}
+		if (LodestoneSavedData.from(level).at(level.dimension(), pos).isEmpty()) {
+			return true;
+		}
+		if (LodestonePermissions.canRemove(serverPlayer)) {
+			PENDING_REMOVALS.add(new PendingRemoval(level.dimension(), pos.immutable()));
+			return true;
+		}
+		serverPlayer.sendSystemMessage(LodestoneText.text("error.no_permission.remove", "You do not have permission to remove registered lodestones."));
+		return false;
+	}
+
 	private static void afterBlockBreak(Level level, Player player, BlockPos pos, BlockState state, net.minecraft.world.level.block.entity.BlockEntity blockEntity) {
 		if (!level.isClientSide() && state.is(Blocks.LODESTONE)) {
 			LodestoneSavedData.from(level).remove(level.dimension(), pos);
@@ -67,6 +89,7 @@ public final class LodestoneEvents {
 
 	private static void onEndServerTick(MinecraftServer server) {
 		LodestoneTeleportCasts.tick(server);
+		processPendingRemovals(server);
 
 		Iterator<PendingPlacement> iterator = PENDING_PLACEMENTS.iterator();
 		while (iterator.hasNext()) {
@@ -80,6 +103,10 @@ public final class LodestoneEvents {
 			ServerLevel level = (ServerLevel) player.level();
 			BlockPos placed = findPlacedLodestone(level, pending.clicked(), pending.adjacent());
 			if (placed == null) {
+				continue;
+			}
+			if (!LodestonePermissions.canCreate(player)) {
+				player.sendSystemMessage(LodestoneText.text("error.no_permission.create", "You do not have permission to register lodestones."));
 				continue;
 			}
 
@@ -103,6 +130,25 @@ public final class LodestoneEvents {
 		return null;
 	}
 
+	private static void processPendingRemovals(MinecraftServer server) {
+		Iterator<PendingRemoval> iterator = PENDING_REMOVALS.iterator();
+		while (iterator.hasNext()) {
+			PendingRemoval pending = iterator.next();
+			iterator.remove();
+
+			ServerLevel level = server.getLevel(pending.dimension());
+			if (level == null) {
+				continue;
+			}
+			if (!level.getBlockState(pending.pos()).is(Blocks.LODESTONE)) {
+				LodestoneSavedData.from(level).remove(pending.dimension(), pending.pos());
+			}
+		}
+	}
+
 	private record PendingPlacement(UUID playerUuid, BlockPos clicked, BlockPos adjacent, boolean rename) {
+	}
+
+	private record PendingRemoval(net.minecraft.resources.ResourceKey<Level> dimension, BlockPos pos) {
 	}
 }

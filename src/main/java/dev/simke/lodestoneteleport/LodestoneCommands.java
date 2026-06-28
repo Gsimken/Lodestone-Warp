@@ -77,7 +77,12 @@ public final class LodestoneCommands {
 					.then(Commands.argument("id", StringArgumentType.word())
 						.then(Commands.argument("name", MessageArgument.message())
 							.executes(context -> rename(context.getSource(), StringArgumentType.getString(context, "id"), MessageArgument.getMessage(context, "name").getString())))))
+				.then(Commands.literal("remove")
+					.requires(LodestonePermissions::canRemove)
+					.then(Commands.argument("id", StringArgumentType.word())
+						.executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "id")))))
 				.then(Commands.literal("list")
+					.requires(LodestonePermissions::canAdmin)
 					.executes(context -> list(context.getSource())));
 	}
 
@@ -124,7 +129,7 @@ public final class LodestoneCommands {
 			source.sendFailure(LodestoneText.text("error.need_near_lodestone", "You must be near a registered lodestone to teleport."));
 			return 0;
 		}
-		long cooldown = LodestoneTeleportCooldowns.remainingSeconds(player);
+		long cooldown = LodestonePermissions.canBypassCooldown(source) ? 0L : LodestoneTeleportCooldowns.remainingSeconds(player);
 		if (cooldown > 0L) {
 			source.sendFailure(LodestoneText.text("error.cooldown", "You must wait %s seconds before teleporting again.", cooldown));
 			return 0;
@@ -138,6 +143,7 @@ public final class LodestoneCommands {
 			return 1;
 		}
 
+		boolean bypassCost = LodestonePermissions.canBypassCost(source);
 		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
 		if (!hasCost(player, cost)) {
 			source.sendFailure(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)));
@@ -151,8 +157,12 @@ public final class LodestoneCommands {
 			return 0;
 		}
 
-		consumeCost(teleportedPlayer, cost);
-		LodestoneTeleportCooldowns.mark(teleportedPlayer);
+		if (!bypassCost) {
+			consumeCost(teleportedPlayer, cost);
+		}
+		if (!LodestonePermissions.canBypassCooldown(teleportedPlayer)) {
+			LodestoneTeleportCooldowns.mark(teleportedPlayer);
+		}
 		LodestoneTeleportEffects.after(teleportedPlayer);
 		teleportedPlayer.sendSystemMessage(LodestoneText.text(
 			"arrived",
@@ -242,6 +252,27 @@ public final class LodestoneCommands {
 		return 1;
 	}
 
+	static int remove(CommandSourceStack source, String id) {
+		if (!LodestonePermissions.canRemove(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.remove", "You do not have permission to remove registered lodestones."));
+			return 0;
+		}
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
+			return 0;
+		}
+		ServerLevel level = source.getServer().getLevel(location.get().dimension());
+		if (level != null && level.getBlockState(location.get().pos()).is(Blocks.LODESTONE)) {
+			source.sendFailure(LodestoneText.text("error.remove_existing_lodestone", "Break the lodestone block before removing this entry."));
+			return 0;
+		}
+		data.remove(location.get().dimension(), location.get().pos());
+		source.sendSuccess(() -> LodestoneText.text("removed", "Removed lodestone entry: %s.", location.get().displayName()), false);
+		return 1;
+	}
+
 	private static int list(CommandSourceStack source) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if (data.all().isEmpty()) {
@@ -250,9 +281,30 @@ public final class LodestoneCommands {
 		}
 		source.sendSystemMessage(LodestoneText.text("list.header", "Registered lodestones:"));
 		for (LodestoneLocation location : data.all()) {
-			source.sendSystemMessage(LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayName(), LodestoneText.dimension(location.dimension())));
+			source.sendSystemMessage(listEntry(location));
 		}
 		return data.all().size();
+	}
+
+	private static Component listEntry(LodestoneLocation location) {
+		return LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayName(), LodestoneText.dimension(location.dimension()))
+			.copy()
+			.append(Component.literal(" "))
+			.append(actionButton("button.teleport", "[TP]", ChatFormatting.AQUA, "tp", location.id()))
+			.append(Component.literal(" "))
+			.append(actionButton("button.rename_short", "[\u270e]", ChatFormatting.GOLD, "edit", location.id()))
+			.append(Component.literal(" "))
+			.append(actionButton("button.remove", "[X]", ChatFormatting.RED, "remove", location.id()));
+	}
+
+	private static Component actionButton(String textKey, String fallback, ChatFormatting color, String action, String id) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", action);
+		payload.putString("id", id);
+		return LodestoneText.text(textKey, fallback).withStyle(style -> style
+			.withColor(color)
+			.withUnderlined(true)
+			.withClickEvent(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))));
 	}
 
 	private static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
@@ -294,7 +346,7 @@ public final class LodestoneCommands {
 	}
 
 	private static boolean hasCost(ServerPlayer player, LodestoneTeleportCost cost) {
-		if (cost.amount() <= 0 || player.isCreative()) {
+		if (cost.amount() <= 0 || player.isCreative() || LodestonePermissions.canBypassCost(player)) {
 			return true;
 		}
 		Item costItem = cost.item();

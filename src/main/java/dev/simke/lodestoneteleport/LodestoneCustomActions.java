@@ -47,6 +47,10 @@ public final class LodestoneCustomActions {
 					LodestoneCommands.rename(player.createCommandSourceStack(), id, readField(payload, "name"));
 					yield true;
 				}
+				case "remove" -> {
+					LodestoneCommands.remove(player.createCommandSourceStack(), id);
+					yield true;
+				}
 				default -> false;
 			};
 		} catch (CommandSyntaxException exception) {
