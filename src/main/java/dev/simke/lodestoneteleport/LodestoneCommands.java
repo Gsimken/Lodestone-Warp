@@ -138,6 +138,14 @@ public final class LodestoneCommands {
 			source.sendFailure(LodestoneText.text("error.cooldown", "You must wait %s seconds before teleporting again.", cooldown));
 			return 0;
 		}
+
+		boolean bypassCost = LodestonePermissions.canBypassCost(source);
+		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
+		if (!hasCost(player, cost)) {
+			source.sendFailure(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)));
+			return 0;
+		}
+
 		if (!fromCast && LodestoneConfig.get().teleportCastSeconds > 0) {
 			if (LodestoneTeleportCasts.isCasting(player)) {
 				source.sendFailure(LodestoneText.text("teleport.cast_already", "You are already casting a teleport."));
@@ -145,13 +153,6 @@ public final class LodestoneCommands {
 			}
 			LodestoneTeleportCasts.start(player, location.id());
 			return 1;
-		}
-
-		boolean bypassCost = LodestonePermissions.canBypassCost(source);
-		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
-		if (!hasCost(player, cost)) {
-			source.sendFailure(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)));
-			return 0;
 		}
 
 		LodestoneTeleportEffects.before(player);
