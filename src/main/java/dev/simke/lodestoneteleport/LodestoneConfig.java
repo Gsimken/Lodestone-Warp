@@ -28,6 +28,12 @@ public final class LodestoneConfig {
 	public boolean allowCrossDimension = true;
 	public int maxDialogDestinations = 24;
 	public int teleportSourceRange = 8;
+	public int teleportCastSeconds = 2;
+	public double teleportCastMoveTolerance = 0.2D;
+	public int teleportCooldownSeconds = 3;
+	public boolean teleportEffects = true;
+	public String vanillaTeleportEffect = "end";
+	public String modTeleportEffect = "lodestone";
 	public boolean requirePermissions = false;
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
@@ -79,6 +85,11 @@ public final class LodestoneConfig {
 		config.maxCost = Math.max(0, config.maxCost);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
 		config.teleportSourceRange = Math.max(0, config.teleportSourceRange);
+		config.teleportCastSeconds = Math.max(0, config.teleportCastSeconds);
+		config.teleportCastMoveTolerance = Math.max(0.0D, config.teleportCastMoveTolerance);
+		config.teleportCooldownSeconds = Math.max(0, config.teleportCooldownSeconds);
+		config.vanillaTeleportEffect = cleanEffect(config.vanillaTeleportEffect, "end");
+		config.modTeleportEffect = cleanEffect(config.modTeleportEffect, "lodestone");
 		config.commandName = cleanCommandName(config.commandName, "warp");
 		config.fallbackCommandName = cleanCommandName(config.fallbackCommandName, "lodestone_warp");
 		config.serverLanguage = cleanLanguage(config.serverLanguage);
@@ -104,6 +115,17 @@ public final class LodestoneConfig {
 		return switch (clean) {
 			case "es", "es_es", "spanish" -> "es_es";
 			default -> "en_us";
+		};
+	}
+
+	private static String cleanEffect(String value, String fallback) {
+		if (value == null) {
+			return fallback;
+		}
+		String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
+		return switch (clean) {
+			case "none", "off", "end", "lodestone" -> clean;
+			default -> fallback;
 		};
 	}
 

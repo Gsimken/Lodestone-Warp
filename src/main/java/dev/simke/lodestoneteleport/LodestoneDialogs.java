@@ -72,7 +72,7 @@ public final class LodestoneDialogs {
 			destinationCount++;
 		}
 		if (canRename) {
-			buttons.add(customButton(LodestoneText.text("button.rename_current", "Renombrar este warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
+			buttons.add(customButton(LodestoneText.text("button.rename_current", "Rename this warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
 			buttons.add(spacerButton());
 		}
 
@@ -83,24 +83,24 @@ public final class LodestoneDialogs {
 			false,
 			DialogAction.CLOSE,
 			List.of(new PlainMessage(bodyText(current, cleanQuery, destinationCount == 0), INPUT_WIDTH)),
-			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Buscar"), true, cleanQuery, 48, Optional.empty())))
+			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Search"), true, cleanQuery, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), columns));
 	}
 
 	public static void showRename(ServerPlayer player, LodestoneLocation location) {
 		CommonDialogData common = new CommonDialogData(
-			LodestoneText.text("rename.title", "Nombrar lodestone"),
+			LodestoneText.text("rename.title", "Name lodestone"),
 			Optional.empty(),
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(LodestoneText.text("rename.body", "Elige un nombre para esta lodestone."), INPUT_WIDTH)),
-			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.text("input.name", "Nombre"), true, location.displayName(), 48, Optional.empty())))
+			List.of(new PlainMessage(LodestoneText.text("rename.body", "Choose a name for this lodestone."), INPUT_WIDTH)),
+			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.text("input.name", "Name"), true, location.displayName(), 48, Optional.empty())))
 		);
 
 		ActionButton confirm = new ActionButton(
-			new CommonButtonData(LodestoneText.text("button.save", "Guardar"), INPUT_WIDTH),
+			new CommonButtonData(LodestoneText.text("button.save", "Save"), INPUT_WIDTH),
 			Optional.of(renameAction(location.id()))
 		);
 		send(player, new NoticeDialog(common, confirm));
@@ -146,7 +146,7 @@ public final class LodestoneDialogs {
 	}
 
 	private static ActionButton editButton(LodestoneLocation location) {
-		return editButton(location, LodestoneText.text("button.rename", "Renombrar %s", location.displayName()));
+		return editButton(location, LodestoneText.text("button.rename", "Rename %s", location.displayName()));
 	}
 
 	private static ActionButton editButton(LodestoneLocation location, Component tooltip) {
@@ -165,7 +165,7 @@ public final class LodestoneDialogs {
 		payload.putString("action", "search");
 		payload.putString("id", id);
 		return new ActionButton(
-			new CommonButtonData(LodestoneText.text("button.search", "Buscar ubicacion").withStyle(ChatFormatting.AQUA), DESTINATION_BUTTON_WIDTH),
+			new CommonButtonData(LodestoneText.text("button.search", "Search location").withStyle(ChatFormatting.AQUA), DESTINATION_BUTTON_WIDTH),
 			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
 		);
 	}
@@ -189,9 +189,9 @@ public final class LodestoneDialogs {
 
 	private static Component bodyText(LodestoneLocation current, String query, boolean noResults) {
 		if (noResults && !query.isBlank()) {
-			return LodestoneText.text("menu.body.no_results", "Desde %s\nSin resultados para: %s", current.displayName(), query);
+			return LodestoneText.text("menu.body.no_results", "From %s\nNo results for: %s", current.displayName(), query);
 		}
-		return LodestoneText.text("menu.body", "Desde %s", current.displayName());
+		return LodestoneText.text("menu.body", "From %s", current.displayName());
 	}
 
 	private static String destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {

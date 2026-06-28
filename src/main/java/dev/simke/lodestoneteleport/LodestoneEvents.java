@@ -41,7 +41,7 @@ public final class LodestoneEvents {
 		BlockState clickedState = level.getBlockState(hit.getBlockPos());
 		if (clickedState.is(Blocks.LODESTONE) && player.getItemInHand(hand).isEmpty()) {
 			if (!LodestonePermissions.canUse(serverPlayer)) {
-				serverPlayer.sendSystemMessage(LodestoneText.text("error.no_permission.use", "No tienes permiso para usar lodestones."));
+				serverPlayer.sendSystemMessage(LodestoneText.text("error.no_permission.use", "You do not have permission to use lodestones."));
 				return InteractionResult.SUCCESS_SERVER;
 			}
 			LodestoneSavedData data = LodestoneSavedData.from(level);
@@ -66,6 +66,8 @@ public final class LodestoneEvents {
 	}
 
 	private static void onEndServerTick(MinecraftServer server) {
+		LodestoneTeleportCasts.tick(server);
+
 		Iterator<PendingPlacement> iterator = PENDING_PLACEMENTS.iterator();
 		while (iterator.hasNext()) {
 			PendingPlacement pending = iterator.next();
@@ -82,11 +84,11 @@ public final class LodestoneEvents {
 			}
 
 			LodestoneLocation location = LodestoneSavedData.from(level).register(level.dimension(), placed, player.getUUID(), player.getName().getString());
-			player.sendSystemMessage(LodestoneText.text("registered", "Lodestone registrada: %s", location.displayName()));
+			player.sendSystemMessage(LodestoneText.text("registered", "Registered lodestone: %s", location.displayName()));
 			if (pending.rename() && LodestonePermissions.canRename(player)) {
 				LodestoneUi.showRename(player, location);
 			} else if (pending.rename()) {
-				player.sendSystemMessage(LodestoneText.text("error.no_permission.rename", "No tienes permiso para renombrar lodestones."));
+				player.sendSystemMessage(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
 			}
 		}
 	}

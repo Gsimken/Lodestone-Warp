@@ -20,6 +20,12 @@ config/lodestone_teleport.json
   "allowCrossDimension": true,
   "maxDialogDestinations": 24,
   "teleportSourceRange": 8,
+  "teleportCastSeconds": 2,
+  "teleportCastMoveTolerance": 0.2,
+  "teleportCooldownSeconds": 3,
+  "teleportEffects": true,
+  "vanillaTeleportEffect": "end",
+  "modTeleportEffect": "lodestone",
   "requirePermissions": false,
   "commandName": "warp",
   "fallbackCommandName": "lodestone_warp",
@@ -67,6 +73,60 @@ Players must be near a registered Lodestone before teleporting.
 
 - `8`: default radius in blocks.
 - `0`: disables this requirement.
+
+`teleportCooldownSeconds`
+
+Server-side cooldown after a successful teleport.
+
+- `3`: default cooldown in seconds.
+- `0`: disables cooldown.
+- Any positive value is measured in seconds.
+
+`teleportCastSeconds`
+
+Stand-still cast time before teleporting.
+
+- `2`: default cast duration in seconds.
+- `0`: disables the cast and teleports immediately.
+
+`teleportCastMoveTolerance`
+
+How far the player can move during the cast before it is cancelled.
+
+- `0.2`: default tolerance in blocks.
+- `0`: requires the player to stay exactly still.
+
+## Teleport Effects
+
+`teleportEffects`
+
+Enables or disables teleport particles and sounds.
+
+`vanillaTeleportEffect`
+
+Effect preset used for vanilla clients.
+
+Default:
+
+```json
+"vanillaTeleportEffect": "end"
+```
+
+`modTeleportEffect`
+
+Effect preset used when the player has Lodestone Warps installed on the client.
+
+Default:
+
+```json
+"modTeleportEffect": "lodestone"
+```
+
+Supported presets:
+
+- `end`: End/portal-style particles and Enderman teleport sound.
+- `lodestone`: brighter Lodestone-style particles using portal, end rod, and enchant effects.
+- `none` or `off`: disables that preset.
 
 ## UI
 

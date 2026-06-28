@@ -54,8 +54,8 @@ public final class LodestoneWarpScreen extends Screen {
 		int left = (this.width - PANEL_WIDTH) / 2;
 		int top = top();
 
-		this.searchBox = new EditBox(this.font, left, top + 58, PANEL_WIDTH, 20, LodestoneText.text("input.search", "Buscar ubicacion"));
-		this.searchBox.setHint(LodestoneText.text("input.search", "Buscar ubicacion"));
+		this.searchBox = new EditBox(this.font, left, top + 58, PANEL_WIDTH, 20, LodestoneText.text("input.search", "Search"));
+		this.searchBox.setHint(LodestoneText.text("input.search", "Search"));
 		this.searchBox.setMaxLength(64);
 		this.searchBox.setValue(this.query);
 		this.searchBox.setResponder(value -> {
@@ -66,7 +66,7 @@ public final class LodestoneWarpScreen extends Screen {
 		addRenderableWidget(this.searchBox);
 
 		if (this.canRename) {
-			addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Renombrar este warp"), button -> {
+			addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Rename this warp"), button -> {
 				this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, this.currentId, this.currentName, this.currentId));
 			}).bounds(left, this.height - 38, PANEL_WIDTH, 20).build());
 		}
@@ -82,7 +82,7 @@ public final class LodestoneWarpScreen extends Screen {
 		graphics.fill(left - 10, top - 18, left + PANEL_WIDTH + 10, this.height - 12, 0xCC101010);
 		graphics.outline(left - 10, top - 18, PANEL_WIDTH + 20, this.height - top + 6, 0xFF595959);
 		graphics.centeredText(this.font, this.title, this.width / 2, top - 9, 0xFFFFFFFF);
-		graphics.text(this.font, LodestoneText.text("client.current_name", "Nombre warp: %s", this.currentName), left, top + 14, 0xFFFFD37A);
+		graphics.text(this.font, LodestoneText.text("client.current_name", "Warp name: %s", this.currentName), left, top + 14, 0xFFFFD37A);
 		graphics.text(this.font, LodestoneText.text("client.current_coords", "Coords Warp: %s", this.currentSubtitle), left, top + 31, 0xFFA8A8A8);
 		drawTableHeader(graphics, left, top + 83);
 		super.extractRenderState(graphics, mouseX, mouseY, partialTick);
@@ -132,7 +132,7 @@ public final class LodestoneWarpScreen extends Screen {
 		}
 
 		if (shown == 0) {
-			Button empty = Button.builder(LodestoneText.text("menu.empty", "No hay otros destinos."), button -> {
+			Button empty = Button.builder(LodestoneText.text("menu.empty", "No other destinations."), button -> {
 			}).bounds(left, y, PANEL_WIDTH, ROW_HEIGHT).build();
 			empty.active = false;
 			this.destinationButtons.add(empty);
@@ -156,17 +156,17 @@ public final class LodestoneWarpScreen extends Screen {
 
 	private void addPaginationButtons(int left, int totalPages) {
 		int y = this.height - 66;
-		Button previous = Button.builder(LodestoneText.text("client.page.previous", "Anterior"), button -> {
+		Button previous = Button.builder(LodestoneText.text("client.page.previous", "Previous"), button -> {
 			this.page = Math.max(0, this.page - 1);
 			refreshDestinations();
 		}).bounds(left, y, 100, 20).build();
 		previous.active = this.page > 0;
 
-		Button label = Button.builder(LodestoneText.text("client.page", "Pagina %s / %s", this.page + 1, totalPages), button -> {
+		Button label = Button.builder(LodestoneText.text("client.page", "Page %s / %s", this.page + 1, totalPages), button -> {
 		}).bounds(left + 110, y, PANEL_WIDTH - 220, 20).build();
 		label.active = false;
 
-		Button next = Button.builder(LodestoneText.text("client.page.next", "Siguiente"), button -> {
+		Button next = Button.builder(LodestoneText.text("client.page.next", "Next"), button -> {
 			this.page = Math.min(totalPages - 1, this.page + 1);
 			refreshDestinations();
 		}).bounds(left + PANEL_WIDTH - 100, y, 100, 20).build();
@@ -181,10 +181,10 @@ public final class LodestoneWarpScreen extends Screen {
 	}
 
 	private void drawTableHeader(GuiGraphicsExtractor graphics, int left, int y) {
-		graphics.text(this.font, LodestoneText.text("client.column.name", "Nombre"), left + NAME_X, y, 0xFF8DEEFF);
+		graphics.text(this.font, LodestoneText.text("client.column.name", "Name"), left + NAME_X, y, 0xFF8DEEFF);
 		graphics.text(this.font, LodestoneText.text("client.column.coords", "Coords"), left + COORDS_X, y, 0xFF8DEEFF);
 		graphics.text(this.font, LodestoneText.text("client.column.dimension", "Dimension"), left + DIMENSION_X, y, 0xFF8DEEFF);
-		graphics.text(this.font, LodestoneText.text("client.column.cost", "Costo"), left + COST_X, y, 0xFF8DEEFF);
+		graphics.text(this.font, LodestoneText.text("client.column.cost", "Cost"), left + COST_X, y, 0xFF8DEEFF);
 	}
 
 	private void drawRows(GuiGraphicsExtractor graphics, int left) {

@@ -27,6 +27,10 @@ The most up-to-date documentation is kept in the wiki:
 - Pagination in the custom mod UI.
 - Rename Lodestones from the UI.
 - Teleport cost with configurable item and dynamic distance scaling.
+- Stand-still teleport cast before travel.
+- Server-side teleport cooldown.
+- Configurable teleport particles and sounds.
+- Separate vanilla and mod-client teleport effect presets.
 - Item icons for cost display in the custom mod UI.
 - Cross-dimensional teleport support.
 - Configurable requirement to stand near a registered Lodestone before teleporting.

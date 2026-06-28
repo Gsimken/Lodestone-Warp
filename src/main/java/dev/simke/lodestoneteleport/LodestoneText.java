@@ -86,6 +86,10 @@ public final class LodestoneText {
 			case "error.destination_removed" -> "The destination no longer has a lodestone and was removed.";
 			case "error.need_cost" -> "You need %s.";
 			case "error.need_near_lodestone" -> "You must be near a registered lodestone to teleport.";
+			case "error.cooldown" -> "You must wait %s seconds before teleporting again.";
+			case "teleport.cast_start" -> "Casting teleport... stand still for %s seconds.";
+			case "teleport.cast_cancelled" -> "Teleport cancelled: you moved.";
+			case "teleport.cast_already" -> "You are already casting a teleport.";
 			case "error.no_permission.use" -> "You do not have permission to use lodestones.";
 			case "error.no_permission.rename" -> "You do not have permission to rename lodestones.";
 			case "error.lodestone_not_found" -> "I could not find that lodestone.";

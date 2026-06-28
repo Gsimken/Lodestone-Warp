@@ -72,10 +72,10 @@ public final class LodestoneNetworking {
 						refreshAfterRename(context.player(), data.getStringOr("returnId", ""));
 					}
 					case "edit" -> LodestoneCommands.edit(context.player().createCommandSourceStack(), id);
-					default -> context.player().sendSystemMessage(LodestoneText.text("error.action_failed", "No se pudo ejecutar la accion de lodestone."));
+					default -> context.player().sendSystemMessage(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
 				}
 			} catch (CommandSyntaxException exception) {
-				context.player().sendSystemMessage(LodestoneText.text("error.action_failed", "No se pudo ejecutar la accion de lodestone."));
+				context.player().sendSystemMessage(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
 			}
 		});
 	}

@@ -24,7 +24,7 @@ public final class LodestoneCustomActions {
 		String action = payload.getStringOr("action", "");
 		String id = payload.getStringOr("id", "");
 		if (id.isBlank()) {
-			player.sendSystemMessage(LodestoneText.text("error.invalid_action", "Accion de lodestone invalida."));
+			player.sendSystemMessage(LodestoneText.text("error.invalid_action", "Invalid lodestone action."));
 			return true;
 		}
 
@@ -50,7 +50,7 @@ public final class LodestoneCustomActions {
 				default -> false;
 			};
 		} catch (CommandSyntaxException exception) {
-			player.sendSystemMessage(LodestoneText.text("error.action_failed", "No se pudo ejecutar la accion de lodestone."));
+			player.sendSystemMessage(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
 			return true;
 		}
 	}

@@ -82,9 +82,21 @@ public final class LodestoneCommands {
 	}
 
 	static int teleport(CommandSourceStack source, String destination) throws CommandSyntaxException {
+		return teleport(source, destination, false);
+	}
+
+	static void completeCast(ServerPlayer player, String destination) {
+		try {
+			teleport(player.createCommandSourceStack(), destination, true);
+		} catch (CommandSyntaxException exception) {
+			player.sendSystemMessage(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
+		}
+	}
+
+	private static int teleport(CommandSourceStack source, String destination, boolean fromCast) throws CommandSyntaxException {
 		ServerPlayer player = source.getPlayerOrException();
 		if (!LodestonePermissions.canUse(source)) {
-			source.sendFailure(LodestoneText.text("error.no_permission.use", "No tienes permiso para usar lodestones."));
+			source.sendFailure(LodestoneText.text("error.no_permission.use", "You do not have permission to use lodestones."));
 			return 0;
 		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
@@ -96,39 +108,55 @@ public final class LodestoneCommands {
 		LodestoneLocation location = maybeLocation.get();
 		ServerLevel destinationLevel = source.getServer().getLevel(location.dimension());
 		if (destinationLevel == null) {
-			source.sendFailure(LodestoneText.text("error.dimension_unloaded", "La dimension del destino no esta cargada."));
+			source.sendFailure(LodestoneText.text("error.dimension_unloaded", "The destination dimension is not loaded."));
 			return 0;
 		}
 		if (!LodestoneConfig.get().allowCrossDimension && !player.level().dimension().equals(location.dimension())) {
-			source.sendFailure(LodestoneText.text("error.cross_dimension_disabled", "El teleport entre dimensiones esta desactivado."));
+			source.sendFailure(LodestoneText.text("error.cross_dimension_disabled", "Cross-dimension teleport is disabled."));
 			return 0;
 		}
 		if (!destinationLevel.getBlockState(location.pos()).is(Blocks.LODESTONE)) {
 			data.remove(location.dimension(), location.pos());
-			source.sendFailure(LodestoneText.text("error.destination_removed", "El destino ya no tiene una lodestone y fue eliminado."));
+			source.sendFailure(LodestoneText.text("error.destination_removed", "The destination no longer has a lodestone and was removed."));
 			return 0;
 		}
 		if (!isNearRegisteredLodestone(player, data)) {
-			source.sendFailure(LodestoneText.text("error.need_near_lodestone", "Debes estar cerca de una lodestone registrada para teletransportarte."));
+			source.sendFailure(LodestoneText.text("error.need_near_lodestone", "You must be near a registered lodestone to teleport."));
 			return 0;
+		}
+		long cooldown = LodestoneTeleportCooldowns.remainingSeconds(player);
+		if (cooldown > 0L) {
+			source.sendFailure(LodestoneText.text("error.cooldown", "You must wait %s seconds before teleporting again.", cooldown));
+			return 0;
+		}
+		if (!fromCast && LodestoneConfig.get().teleportCastSeconds > 0) {
+			if (LodestoneTeleportCasts.isCasting(player)) {
+				source.sendFailure(LodestoneText.text("teleport.cast_already", "You are already casting a teleport."));
+				return 0;
+			}
+			LodestoneTeleportCasts.start(player, location.id());
+			return 1;
 		}
 
 		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
 		if (!hasCost(player, cost)) {
-			source.sendFailure(LodestoneText.text("error.need_cost", "Necesitas %s.", LodestoneText.cost(cost)));
+			source.sendFailure(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)));
 			return 0;
 		}
 
+		LodestoneTeleportEffects.before(player);
 		ServerPlayer teleportedPlayer = teleportPlayer(player, destinationLevel, location);
 		if (teleportedPlayer == null) {
-			source.sendFailure(LodestoneText.text("error.action_failed", "No se pudo ejecutar la accion de lodestone."));
+			source.sendFailure(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
 			return 0;
 		}
 
 		consumeCost(teleportedPlayer, cost);
+		LodestoneTeleportCooldowns.mark(teleportedPlayer);
+		LodestoneTeleportEffects.after(teleportedPlayer);
 		teleportedPlayer.sendSystemMessage(LodestoneText.text(
 			"arrived",
-			"Has llegado a \"%s\" (%s, %s, %s, %s).",
+			"You arrived at \"%s\" (%s, %s, %s, %s).",
 			location.displayName(),
 			location.pos().getX(),
 			location.pos().getY(),
@@ -158,12 +186,12 @@ public final class LodestoneCommands {
 			sendDuplicateDestinationMessage(source, clean, matches);
 			return Optional.empty();
 		}
-		source.sendFailure(LodestoneText.text("error.missing_destination", "Ese destino ya no existe."));
+		source.sendFailure(LodestoneText.text("error.missing_destination", "That destination no longer exists."));
 		return Optional.empty();
 	}
 
 	private static void sendDuplicateDestinationMessage(CommandSourceStack source, String name, List<LodestoneLocation> matches) {
-		source.sendFailure(LodestoneText.text("error.duplicate_destination_name", "Hay mas de una lodestone llamada \"%s\". Elige una:", name));
+		source.sendFailure(LodestoneText.text("error.duplicate_destination_name", "More than one lodestone is named \"%s\". Choose one:", name));
 		for (LodestoneLocation location : matches) {
 			CompoundTag payload = new CompoundTag();
 			payload.putString("action", "tp");
@@ -185,29 +213,29 @@ public final class LodestoneCommands {
 
 	static int rename(CommandSourceStack source, String id, String name) {
 		if (!LodestonePermissions.canRename(source)) {
-			source.sendFailure(LodestoneText.text("error.no_permission.rename", "No tienes permiso para renombrar lodestones."));
+			source.sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
 			return 0;
 		}
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if (!data.rename(id, name)) {
-			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "No encontre esa lodestone."));
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
 		String cleanName = data.get(id).map(LodestoneLocation::displayName).orElse(name.trim());
-		source.sendSuccess(() -> LodestoneText.text("renamed", "Lodestone renombrada a %s.", cleanName), false);
+		source.sendSuccess(() -> LodestoneText.text("renamed", "Lodestone renamed to %s.", cleanName), false);
 		return 1;
 	}
 
 	static int edit(CommandSourceStack source, String id) throws CommandSyntaxException {
 		ServerPlayer player = source.getPlayerOrException();
 		if (!LodestonePermissions.canRename(source)) {
-			source.sendFailure(LodestoneText.text("error.no_permission.rename", "No tienes permiso para renombrar lodestones."));
+			source.sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
 			return 0;
 		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
 		Optional<LodestoneLocation> location = data.get(id);
 		if (location.isEmpty()) {
-			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "No encontre esa lodestone."));
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
 		LodestoneDialogs.showRename(player, location.get());
@@ -217,10 +245,10 @@ public final class LodestoneCommands {
 	private static int list(CommandSourceStack source) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if (data.all().isEmpty()) {
-			source.sendSystemMessage(LodestoneText.text("list.empty", "No hay lodestones registradas."));
+			source.sendSystemMessage(LodestoneText.text("list.empty", "No registered lodestones."));
 			return 1;
 		}
-		source.sendSystemMessage(LodestoneText.text("list.header", "Lodestones registradas:"));
+		source.sendSystemMessage(LodestoneText.text("list.header", "Registered lodestones:"));
 		for (LodestoneLocation location : data.all()) {
 			source.sendSystemMessage(LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayName(), LodestoneText.dimension(location.dimension())));
 		}
