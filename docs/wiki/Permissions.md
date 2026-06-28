@@ -9,6 +9,14 @@ Lodestone Warps uses Fabric Permissions API and is compatible with LuckPerms.
 ```text
 lodestone_teleport.use
 lodestone_teleport.rename
+lodestone_teleport.create
+lodestone_teleport.remove
+lodestone_teleport.admin
+lodestone_teleport.bypass_cost
+lodestone_teleport.bypass_cooldown
+lodestone_teleport.bypass_max_warps
+lodestone_teleport.mode.all
+lodestone_teleport.mode.discover
 ```
 
 ## Use Permission
@@ -33,6 +41,55 @@ Allows:
 - using `/warp rename <id> <name>`
 - using `/warp edit <id>`
 
+## Create Permission
+
+`lodestone_teleport.create`
+
+Allows:
+
+- registering Lodestones when placed
+- auto-registering old or untracked Lodestones when interacted with
+
+## Remove Permission
+
+`lodestone_teleport.remove`
+
+Allows:
+
+- breaking registered Lodestones and removing them from the warp network
+
+## Admin Permission
+
+`lodestone_teleport.admin`
+
+Allows:
+
+- using diagnostic/admin commands such as `/warp list`
+
+## Bypass Permissions
+
+`lodestone_teleport.bypass_cost`
+
+Allows teleporting without paying the configured cost.
+
+`lodestone_teleport.bypass_cooldown`
+
+Allows teleporting without waiting for teleport cooldown.
+
+`lodestone_teleport.bypass_max_warps`
+
+Reserved for the future max warps limit.
+
+## Mode Permissions
+
+`lodestone_teleport.mode.all`
+
+Reserved for the future `all` network visibility mode.
+
+`lodestone_teleport.mode.discover`
+
+Reserved for the future `discover` network visibility mode.
+
 ## LuckPerms Examples
 
 Give everyone warp usage:
@@ -54,6 +111,13 @@ Give one player both permissions:
 /lp user PlayerName permission set lodestone_teleport.rename true
 ```
 
+Allow admins to bypass cost and cooldown:
+
+```mcfunction
+/lp group admin permission set lodestone_teleport.bypass_cost true
+/lp group admin permission set lodestone_teleport.bypass_cooldown true
+```
+
 ## Disable Permission Checks
 
 For open or small servers:
@@ -62,4 +126,6 @@ For open or small servers:
 "requirePermissions": false
 ```
 
-When disabled, everyone can use and rename Lodestones.
+When disabled, everyone can use, rename, create, and remove Lodestones.
+
+Bypass and admin permissions are not granted to normal players by disabling permission checks. Operators still receive operator-level fallback access.

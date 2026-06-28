@@ -6,9 +6,36 @@
 - [x] Add configurable cost item.
 - [x] Add server-side cooldown.
 - [ ] Add maximum possible warps.
+- [ ] Add Lodestone discovery modes:
+  - [ ] `all`: players can see and teleport to every registered Lodestone.
+  - [ ] `discover`: players can only see and teleport to Lodestones they have discovered.
+  - [ ] Config option for the default network mode.
+  - [ ] Per-player discovered Lodestone storage.
+  - [ ] Auto-discover when placing a Lodestone.
+  - [ ] Auto-discover when interacting with a registered Lodestone.
+  - [ ] Optional admin command to grant or revoke discoveries.
 - [ ] Add teleport animations and configuration:
   - [x] Basic vanilla-style effects using existing particles.
   - [x] Separate server-side effect preset when the client has the mod installed.
   - [ ] Enhanced client-side screen/camera effects when the client has the mod installed.
 - [x] Add basic permissions for use and rename.
 - [ ] Add permissions for all relevant actions.
+  - [x] `lodestone_teleport.create`
+  - [x] `lodestone_teleport.remove`
+  - [x] `lodestone_teleport.admin`
+  - [x] `lodestone_teleport.bypass_cost`
+  - [x] `lodestone_teleport.bypass_cooldown`
+  - [ ] `lodestone_teleport.bypass_max_warps`
+  - [ ] `lodestone_teleport.mode.all`
+  - [ ] `lodestone_teleport.mode.discover`
+- [ ] Add configurable permission backend:
+  - [ ] `luckperms`: use Fabric Permissions API / LuckPerms.
+  - [ ] `own`: use Lodestone Warps' own permissions file.
+  - [ ] Keep LuckPerms as the default backend.
+  - [ ] Add fallback behavior when LuckPerms/Fabric permission checks are unavailable.
+- [ ] Add Lodestone Warps own permission file:
+  - [ ] Store player entries by username and UUID.
+  - [ ] Support entries like `"Username-UUID": ["lodestone.use", "lodestone.name", "lodestone.mode.discover"]`.
+  - [ ] Define final node naming before implementation.
+  - [ ] Add reload support for permission file.
+  - [ ] Add admin commands to inspect/set/remove own permissions.

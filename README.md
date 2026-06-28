@@ -78,6 +78,7 @@ Available subcommands:
 - `/warp tp <id or name>`
 - `/warp rename <id> <name>`
 - `/warp edit <id>`
+- `/warp remove <id>`
 - `/warp list`
 
 If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` available as a safer fallback.
@@ -90,8 +91,13 @@ Permission nodes:
 
 - `lodestone_teleport.use`
 - `lodestone_teleport.rename`
+- `lodestone_teleport.create`
+- `lodestone_teleport.remove`
+- `lodestone_teleport.admin`
+- `lodestone_teleport.bypass_cost`
+- `lodestone_teleport.bypass_cooldown`
 
-If permissions are enabled, players need `lodestone_teleport.use` to use warps and `lodestone_teleport.rename` to rename Lodestones.
+If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to remove registered Lodestones.
 
 Permission checks can be disabled in the server config.
 

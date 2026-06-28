@@ -36,11 +36,23 @@ Abrir edición:
 /warp edit <id>
 ```
 
+Remover una entrada antigua:
+
+```mcfunction
+/warp remove <id>
+```
+
 Listar Lodestones registradas:
 
 ```mcfunction
 /warp list
 ```
+
+`/warp list` muestra acciones clicables compactas después de cada entrada:
+
+- `[TP]`: teletransportarse a la Lodestone.
+- `[✎]`: abrir el flujo de renombrado.
+- `[X]`: remover la entrada solo si el bloque físico de Lodestone ya no existe.
 
 ## Teleport por Nombre
 

@@ -36,11 +36,23 @@ Open edit flow:
 /warp edit <id>
 ```
 
+Remove a stale Lodestone entry:
+
+```mcfunction
+/warp remove <id>
+```
+
 List registered Lodestones:
 
 ```mcfunction
 /warp list
 ```
+
+`/warp list` shows compact clickable actions after each entry:
+
+- `[TP]`: teleport to the Lodestone.
+- `[✎]`: open the rename flow.
+- `[X]`: remove the entry only if the physical Lodestone block no longer exists.
 
 ## Teleport by Name
 

@@ -8,6 +8,8 @@ La configuración se genera en el primer inicio:
 config/lodestone_teleport.json
 ```
 
+Cuando se carga una configuración existente, Lodestone Warps rellena las opciones faltantes con los defaults actuales y vuelve a escribir el archivo normalizado.
+
 ## Ejemplo
 
 ```json
@@ -163,6 +165,12 @@ Para debug local, `runClient` y `runServer` pueden simular permisos sin LuckPerm
 
 ```powershell
 .\gradlew.bat runClient -Plodestone_teleport.use=true -Plodestone_teleport.rename=false
+```
+
+Ejemplo con permisos granulares:
+
+```powershell
+.\gradlew.bat runClient -Plodestone_teleport.use=true -Plodestone_teleport.create=false -Plodestone_teleport.bypass_cost=true
 ```
 
 También se pueden pasar como system properties de JVM:
