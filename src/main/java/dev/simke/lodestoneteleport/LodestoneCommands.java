@@ -81,6 +81,10 @@ public final class LodestoneCommands {
 					.requires(LodestonePermissions::canRemove)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "id")))))
+				.then(Commands.literal("unlink")
+					.requires(LodestonePermissions::canRemove)
+					.then(Commands.argument("id", StringArgumentType.word())
+						.executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "id")))))
 				.then(Commands.literal("list")
 					.requires(LodestonePermissions::canAdmin)
 					.executes(context -> list(context.getSource())));
@@ -263,13 +267,8 @@ public final class LodestoneCommands {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
-		ServerLevel level = source.getServer().getLevel(location.get().dimension());
-		if (level != null && level.getBlockState(location.get().pos()).is(Blocks.LODESTONE)) {
-			source.sendFailure(LodestoneText.text("error.remove_existing_lodestone", "Break the lodestone block before removing this entry."));
-			return 0;
-		}
 		data.remove(location.get().dimension(), location.get().pos());
-		source.sendSuccess(() -> LodestoneText.text("removed", "Removed lodestone entry: %s.", location.get().displayName()), false);
+		source.sendSuccess(() -> LodestoneText.text("removed", "Unlinked lodestone warp: %s.", location.get().displayName()), false);
 		return 1;
 	}
 

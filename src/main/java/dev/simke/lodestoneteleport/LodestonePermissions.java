@@ -78,6 +78,10 @@ public final class LodestonePermissions {
 		return has(source, BYPASS_MAX_WARPS, false);
 	}
 
+	public static boolean canBypassMaxWarps(ServerPlayer player) {
+		return canBypassMaxWarps(player.createCommandSourceStack());
+	}
+
 	public static boolean canUseAllMode(CommandSourceStack source) {
 		return has(source, MODE_ALL, true);
 	}

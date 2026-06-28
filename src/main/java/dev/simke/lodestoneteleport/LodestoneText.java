@@ -77,7 +77,7 @@ public final class LodestoneText {
 			case "dimension.the_end" -> "the end";
 			case "arrived" -> "You arrived at \"%s\" (%s, %s, %s, %s).";
 			case "renamed" -> "Lodestone renamed to %s.";
-			case "removed" -> "Removed lodestone entry: %s.";
+			case "removed" -> "Unlinked lodestone warp: %s.";
 			case "registered" -> "Lodestone registered: %s";
 			case "list.empty" -> "No lodestones registered.";
 			case "list.header" -> "Registered lodestones:";
@@ -87,7 +87,9 @@ public final class LodestoneText {
 			case "error.dimension_unloaded" -> "The destination dimension is not loaded.";
 			case "error.cross_dimension_disabled" -> "Cross-dimension teleport is disabled.";
 			case "error.destination_removed" -> "The destination no longer has a lodestone and was removed.";
-			case "error.remove_existing_lodestone" -> "Break the lodestone block before removing this entry.";
+			case "error.lodestone_not_registered" -> "This lodestone is not registered.";
+			case "error.max_lodestones_global" -> "The server has reached the maximum number of registered lodestones.";
+			case "error.max_lodestones_player" -> "You have reached your maximum number of registered lodestones.";
 			case "error.need_cost" -> "You need %s.";
 			case "error.need_near_lodestone" -> "You must be near a registered lodestone to teleport.";
 			case "error.cooldown" -> "You must wait %s seconds before teleporting again.";

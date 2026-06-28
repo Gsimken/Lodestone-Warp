@@ -49,9 +49,14 @@ public final class LodestoneEvents {
 			}
 			LodestoneSavedData data = LodestoneSavedData.from(level);
 			Optional<LodestoneLocation> existing = data.at(level.dimension(), hit.getBlockPos());
-			if (existing.isEmpty() && !LodestonePermissions.canCreate(serverPlayer)) {
-				serverPlayer.sendSystemMessage(LodestoneText.text("error.no_permission.create", "You do not have permission to register lodestones."));
-				return InteractionResult.SUCCESS_SERVER;
+			if (existing.isEmpty()) {
+				if (!LodestoneConfig.get().autoRegisterUntrackedLodestones) {
+					serverPlayer.sendSystemMessage(LodestoneText.text("error.lodestone_not_registered", "This lodestone is not registered."));
+					return InteractionResult.SUCCESS_SERVER;
+				}
+				if (!canRegister(serverPlayer, data)) {
+					return InteractionResult.SUCCESS_SERVER;
+				}
 			}
 			LodestoneLocation location = existing.orElseGet(() -> data.register(level.dimension(), hit.getBlockPos(), player.getUUID(), player.getName().getString()));
 			LodestoneUi.showDestinations(serverPlayer, location);
@@ -59,6 +64,9 @@ public final class LodestoneEvents {
 		}
 
 		if (hand == InteractionHand.MAIN_HAND && player.getItemInHand(hand).is(Items.LODESTONE)) {
+			if (LodestoneConfig.get().registerPlacedLodestonesOnlyWhenSneaking && !player.isShiftKeyDown()) {
+				return InteractionResult.PASS;
+			}
 			BlockPos clicked = hit.getBlockPos().immutable();
 			BlockPos adjacent = clicked.relative(hit.getDirection()).immutable();
 			PENDING_PLACEMENTS.add(new PendingPlacement(serverPlayer.getUUID(), clicked, adjacent, player.isShiftKeyDown()));
@@ -105,12 +113,12 @@ public final class LodestoneEvents {
 			if (placed == null) {
 				continue;
 			}
-			if (!LodestonePermissions.canCreate(player)) {
-				player.sendSystemMessage(LodestoneText.text("error.no_permission.create", "You do not have permission to register lodestones."));
+			LodestoneSavedData data = LodestoneSavedData.from(level);
+			if (!canRegister(player, data)) {
 				continue;
 			}
 
-			LodestoneLocation location = LodestoneSavedData.from(level).register(level.dimension(), placed, player.getUUID(), player.getName().getString());
+			LodestoneLocation location = data.register(level.dimension(), placed, player.getUUID(), player.getName().getString());
 			player.sendSystemMessage(LodestoneText.text("registered", "Registered lodestone: %s", location.displayName()));
 			if (pending.rename() && LodestonePermissions.canRename(player)) {
 				LodestoneUi.showRename(player, location);
@@ -128,6 +136,32 @@ public final class LodestoneEvents {
 			return clicked;
 		}
 		return null;
+	}
+
+	private static boolean canRegister(ServerPlayer player, LodestoneSavedData data) {
+		if (!LodestonePermissions.canCreate(player)) {
+			player.sendSystemMessage(LodestoneText.text("error.no_permission.create", "You do not have permission to register lodestones."));
+			return false;
+		}
+		if (LodestonePermissions.canBypassMaxWarps(player)) {
+			return true;
+		}
+
+		LodestoneConfig config = LodestoneConfig.get();
+		if (config.maxLodestonesGlobal > 0 && data.all().size() >= config.maxLodestonesGlobal) {
+			player.sendSystemMessage(LodestoneText.text("error.max_lodestones_global", "The server has reached the maximum number of registered lodestones."));
+			return false;
+		}
+		if (config.maxLodestonesPerPlayer > 0) {
+			long owned = data.all().stream()
+				.filter(location -> location.ownerUuid().equals(player.getUUID()))
+				.count();
+			if (owned >= config.maxLodestonesPerPlayer) {
+				player.sendSystemMessage(LodestoneText.text("error.max_lodestones_player", "You have reached your maximum number of registered lodestones."));
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static void processPendingRemovals(MinecraftServer server) {

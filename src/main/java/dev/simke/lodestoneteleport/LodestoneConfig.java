@@ -29,6 +29,10 @@ public final class LodestoneConfig {
 	public double crossDimensionMultiplier = 2.0D;
 	public int maxCost = 64;
 	public boolean allowCrossDimension = true;
+	public int maxLodestonesGlobal = 0;
+	public int maxLodestonesPerPlayer = 0;
+	public boolean registerPlacedLodestonesOnlyWhenSneaking = true;
+	public boolean autoRegisterUntrackedLodestones = false;
 	public int maxDialogDestinations = 24;
 	public int teleportSourceRange = 8;
 	public int teleportCastSeconds = 2;
@@ -99,6 +103,8 @@ public final class LodestoneConfig {
 		config.blocksPerExtraCost = Math.max(0, config.blocksPerExtraCost);
 		config.crossDimensionMultiplier = Math.max(0.0D, config.crossDimensionMultiplier);
 		config.maxCost = Math.max(0, config.maxCost);
+		config.maxLodestonesGlobal = Math.max(0, config.maxLodestonesGlobal);
+		config.maxLodestonesPerPlayer = Math.max(0, config.maxLodestonesPerPlayer);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
 		config.teleportSourceRange = Math.max(0, config.teleportSourceRange);
 		config.teleportCastSeconds = Math.max(0, config.teleportCastSeconds);
