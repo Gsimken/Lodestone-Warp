@@ -54,6 +54,7 @@
   "text.lodestone_teleport.config.switch.on": "ON",
   "text.lodestone_teleport.config.switch.off": "OFF",
   "text.lodestone_teleport.config.scroll": "%s-%s / %s",
+  "text.lodestone_teleport.config.default": "Default: %s",
   "text.lodestone_teleport.config.status.saved": "Configuración guardada.",
   "text.lodestone_teleport.config.status.reloaded": "Configuración recargada desde disco.",
   "text.lodestone_teleport.config.status.invalid": "Algunos valores no son válidos.",
