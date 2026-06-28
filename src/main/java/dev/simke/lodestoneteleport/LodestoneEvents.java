@@ -42,7 +42,7 @@ public final class LodestoneEvents {
 		}
 
 		BlockState clickedState = level.getBlockState(hit.getBlockPos());
-		if (clickedState.is(Blocks.LODESTONE) && player.getItemInHand(hand).isEmpty()) {
+		if (hand == InteractionHand.MAIN_HAND && clickedState.is(Blocks.LODESTONE) && player.getItemInHand(hand).isEmpty()) {
 			if (!LodestonePermissions.canUse(serverPlayer)) {
 				serverPlayer.sendSystemMessage(LodestoneText.text("error.no_permission.use", "You do not have permission to use lodestones."));
 				return InteractionResult.SUCCESS_SERVER;
