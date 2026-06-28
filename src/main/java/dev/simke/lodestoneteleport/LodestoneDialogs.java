@@ -30,8 +30,7 @@ public final class LodestoneDialogs {
 	private static final int INPUT_WIDTH = 300;
 	private static final int DESTINATION_BUTTON_WIDTH = 250;
 	private static final int EDIT_BUTTON_WIDTH = 40;
-	private static final int CONFIG_BUTTON_WIDTH = 300;
-	private static final int CONFIG_EDIT_BUTTON_WIDTH = 40;
+	private static final int CONFIG_BUTTON_WIDTH = 340;
 	private static final int GRID_COLUMNS = 2;
 	private static final int DESTINATION_LABEL_WIDTH = 25;
 
@@ -114,7 +113,7 @@ public final class LodestoneDialogs {
 		List<ActionButton> buttons = new ArrayList<>();
 
 		buttons.add(configSearchButton(cleanCategory));
-		buttons.add(configActionButton(LodestoneText.text("config.server.button.reload", "Reload from disk").withStyle(ChatFormatting.GOLD), Optional.empty(), CONFIG_EDIT_BUTTON_WIDTH + CONFIG_BUTTON_WIDTH, "config_reload", cleanCategory, "", cleanQuery));
+		buttons.add(configActionButton(LodestoneText.text("config.server.button.reload", "Reload from disk").withStyle(ChatFormatting.GOLD), Optional.empty(), CONFIG_BUTTON_WIDTH, "config_reload", cleanCategory, "", cleanQuery));
 		buttons.add(configCategoryButton(LodestoneConfigOptions.ALL, "config.page.all", "All", cleanCategory, cleanQuery));
 		buttons.add(configCategoryButton(LodestoneConfigOptions.COST, "config.page.cost", "Cost", cleanCategory, cleanQuery));
 		buttons.add(configCategoryButton(LodestoneConfigOptions.REGISTRATION, "config.page.registration", "Registration", cleanCategory, cleanQuery));
@@ -123,11 +122,10 @@ public final class LodestoneDialogs {
 
 		for (LodestoneConfigOptions.Option option : LodestoneConfigOptions.filtered(cleanCategory, cleanQuery)) {
 			if (option.type() == LodestoneConfigOptions.Type.BOOLEAN) {
-				buttons.add(configActionButton(configOptionLabel(option), Optional.of(configOptionTooltip(option)), CONFIG_EDIT_BUTTON_WIDTH + CONFIG_BUTTON_WIDTH, "config_toggle", cleanCategory, option.id(), cleanQuery));
+				buttons.add(configActionButton(configOptionLabel(option), Optional.of(configOptionTooltip(option)), CONFIG_BUTTON_WIDTH, "config_toggle", cleanCategory, option.id(), cleanQuery));
 				continue;
 			}
-			buttons.add(configActionButton(configOptionLabel(option), Optional.of(configOptionTooltip(option)), CONFIG_BUTTON_WIDTH, "config_edit", cleanCategory, option.id(), cleanQuery));
-			buttons.add(configActionButton(Component.literal("\u270e").withStyle(ChatFormatting.GOLD), Optional.of(configOptionTooltip(option)), CONFIG_EDIT_BUTTON_WIDTH, "config_edit", cleanCategory, option.id(), cleanQuery));
+			buttons.add(configActionButton(configOptionLabel(option).copy().append(Component.literal(" \u270e").withStyle(ChatFormatting.GOLD)), Optional.of(configOptionTooltip(option)), CONFIG_BUTTON_WIDTH, "config_edit", cleanCategory, option.id(), cleanQuery));
 		}
 
 		CommonDialogData common = new CommonDialogData(
@@ -139,7 +137,7 @@ public final class LodestoneDialogs {
 			List.of(new PlainMessage(configBody(cleanCategory, cleanQuery), INPUT_WIDTH)),
 			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Search"), true, cleanQuery, 48, Optional.empty())))
 		);
-		send(player, new MultiActionDialog(common, buttons, Optional.empty(), GRID_COLUMNS));
+		send(player, new MultiActionDialog(common, buttons, Optional.empty(), 1));
 	}
 
 	public static void showConfigEdit(ServerPlayer player, LodestoneConfigOptions.Option option, String category, String query) {
@@ -234,14 +232,14 @@ public final class LodestoneDialogs {
 		payload.putString("action", "config_open");
 		payload.putString("category", category);
 		return new ActionButton(
-			new CommonButtonData(LodestoneText.text("button.search", "Search location").withStyle(ChatFormatting.AQUA), CONFIG_EDIT_BUTTON_WIDTH + CONFIG_BUTTON_WIDTH),
+			new CommonButtonData(LodestoneText.text("button.search", "Search location").withStyle(ChatFormatting.AQUA), CONFIG_BUTTON_WIDTH),
 			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
 		);
 	}
 
 	private static ActionButton configCategoryButton(String category, String key, String fallback, String currentCategory, String query) {
 		Component label = LodestoneText.text(key, fallback).withStyle(category.equals(currentCategory) ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
-		return configActionButton(label, Optional.empty(), CONFIG_BUTTON_WIDTH / 2, "config_open", category, "", query);
+		return configActionButton(label, Optional.empty(), CONFIG_BUTTON_WIDTH, "config_open", category, "", query);
 	}
 
 	private static ActionButton configActionButton(Component label, Optional<Component> tooltip, int width, String action, String category, String key, String query) {
