@@ -1,7 +1,10 @@
 package dev.simke.lodestoneteleport;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
@@ -24,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public final class LodestoneCommands {
 	private LodestoneCommands() {
@@ -98,9 +102,11 @@ public final class LodestoneCommands {
 						.executes(context -> listConfig(context.getSource())))
 					.then(Commands.literal("get")
 						.then(Commands.argument("key", StringArgumentType.word())
+							.suggests(LodestoneCommands::suggestConfigKeys)
 							.executes(context -> getConfig(context.getSource(), StringArgumentType.getString(context, "key")))))
 					.then(Commands.literal("set")
 						.then(Commands.argument("key", StringArgumentType.word())
+							.suggests(LodestoneCommands::suggestConfigKeys)
 							.then(Commands.argument("value", StringArgumentType.greedyString())
 								.executes(context -> setConfig(context.getSource(), StringArgumentType.getString(context, "key"), StringArgumentType.getString(context, "value")))))));
 	}
@@ -359,12 +365,28 @@ public final class LodestoneCommands {
 	}
 
 	private static Component configEntry(LodestoneConfigOptions.Option option) {
+		String command = "/" + LodestoneConfig.get().commandName + " config set " + option.id() + " " + option.currentValue();
 		MutableComponent entry = Component.literal("- " + option.id() + " = ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(option.currentValue()).withStyle(option.isDefault() ? ChatFormatting.WHITE : ChatFormatting.YELLOW))
 			.append(Component.literal(" "))
-			.append(LodestoneText.text("config.default", "Default: %s", option.defaultValue()).withStyle(ChatFormatting.DARK_GRAY));
+			.append(LodestoneText.text("config.default", "Default: %s", option.defaultValue()).withStyle(ChatFormatting.DARK_GRAY))
+			.append(Component.literal(" "))
+			.append(LodestoneText.text("config.server.set_suggest", "[Set]").withStyle(style -> style
+				.withColor(ChatFormatting.AQUA)
+				.withUnderlined(true)
+				.withClickEvent(new ClickEvent.SuggestCommand(command))));
 		return entry;
+	}
+
+	private static CompletableFuture<Suggestions> suggestConfigKeys(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+		String remaining = builder.getRemaining().toLowerCase(java.util.Locale.ROOT);
+		for (LodestoneConfigOptions.Option option : LodestoneConfigOptions.all()) {
+			if (option.id().startsWith(remaining)) {
+				builder.suggest(option.id());
+			}
+		}
+		return builder.buildFuture();
 	}
 
 	private static int list(CommandSourceStack source) {

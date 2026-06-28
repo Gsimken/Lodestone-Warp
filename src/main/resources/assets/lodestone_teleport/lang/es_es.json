@@ -71,6 +71,7 @@
   "text.lodestone_teleport.config.server.invalid_value": "Valor inválido para %s. Acepta: %s",
   "text.lodestone_teleport.config.server.changed": "%s cambiado a %s.",
   "text.lodestone_teleport.config.server.restart_required": "Reinicia el servidor para aplicar cambios de nombre de comando.",
+  "text.lodestone_teleport.config.server.set_suggest": "[Cambiar]",
   "text.lodestone_teleport.rename.title": "Nombrar lodestone",
   "text.lodestone_teleport.rename.body": "Elige un nombre para esta lodestone.",
   "text.lodestone_teleport.cost.free": "gratis",
