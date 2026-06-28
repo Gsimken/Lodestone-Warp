@@ -48,7 +48,7 @@ Alias:
 /warp unlink <id>
 ```
 
-The physical Lodestone block is left in the world. By default, it will not re-register when clicked.
+The physical Lodestone block is left in the world. By default, it will not re-register on a normal click; sneak-right-click it with an empty hand to register it again intentionally.
 
 List registered Lodestones:
 

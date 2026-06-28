@@ -119,6 +119,8 @@ Controla que pasa cuando un jugador hace click derecho con la mano vacia sobre u
 - `false`: el bloque queda vanilla y no se registra.
 - `true`: el bloque se registra al usarlo si el jugador puede crear Lodestones y los limites lo permiten.
 
+Incluso cuando esta opcion es `false`, un jugador puede hacer click derecho agachado con la mano vacia sobre una Lodestone no registrada para registrarla de forma intencional, siempre que tenga permiso de crear y los limites lo permitan.
+
 ## Reglas de Teleport
 
 `allowCrossDimension`

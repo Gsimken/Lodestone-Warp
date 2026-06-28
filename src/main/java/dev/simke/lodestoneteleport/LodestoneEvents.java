@@ -50,7 +50,7 @@ public final class LodestoneEvents {
 			LodestoneSavedData data = LodestoneSavedData.from(level);
 			Optional<LodestoneLocation> existing = data.at(level.dimension(), hit.getBlockPos());
 			if (existing.isEmpty()) {
-				if (!LodestoneConfig.get().autoRegisterUntrackedLodestones) {
+				if (!LodestoneConfig.get().autoRegisterUntrackedLodestones && !player.isShiftKeyDown()) {
 					serverPlayer.sendSystemMessage(LodestoneText.text("error.lodestone_not_registered", "This lodestone is not registered."));
 					return InteractionResult.SUCCESS_SERVER;
 				}

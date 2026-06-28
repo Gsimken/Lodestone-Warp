@@ -97,6 +97,8 @@ Controls what happens when a player right-clicks an unregistered Lodestone with 
 - `false`: the block stays vanilla and is not registered.
 - `true`: the block is registered on use if the player can create Lodestones and limits allow it.
 
+Even when this option is `false`, a player can sneak-right-click an unregistered Lodestone with an empty hand to register it intentionally, as long as they have create permission and limits allow it.
+
 ## Teleport Rules
 
 `allowCrossDimension`

@@ -48,7 +48,7 @@ Alias:
 /warp unlink <id>
 ```
 
-El bloque fisico de Lodestone queda en el mundo. Por defecto, no se volvera a registrar al hacer click.
+El bloque fisico de Lodestone queda en el mundo. Por defecto, no se volvera a registrar con click normal; usa click derecho agachado con la mano vacia para registrarlo otra vez de forma intencional.
 
 Listar Lodestones registradas:
 
