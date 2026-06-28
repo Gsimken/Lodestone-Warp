@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 public final class LodestoneConfigScreen extends Screen {
 	private static final int MARGIN = 28;
 	private static final int FIELD_WIDTH = 260;
-	private static final int ROW_HEIGHT = 42;
+	private static final int ROW_HEIGHT = 24;
 
 	private final Screen parent;
 	private final Map<String, String> drafts = new HashMap<>();
@@ -120,9 +120,10 @@ public final class LodestoneConfigScreen extends Screen {
 
 		int y = top + 105;
 		for (ConfigField field : this.fields) {
-			graphics.text(this.font, field.displayLabel(), left, y, field.labelColor());
-			graphics.text(this.font, field.description(), left, y + 12, 0xFFA8A8A8);
-			graphics.text(this.font, field.defaultText(), left, y + 24, field.nonDefault() ? 0xFFFFD37A : 0xFF777777);
+			graphics.text(this.font, field.displayLabel(), left, y + 4, field.labelColor());
+			if (mouseX >= left && mouseX <= right && mouseY >= y && mouseY < y + ROW_HEIGHT) {
+				graphics.setComponentTooltipForNextFrame(this.font, field.tooltip(), mouseX, mouseY);
+			}
 			y += ROW_HEIGHT;
 		}
 		int totalRows = filteredFields().size();
@@ -355,15 +356,14 @@ public final class LodestoneConfigScreen extends Screen {
 				.withStyle(ChatFormatting.BOLD, ChatFormatting.ITALIC);
 		}
 
-		Component description() {
-			return Component.literal("")
-				.append(this.description)
-				.append(Component.literal(" "))
-				.append(this.acceptedValues);
-		}
-
-		Component defaultText() {
-			return LodestoneText.text("config.default", "Default: %s", this.defaultValue);
+		List<Component> tooltip() {
+			return List.of(
+				this.label.copy().withStyle(ChatFormatting.AQUA),
+				this.description,
+				this.acceptedValues.copy().withStyle(ChatFormatting.GRAY),
+				LodestoneText.text("config.default", "Default: %s", this.defaultValue).withStyle(this.nonDefault() ? ChatFormatting.YELLOW : ChatFormatting.DARK_GRAY),
+				LodestoneText.text("config.current", "Current: %s", this.value).withStyle(this.nonDefault() ? ChatFormatting.YELLOW : ChatFormatting.GRAY)
+			);
 		}
 
 		int labelColor() {
