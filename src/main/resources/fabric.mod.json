@@ -16,6 +16,9 @@
 		],
 		"client": [
 			"dev.simke.lodestoneteleport.client.LodestoneTeleportClient"
+		],
+		"modmenu": [
+			"dev.simke.lodestoneteleport.client.LodestoneModMenuIntegration"
 		]
 	},
 	"mixins": [
@@ -27,5 +30,8 @@
 		"java": ">=25",
 		"fabric-api": "*",
 		"fabric-permission-api-v1": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
 	}
 }

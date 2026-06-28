@@ -20,6 +20,14 @@ dependencies {
 	implementation "net.fabricmc.fabric-api:fabric-permission-api-v1:${project.fabric_permission_api_version}"
 }
 
+sourceSets {
+	main {
+		java {
+			srcDir 'src/modmenuApi/java'
+		}
+	}
+}
+
 processResources {
 	def version = project.version
 	inputs.property "version", version
@@ -57,6 +65,14 @@ java {
 	withSourcesJar()
 	sourceCompatibility = JavaVersion.VERSION_25
 	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	exclude 'com/terraformersmc/**'
+}
+
+sourcesJar {
+	exclude 'com/terraformersmc/**'
 }
 
 publishing {

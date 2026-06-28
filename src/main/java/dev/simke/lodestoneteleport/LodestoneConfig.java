@@ -53,6 +53,12 @@ public final class LodestoneConfig {
 		return INSTANCE;
 	}
 
+	public static void save() {
+		Path path = FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
+		INSTANCE = sanitize(INSTANCE);
+		save(path, INSTANCE);
+	}
+
 	public static void load() {
 		Path path = FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
 		if (Files.notExists(path)) {

@@ -10,6 +10,8 @@ config/lodestone_teleport.json
 
 Cuando se carga una configuración existente, Lodestone Warps rellena las opciones faltantes con los defaults actuales y vuelve a escribir el archivo normalizado.
 
+Si Mod Menu está instalado en el cliente, Lodestone Warps también muestra una pantalla opcional de configuración dentro del juego. Esta pantalla edita solo la config local; los servidores remotos siguen usando su propia configuración server-side.
+
 ## Ejemplo
 
 ```json

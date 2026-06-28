@@ -20,6 +20,7 @@ The most up-to-date documentation is kept in the wiki:
 - Server-side Lodestone warp network.
 - Vanilla client support through Minecraft Dialogs.
 - Optional enhanced UI for players with the mod installed client-side.
+- Optional Mod Menu config screen when installed on the client.
 - Sneak-place Lodestones to register them as warps by default.
 - Optional auto-registration for old or untracked Lodestones when interacted with.
 - Configurable global and per-player Lodestone registration limits.
@@ -48,6 +49,7 @@ The most up-to-date documentation is kept in the wiki:
 - Fabric Loader **0.19.3+**
 - Fabric API
 - Optional: LuckPerms for permission management
+- Optional client-side: Mod Menu for an in-game local config editor
 
 ## Client Support
 
