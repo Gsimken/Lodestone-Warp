@@ -18,6 +18,7 @@ public final class LodestonePermissions {
 	public static final PermissionNode<Boolean> BYPASS_MAX_WARPS = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_max_warps");
 	public static final PermissionNode<Boolean> MODE_ALL = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "mode.all");
 	public static final PermissionNode<Boolean> MODE_DISCOVER = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "mode.discover");
+	public static final PermissionNode<Boolean> CONFIG = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "config");
 
 	private LodestonePermissions() {
 	}
@@ -90,6 +91,14 @@ public final class LodestonePermissions {
 		return has(source, MODE_DISCOVER, true);
 	}
 
+	public static boolean canConfig(CommandSourceStack source) {
+		return has(source, CONFIG, false);
+	}
+
+	public static boolean canConfig(ServerPlayer player) {
+		return canConfig(player.createCommandSourceStack());
+	}
+
 	private static boolean has(CommandSourceStack source, PermissionNode<Boolean> permission, boolean openDefault) {
 		Boolean debugOverride = debugOverride(permission);
 		if (debugOverride != null) {
@@ -116,6 +125,7 @@ public final class LodestonePermissions {
 		if (permission == BYPASS_MAX_WARPS) return "bypass_max_warps";
 		if (permission == MODE_ALL) return "mode.all";
 		if (permission == MODE_DISCOVER) return "mode.discover";
+		if (permission == CONFIG) return "config";
 		return "";
 	}
 

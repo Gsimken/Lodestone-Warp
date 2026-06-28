@@ -1,6 +1,6 @@
 # Lodestone Warps
 
-**Last updated:** 2026-06-27
+**Last updated:** 2026-06-28
 
 **Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
 
@@ -38,6 +38,7 @@ The most up-to-date documentation is kept in the wiki:
 - Configurable requirement to stand near a registered Lodestone before teleporting.
 - Configurable command name, defaulting to `/warp`.
 - Safe fallback command, defaulting to `/lodestone_warp`.
+- Server-side config commands and a vanilla Dialog quick config UI for server owners.
 - LuckPerms-compatible permissions through Fabric Permissions API.
 - Optional config to disable permission checks for open servers.
 - Server-side language fallback for vanilla UI text.
@@ -84,6 +85,11 @@ Available subcommands:
 - `/warp remove <id>`
 - `/warp unlink <id>`
 - `/warp list`
+- `/warp reload`
+- `/warp config`
+- `/warp config list`
+- `/warp config get <key>`
+- `/warp config set <key> <value>`
 
 If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` available as a safer fallback.
 
@@ -101,8 +107,11 @@ Permission nodes:
 - `lodestone_teleport.bypass_cost`
 - `lodestone_teleport.bypass_cooldown`
 - `lodestone_teleport.bypass_max_warps`
+- `lodestone_teleport.config`
 
 If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
+
+Server owners need `lodestone_teleport.config` or OP-level access to use `/warp reload`, `/warp config`, and server config editing actions.
 
 Permission checks can be disabled in the server config.
 

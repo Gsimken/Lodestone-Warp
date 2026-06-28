@@ -6,6 +6,7 @@
 - [x] Add configurable cost item.
 - [x] Add server-side cooldown.
 - [x] Add maximum possible warps.
+- [x] Add server-side config commands and vanilla Dialog quick config UI.
 - [ ] Add Lodestone discovery modes:
   - [ ] `all`: players can see and teleport to every registered Lodestone.
   - [ ] `discover`: players can only see and teleport to Lodestones they have discovered.
@@ -26,6 +27,7 @@
   - [x] `lodestone_teleport.bypass_cost`
   - [x] `lodestone_teleport.bypass_cooldown`
   - [x] `lodestone_teleport.bypass_max_warps`
+  - [x] `lodestone_teleport.config`
   - [ ] `lodestone_teleport.mode.all`
   - [ ] `lodestone_teleport.mode.discover`
 - [ ] Add configurable permission backend:

@@ -87,7 +87,22 @@ public final class LodestoneCommands {
 						.executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "id")))))
 				.then(Commands.literal("list")
 					.requires(LodestonePermissions::canAdmin)
-					.executes(context -> list(context.getSource())));
+					.executes(context -> list(context.getSource())))
+				.then(Commands.literal("reload")
+					.requires(LodestonePermissions::canConfig)
+					.executes(context -> reloadConfig(context.getSource())))
+				.then(Commands.literal("config")
+					.requires(LodestonePermissions::canConfig)
+					.executes(context -> openConfig(context.getSource()))
+					.then(Commands.literal("list")
+						.executes(context -> listConfig(context.getSource())))
+					.then(Commands.literal("get")
+						.then(Commands.argument("key", StringArgumentType.word())
+							.executes(context -> getConfig(context.getSource(), StringArgumentType.getString(context, "key")))))
+					.then(Commands.literal("set")
+						.then(Commands.argument("key", StringArgumentType.word())
+							.then(Commands.argument("value", StringArgumentType.greedyString())
+								.executes(context -> setConfig(context.getSource(), StringArgumentType.getString(context, "key"), StringArgumentType.getString(context, "value")))))));
 	}
 
 	static int teleport(CommandSourceStack source, String destination) throws CommandSyntaxException {
@@ -271,6 +286,85 @@ public final class LodestoneCommands {
 		data.remove(location.get().dimension(), location.get().pos());
 		source.sendSuccess(() -> LodestoneText.text("removed", "Unlinked lodestone warp: %s.", location.get().displayName()), false);
 		return 1;
+	}
+
+	static int reloadConfig(CommandSourceStack source) {
+		if (!LodestonePermissions.canConfig(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.config", "You do not have permission to configure Lodestone Warps."));
+			return 0;
+		}
+		LodestoneConfig.load();
+		source.sendSuccess(() -> LodestoneText.text("config.server.reloaded", "Lodestone Warps config reloaded."), true);
+		return 1;
+	}
+
+	static int openConfig(CommandSourceStack source) throws CommandSyntaxException {
+		ServerPlayer player = source.getPlayerOrException();
+		if (!LodestonePermissions.canConfig(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.config", "You do not have permission to configure Lodestone Warps."));
+			return 0;
+		}
+		LodestoneDialogs.showConfig(player, LodestoneConfigOptions.ALL, "");
+		return 1;
+	}
+
+	static int listConfig(CommandSourceStack source) {
+		if (!LodestonePermissions.canConfig(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.config", "You do not have permission to configure Lodestone Warps."));
+			return 0;
+		}
+		source.sendSystemMessage(LodestoneText.text("config.server.list_header", "Lodestone Warps config keys:"));
+		for (LodestoneConfigOptions.Option option : LodestoneConfigOptions.all()) {
+			source.sendSystemMessage(configEntry(option));
+		}
+		return LodestoneConfigOptions.all().size();
+	}
+
+	static int getConfig(CommandSourceStack source, String key) {
+		if (!LodestonePermissions.canConfig(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.config", "You do not have permission to configure Lodestone Warps."));
+			return 0;
+		}
+		Optional<LodestoneConfigOptions.Option> option = LodestoneConfigOptions.get(key);
+		if (option.isEmpty()) {
+			source.sendFailure(LodestoneText.text("config.server.unknown_key", "Unknown config key: %s", key));
+			return 0;
+		}
+		source.sendSystemMessage(configEntry(option.get()));
+		return 1;
+	}
+
+	static int setConfig(CommandSourceStack source, String key, String value) {
+		if (!LodestonePermissions.canConfig(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.config", "You do not have permission to configure Lodestone Warps."));
+			return 0;
+		}
+		Optional<LodestoneConfigOptions.Option> option = LodestoneConfigOptions.get(key);
+		if (option.isEmpty()) {
+			source.sendFailure(LodestoneText.text("config.server.unknown_key", "Unknown config key: %s", key));
+			return 0;
+		}
+		try {
+			option.get().apply(value);
+			LodestoneConfig.save();
+		} catch (IllegalArgumentException exception) {
+			source.sendFailure(LodestoneText.text("config.server.invalid_value", "Invalid value for %s. Accepted: %s", option.get().id(), option.get().acceptedValues()));
+			return 0;
+		}
+		source.sendSuccess(() -> LodestoneText.text("config.server.changed", "Set %s to %s.", option.get().id(), option.get().currentValue()), true);
+		if (option.get().id().equals("command_name") || option.get().id().equals("fallback_command_name")) {
+			source.sendSystemMessage(LodestoneText.text("config.server.restart_required", "Restart the server for command name changes to take effect."));
+		}
+		return 1;
+	}
+
+	private static Component configEntry(LodestoneConfigOptions.Option option) {
+		MutableComponent entry = Component.literal("- " + option.id() + " = ")
+			.withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(option.currentValue()).withStyle(option.isDefault() ? ChatFormatting.WHITE : ChatFormatting.YELLOW))
+			.append(Component.literal(" "))
+			.append(LodestoneText.text("config.default", "Default: %s", option.defaultValue()).withStyle(ChatFormatting.DARK_GRAY));
+		return entry;
 	}
 
 	private static int list(CommandSourceStack source) {

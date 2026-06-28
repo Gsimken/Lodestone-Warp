@@ -30,6 +30,8 @@ public final class LodestoneDialogs {
 	private static final int INPUT_WIDTH = 300;
 	private static final int DESTINATION_BUTTON_WIDTH = 250;
 	private static final int EDIT_BUTTON_WIDTH = 40;
+	private static final int CONFIG_BUTTON_WIDTH = 300;
+	private static final int CONFIG_EDIT_BUTTON_WIDTH = 40;
 	private static final int GRID_COLUMNS = 2;
 	private static final int DESTINATION_LABEL_WIDTH = 25;
 
@@ -106,6 +108,63 @@ public final class LodestoneDialogs {
 		send(player, new NoticeDialog(common, confirm));
 	}
 
+	public static void showConfig(ServerPlayer player, String category, String query) {
+		String cleanCategory = LodestoneConfigOptions.cleanCategory(category);
+		String cleanQuery = query == null ? "" : query.trim();
+		List<ActionButton> buttons = new ArrayList<>();
+
+		buttons.add(configSearchButton(cleanCategory));
+		buttons.add(configActionButton(LodestoneText.text("config.server.button.reload", "Reload from disk").withStyle(ChatFormatting.GOLD), Optional.empty(), CONFIG_EDIT_BUTTON_WIDTH + CONFIG_BUTTON_WIDTH, "config_reload", cleanCategory, "", cleanQuery));
+		buttons.add(configCategoryButton(LodestoneConfigOptions.ALL, "config.page.all", "All", cleanCategory, cleanQuery));
+		buttons.add(configCategoryButton(LodestoneConfigOptions.COST, "config.page.cost", "Cost", cleanCategory, cleanQuery));
+		buttons.add(configCategoryButton(LodestoneConfigOptions.REGISTRATION, "config.page.registration", "Registration", cleanCategory, cleanQuery));
+		buttons.add(configCategoryButton(LodestoneConfigOptions.TELEPORT, "config.page.teleport", "Teleport", cleanCategory, cleanQuery));
+		buttons.add(configCategoryButton(LodestoneConfigOptions.ADVANCED, "config.page.advanced", "Advanced", cleanCategory, cleanQuery));
+
+		for (LodestoneConfigOptions.Option option : LodestoneConfigOptions.filtered(cleanCategory, cleanQuery)) {
+			if (option.type() == LodestoneConfigOptions.Type.BOOLEAN) {
+				buttons.add(configActionButton(configOptionLabel(option), Optional.of(configOptionTooltip(option)), CONFIG_EDIT_BUTTON_WIDTH + CONFIG_BUTTON_WIDTH, "config_toggle", cleanCategory, option.id(), cleanQuery));
+				continue;
+			}
+			buttons.add(configActionButton(configOptionLabel(option), Optional.of(configOptionTooltip(option)), CONFIG_BUTTON_WIDTH, "config_edit", cleanCategory, option.id(), cleanQuery));
+			buttons.add(configActionButton(Component.literal("\u270e").withStyle(ChatFormatting.GOLD), Optional.of(configOptionTooltip(option)), CONFIG_EDIT_BUTTON_WIDTH, "config_edit", cleanCategory, option.id(), cleanQuery));
+		}
+
+		CommonDialogData common = new CommonDialogData(
+			LodestoneText.text("config.server.title", "Server Config"),
+			Optional.empty(),
+			true,
+			false,
+			DialogAction.CLOSE,
+			List.of(new PlainMessage(configBody(cleanCategory, cleanQuery), INPUT_WIDTH)),
+			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Search"), true, cleanQuery, 48, Optional.empty())))
+		);
+		send(player, new MultiActionDialog(common, buttons, Optional.empty(), GRID_COLUMNS));
+	}
+
+	public static void showConfigEdit(ServerPlayer player, LodestoneConfigOptions.Option option, String category, String query) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", "config_save");
+		payload.putString("key", option.id());
+		payload.putString("category", LodestoneConfigOptions.cleanCategory(category));
+		payload.putString("query", query == null ? "" : query);
+
+		CommonDialogData common = new CommonDialogData(
+			LodestoneText.text("config.server.edit_title", "Edit %s", option.labelFallback()),
+			Optional.empty(),
+			true,
+			false,
+			DialogAction.CLOSE,
+			List.of(new PlainMessage(configOptionTooltip(option), INPUT_WIDTH)),
+			List.of(new Input("value", new TextInput(INPUT_WIDTH, LodestoneText.text("config.server.input.value", "Value"), true, option.currentValue(), 96, Optional.empty())))
+		);
+		ActionButton confirm = new ActionButton(
+			new CommonButtonData(LodestoneText.text("button.save", "Save"), INPUT_WIDTH),
+			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
+		);
+		send(player, new NoticeDialog(common, confirm));
+	}
+
 	public static void showNotice(ServerPlayer player, String title, String message) {
 		showNotice(player, title, message, NoticeDialog.DEFAULT_ACTION);
 	}
@@ -168,6 +227,67 @@ public final class LodestoneDialogs {
 			new CommonButtonData(LodestoneText.text("button.search", "Search location").withStyle(ChatFormatting.AQUA), DESTINATION_BUTTON_WIDTH),
 			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
 		);
+	}
+
+	private static ActionButton configSearchButton(String category) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", "config_open");
+		payload.putString("category", category);
+		return new ActionButton(
+			new CommonButtonData(LodestoneText.text("button.search", "Search location").withStyle(ChatFormatting.AQUA), CONFIG_EDIT_BUTTON_WIDTH + CONFIG_BUTTON_WIDTH),
+			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
+		);
+	}
+
+	private static ActionButton configCategoryButton(String category, String key, String fallback, String currentCategory, String query) {
+		Component label = LodestoneText.text(key, fallback).withStyle(category.equals(currentCategory) ? ChatFormatting.YELLOW : ChatFormatting.WHITE);
+		return configActionButton(label, Optional.empty(), CONFIG_BUTTON_WIDTH / 2, "config_open", category, "", query);
+	}
+
+	private static ActionButton configActionButton(Component label, Optional<Component> tooltip, int width, String action, String category, String key, String query) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", action);
+		payload.putString("category", category);
+		payload.putString("key", key);
+		payload.putString("query", query);
+		return new ActionButton(
+			new CommonButtonData(label, tooltip, width),
+			Optional.of(new StaticAction(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))))
+		);
+	}
+
+	private static Component configBody(String category, String query) {
+		Component categoryLabel = switch (category) {
+			case LodestoneConfigOptions.COST -> LodestoneText.text("config.page.cost", "Cost");
+			case LodestoneConfigOptions.REGISTRATION -> LodestoneText.text("config.page.registration", "Registration");
+			case LodestoneConfigOptions.TELEPORT -> LodestoneText.text("config.page.teleport", "Teleport");
+			case LodestoneConfigOptions.ADVANCED -> LodestoneText.text("config.page.advanced", "Advanced");
+			default -> LodestoneText.text("config.page.all", "All");
+		};
+		if (query == null || query.isBlank()) {
+			return LodestoneText.text("config.server.body", "Category: %s", categoryLabel);
+		}
+		return LodestoneText.text("config.server.body.search", "Category: %s\nSearch: %s", categoryLabel, query);
+	}
+
+	private static Component configOptionLabel(LodestoneConfigOptions.Option option) {
+		ChatFormatting valueColor = option.isDefault() ? ChatFormatting.WHITE : ChatFormatting.YELLOW;
+		Component state = option.type() == LodestoneConfigOptions.Type.BOOLEAN
+			? LodestoneText.text(Boolean.parseBoolean(option.currentValue()) ? "config.switch.on" : "config.switch.off", Boolean.parseBoolean(option.currentValue()) ? "ON" : "OFF")
+			: Component.literal(option.currentValue());
+		return LodestoneText.text(option.labelKey(), option.labelFallback()).withStyle(ChatFormatting.AQUA)
+			.append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
+			.append(state.copy().withStyle(valueColor));
+	}
+
+	private static Component configOptionTooltip(LodestoneConfigOptions.Option option) {
+		return Component.literal(option.description())
+			.append(Component.literal("\n"))
+			.append(Component.literal(option.acceptedValues()).withStyle(ChatFormatting.GRAY))
+			.append(Component.literal("\n"))
+			.append(LodestoneText.text("config.default", "Default: %s", option.defaultValue()).withStyle(option.isDefault() ? ChatFormatting.DARK_GRAY : ChatFormatting.YELLOW))
+			.append(Component.literal("\n"))
+			.append(LodestoneText.text("config.current", "Current: %s", option.currentValue()).withStyle(option.isDefault() ? ChatFormatting.GRAY : ChatFormatting.YELLOW));
 	}
 
 	private static Action renameAction(String id) {

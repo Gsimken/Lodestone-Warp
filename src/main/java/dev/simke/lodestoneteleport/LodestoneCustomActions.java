@@ -23,7 +23,7 @@ public final class LodestoneCustomActions {
 
 		String action = payload.getStringOr("action", "");
 		String id = payload.getStringOr("id", "");
-		if (id.isBlank()) {
+		if (id.isBlank() && requiresLodestoneId(action)) {
 			player.sendSystemMessage(LodestoneText.text("error.invalid_action", "Invalid lodestone action."));
 			return true;
 		}
@@ -51,12 +51,44 @@ public final class LodestoneCustomActions {
 					LodestoneCommands.remove(player.createCommandSourceStack(), id);
 					yield true;
 				}
+				case "config_open" -> {
+					LodestoneDialogs.showConfig(player, payload.getStringOr("category", LodestoneConfigOptions.ALL), readField(payload, "query"));
+					yield true;
+				}
+				case "config_reload" -> {
+					LodestoneCommands.reloadConfig(player.createCommandSourceStack());
+					LodestoneDialogs.showConfig(player, payload.getStringOr("category", LodestoneConfigOptions.ALL), readField(payload, "query"));
+					yield true;
+				}
+				case "config_toggle" -> {
+					String key = payload.getStringOr("key", "");
+					LodestoneConfigOptions.get(key).ifPresent(option -> LodestoneCommands.setConfig(player.createCommandSourceStack(), key, String.valueOf(!Boolean.parseBoolean(option.currentValue()))));
+					LodestoneDialogs.showConfig(player, payload.getStringOr("category", LodestoneConfigOptions.ALL), readField(payload, "query"));
+					yield true;
+				}
+				case "config_edit" -> {
+					String key = payload.getStringOr("key", "");
+					LodestoneConfigOptions.get(key).ifPresent(option -> LodestoneDialogs.showConfigEdit(player, option, payload.getStringOr("category", LodestoneConfigOptions.ALL), readField(payload, "query")));
+					yield true;
+				}
+				case "config_save" -> {
+					LodestoneCommands.setConfig(player.createCommandSourceStack(), payload.getStringOr("key", ""), readField(payload, "value"));
+					LodestoneDialogs.showConfig(player, payload.getStringOr("category", LodestoneConfigOptions.ALL), payload.getStringOr("query", ""));
+					yield true;
+				}
 				default -> false;
 			};
 		} catch (CommandSyntaxException exception) {
 			player.sendSystemMessage(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
 			return true;
 		}
+	}
+
+	private static boolean requiresLodestoneId(String action) {
+		return switch (action) {
+			case "config_open", "config_reload", "config_toggle", "config_edit", "config_save" -> false;
+			default -> true;
+		};
 	}
 
 	private static String readField(CompoundTag payload, String key) {

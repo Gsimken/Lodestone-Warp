@@ -52,7 +52,8 @@ tasks.withType(JavaExec).configureEach {
 		'lodestone_teleport.bypass_cooldown',
 		'lodestone_teleport.bypass_max_warps',
 		'lodestone_teleport.mode.all',
-		'lodestone_teleport.mode.discover'
+		'lodestone_teleport.mode.discover',
+		'lodestone_teleport.config'
 	]) {
 		def value = providers.gradleProperty(permissionProperty).orElse(providers.systemProperty(permissionProperty))
 		if (value.present) {
