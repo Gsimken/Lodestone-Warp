@@ -22,6 +22,7 @@ public final class LodestoneConfigScreen extends Screen {
 	private final List<ConfigField> fields = new ArrayList<>();
 	private Section section = Section.ALL;
 	private String query = "";
+	private int scrollOffset = 0;
 	private Component status = Component.empty();
 	private EditBox searchBox;
 
@@ -33,6 +34,9 @@ public final class LodestoneConfigScreen extends Screen {
 	@Override
 	protected void init() {
 		this.fields.clear();
+		List<ConfigField> filtered = filteredFields();
+		int visibleRows = visibleRows();
+		this.scrollOffset = Math.clamp(this.scrollOffset, 0, Math.max(0, filtered.size() - visibleRows));
 		int left = MARGIN;
 		int right = this.width - MARGIN;
 		int contentWidth = right - left;
@@ -43,6 +47,7 @@ public final class LodestoneConfigScreen extends Screen {
 		for (Section sectionOption : Section.values()) {
 			addRenderableWidget(Button.builder(sectionOption.title(), button -> {
 				this.section = sectionOption;
+				this.scrollOffset = 0;
 				rebuildWidgets();
 			}).bounds(x, top + 42, buttonWidth, 20).build());
 			x += buttonWidth + 5;
@@ -54,18 +59,29 @@ public final class LodestoneConfigScreen extends Screen {
 		this.searchBox.setValue(this.query);
 		this.searchBox.setResponder(value -> {
 			this.query = value;
+			this.scrollOffset = 0;
 			rebuildWidgets();
 		});
 		addRenderableWidget(this.searchBox);
 
 		int y = top + 104;
 		int fieldX = Math.max(left + 220, right - FIELD_WIDTH);
-		for (ConfigField field : filteredFields()) {
-			EditBox box = new EditBox(this.font, fieldX, y, right - fieldX, 18, field.label());
-			box.setMaxLength(96);
-			box.setValue(field.get());
-			addRenderableWidget(box);
-			this.fields.add(field.withBox(box));
+		for (ConfigField field : filtered.stream().skip(this.scrollOffset).limit(visibleRows).toList()) {
+			if (field.booleanField()) {
+				ConfigField visibleField = field;
+				Button button = Button.builder(field.booleanTitle(), widget -> {
+					visibleField.toggle();
+					widget.setMessage(visibleField.booleanTitle());
+				}).bounds(fieldX, y, right - fieldX, 18).build();
+				addRenderableWidget(button);
+				this.fields.add(field);
+			} else {
+				EditBox box = new EditBox(this.font, fieldX, y, right - fieldX, 18, field.label());
+				box.setMaxLength(96);
+				box.setValue(field.get());
+				addRenderableWidget(box);
+				this.fields.add(field.withBox(box));
+			}
 			y += ROW_HEIGHT;
 		}
 
@@ -96,6 +112,10 @@ public final class LodestoneConfigScreen extends Screen {
 			graphics.text(this.font, field.label(), left, y + 4, 0xFF8DEEFF);
 			y += ROW_HEIGHT;
 		}
+		int totalRows = filteredFields().size();
+		if (totalRows > visibleRows()) {
+			graphics.text(this.font, LodestoneText.text("config.scroll", "%s-%s / %s", this.scrollOffset + 1, Math.min(totalRows, this.scrollOffset + visibleRows()), totalRows), right - 80, top + 94, 0xFFA8A8A8);
+		}
 		if (!this.status.getString().isBlank()) {
 			graphics.centeredText(this.font, this.status, this.width / 2, this.height - 48, 0xFFFFD37A);
 		}
@@ -105,6 +125,21 @@ public final class LodestoneConfigScreen extends Screen {
 	@Override
 	public void onClose() {
 		this.minecraft.setScreenAndShow(this.parent);
+	}
+
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+		int maxScroll = Math.max(0, filteredFields().size() - visibleRows());
+		if (maxScroll <= 0) {
+			return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+		}
+		int next = Math.clamp(this.scrollOffset - (int) Math.signum(verticalAmount), 0, maxScroll);
+		if (next == this.scrollOffset) {
+			return true;
+		}
+		this.scrollOffset = next;
+		rebuildWidgets();
+		return true;
 	}
 
 	private void save() {
@@ -131,6 +166,10 @@ public final class LodestoneConfigScreen extends Screen {
 		return this.section.fields().stream()
 			.filter(field -> cleanQuery.isBlank() || field.searchText().contains(cleanQuery))
 			.toList();
+	}
+
+	private int visibleRows() {
+		return Math.max(1, (this.height - 164) / ROW_HEIGHT);
 	}
 
 	private enum Section {
@@ -212,21 +251,62 @@ public final class LodestoneConfigScreen extends Screen {
 		abstract List<ConfigField> fields();
 	}
 
-	private record ConfigField(Component label, String value, String searchText, BiConsumer<LodestoneConfig, String> setter, EditBox box) {
+	private static final class ConfigField {
+		private final Component label;
+		private String value;
+		private final String searchText;
+		private final BiConsumer<LodestoneConfig, String> setter;
+		private final EditBox box;
+		private final boolean booleanField;
+
+		private ConfigField(Component label, String value, String searchText, BiConsumer<LodestoneConfig, String> setter, EditBox box, boolean booleanField) {
+			this.label = label;
+			this.value = value;
+			this.searchText = searchText;
+			this.setter = setter;
+			this.box = box;
+			this.booleanField = booleanField;
+		}
+
 		static ConfigField with(String key, String fallback, String value, BiConsumer<LodestoneConfig, String> setter) {
-			return new ConfigField(LodestoneText.text(key, fallback), value, (key + " " + fallback).toLowerCase(java.util.Locale.ROOT), setter, null);
+			return new ConfigField(LodestoneText.text(key, fallback), value, (key + " " + fallback).toLowerCase(java.util.Locale.ROOT), setter, null, false);
+		}
+
+		static ConfigField bool(String key, String fallback, String value, BiConsumer<LodestoneConfig, String> setter) {
+			return new ConfigField(LodestoneText.text(key, fallback), value, (key + " " + fallback).toLowerCase(java.util.Locale.ROOT), setter, null, true);
 		}
 
 		ConfigField withBox(EditBox box) {
-			return new ConfigField(this.label, this.value, this.searchText, this.setter, box);
+			return new ConfigField(this.label, this.value, this.searchText, this.setter, box, this.booleanField);
 		}
 
 		String get() {
 			return this.value;
 		}
 
+		Component label() {
+			return this.label;
+		}
+
+		String searchText() {
+			return this.searchText;
+		}
+
+		boolean booleanField() {
+			return this.booleanField;
+		}
+
+		Component booleanTitle() {
+			return LodestoneText.text(Boolean.parseBoolean(this.value) ? "config.switch.on" : "config.switch.off", Boolean.parseBoolean(this.value) ? "ON" : "OFF");
+		}
+
+		void toggle() {
+			this.value = String.valueOf(!Boolean.parseBoolean(this.value));
+			this.setter.accept(LodestoneConfig.get(), this.value);
+		}
+
 		void apply(LodestoneConfig config) {
-			this.setter.accept(config, this.box.getValue());
+			this.setter.accept(config, this.booleanField ? this.value : this.box.getValue());
 		}
 	}
 
@@ -243,7 +323,7 @@ public final class LodestoneConfigScreen extends Screen {
 	}
 
 	private static ConfigField bool(String key, String fallback, Supplier<Boolean> getter, BiConsumer<LodestoneConfig, Boolean> setter) {
-		return ConfigField.with(key, fallback, String.valueOf(getter.get()), (config, value) -> {
+		return ConfigField.bool(key, fallback, String.valueOf(getter.get()), (config, value) -> {
 			String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
 			if (!clean.equals("true") && !clean.equals("false")) {
 				throw new IllegalArgumentException("Boolean expected");
