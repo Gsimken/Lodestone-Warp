@@ -22,6 +22,7 @@
   "text.lodestone_teleport.client.page.next": "Siguiente",
   "text.lodestone_teleport.config.title": "Configuración de Lodestone Warps",
   "text.lodestone_teleport.config.notice": "Editor del archivo de config local del cliente. Los servidores remotos usan su propia config.",
+  "text.lodestone_teleport.config.page.all": "Todo",
   "text.lodestone_teleport.config.page.cost": "Costo",
   "text.lodestone_teleport.config.page.registration": "Registro",
   "text.lodestone_teleport.config.page.teleport": "Teleport",

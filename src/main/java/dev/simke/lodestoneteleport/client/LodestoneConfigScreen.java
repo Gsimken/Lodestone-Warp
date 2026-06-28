@@ -11,18 +11,19 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class LodestoneConfigScreen extends Screen {
-	private static final int PANEL_WIDTH = 420;
-	private static final int FIELD_WIDTH = 190;
-	private static final int ROW_HEIGHT = 28;
+	private static final int MARGIN = 28;
+	private static final int FIELD_WIDTH = 260;
+	private static final int ROW_HEIGHT = 24;
 
 	private final Screen parent;
 	private final List<ConfigField> fields = new ArrayList<>();
-	private Page page = Page.COST;
+	private Section section = Section.ALL;
+	private String query = "";
 	private Component status = Component.empty();
+	private EditBox searchBox;
 
 	public LodestoneConfigScreen(Screen parent) {
 		super(LodestoneText.text("config.title", "Lodestone Warps Config"));
@@ -32,22 +33,35 @@ public final class LodestoneConfigScreen extends Screen {
 	@Override
 	protected void init() {
 		this.fields.clear();
-		int left = (this.width - PANEL_WIDTH) / 2;
-		int top = Math.max(26, (this.height - 230) / 2);
+		int left = MARGIN;
+		int right = this.width - MARGIN;
+		int contentWidth = right - left;
+		int top = 28;
 
-		int buttonWidth = (PANEL_WIDTH - 15) / 4;
+		int buttonWidth = Math.max(84, (contentWidth - 20) / Section.values().length);
 		int x = left;
-		for (Page pageOption : Page.values()) {
-			addRenderableWidget(Button.builder(pageOption.title(), button -> {
-				this.page = pageOption;
+		for (Section sectionOption : Section.values()) {
+			addRenderableWidget(Button.builder(sectionOption.title(), button -> {
+				this.section = sectionOption;
 				rebuildWidgets();
-			}).bounds(x, top + 34, buttonWidth, 20).build());
+			}).bounds(x, top + 42, buttonWidth, 20).build());
 			x += buttonWidth + 5;
 		}
 
-		int y = top + 68;
-		for (ConfigField field : this.page.fields()) {
-			EditBox box = new EditBox(this.font, left + PANEL_WIDTH - FIELD_WIDTH, y, FIELD_WIDTH, 20, field.label());
+		this.searchBox = new EditBox(this.font, left, top + 72, contentWidth, 20, LodestoneText.text("input.search", "Search"));
+		this.searchBox.setHint(LodestoneText.text("input.search", "Search"));
+		this.searchBox.setMaxLength(64);
+		this.searchBox.setValue(this.query);
+		this.searchBox.setResponder(value -> {
+			this.query = value;
+			rebuildWidgets();
+		});
+		addRenderableWidget(this.searchBox);
+
+		int y = top + 104;
+		int fieldX = Math.max(left + 220, right - FIELD_WIDTH);
+		for (ConfigField field : filteredFields()) {
+			EditBox box = new EditBox(this.font, fieldX, y, right - fieldX, 18, field.label());
 			box.setMaxLength(96);
 			box.setValue(field.get());
 			addRenderableWidget(box);
@@ -55,33 +69,35 @@ public final class LodestoneConfigScreen extends Screen {
 			y += ROW_HEIGHT;
 		}
 
-		int actionsY = Math.min(this.height - 54, top + 196);
+		int actionsY = this.height - 30;
 		addRenderableWidget(Button.builder(LodestoneText.text("config.button.save", "Save"), button -> save()).bounds(left, actionsY, 130, 20).build());
 		addRenderableWidget(Button.builder(LodestoneText.text("config.button.reload", "Reload"), button -> {
 			LodestoneConfig.load();
 			this.status = LodestoneText.text("config.status.reloaded", "Reloaded config from disk.");
 			rebuildWidgets();
-		}).bounds(left + 145, actionsY, 130, 20).build());
-		addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> this.minecraft.setScreenAndShow(this.parent)).bounds(left + 290, actionsY, 130, 20).build());
+		}).bounds(left + 140, actionsY, 130, 20).build());
+		addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> this.minecraft.setScreenAndShow(this.parent)).bounds(right - 130, actionsY, 130, 20).build());
 	}
 
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		this.extractTransparentBackground(graphics);
-		int left = (this.width - PANEL_WIDTH) / 2;
-		int top = Math.max(26, (this.height - 230) / 2);
-		graphics.fill(left - 12, top - 16, left + PANEL_WIDTH + 12, top + 226, 0xDD101010);
-		graphics.outline(left - 12, top - 16, PANEL_WIDTH + 24, 242, 0xFF595959);
-		graphics.centeredText(this.font, this.title, this.width / 2, top - 7, 0xFFFFFFFF);
+		int left = MARGIN;
+		int right = this.width - MARGIN;
+		int top = 28;
+		graphics.fill(0, 0, this.width, this.height, 0xCC060606);
+		graphics.fill(left - 12, top - 18, right + 12, this.height - 6, 0xDD101010);
+		graphics.outline(left - 12, top - 18, right - left + 24, this.height - top + 12, 0xFF595959);
+		graphics.centeredText(this.font, this.title, this.width / 2, top - 8, 0xFFFFFFFF);
 		graphics.centeredText(this.font, LodestoneText.text("config.notice", "Client-side editor for the local config file. Remote servers use their own config."), this.width / 2, top + 12, 0xFFA8A8A8);
 
-		int y = top + 74;
+		int y = top + 108;
 		for (ConfigField field : this.fields) {
-			graphics.text(this.font, field.label(), left, y + 5, 0xFF8DEEFF);
+			graphics.text(this.font, field.label(), left, y + 4, 0xFF8DEEFF);
 			y += ROW_HEIGHT;
 		}
 		if (!this.status.getString().isBlank()) {
-			graphics.centeredText(this.font, this.status, this.width / 2, Math.min(this.height - 30, top + 206), 0xFFFFD37A);
+			graphics.centeredText(this.font, this.status, this.width / 2, this.height - 48, 0xFFFFD37A);
 		}
 		super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 	}
@@ -110,7 +126,26 @@ public final class LodestoneConfigScreen extends Screen {
 		rebuildWidgets();
 	}
 
-	private enum Page {
+	private List<ConfigField> filteredFields() {
+		String cleanQuery = this.query.trim().toLowerCase(java.util.Locale.ROOT);
+		return this.section.fields().stream()
+			.filter(field -> cleanQuery.isBlank() || field.searchText().contains(cleanQuery))
+			.toList();
+	}
+
+	private enum Section {
+		ALL("config.page.all", "All") {
+			@Override
+			List<ConfigField> fields() {
+				List<ConfigField> fields = new ArrayList<>();
+				for (Section section : Section.values()) {
+					if (section != ALL) {
+						fields.addAll(section.fields());
+					}
+				}
+				return fields;
+			}
+		},
 		COST("config.page.cost", "Cost") {
 			@Override
 			List<ConfigField> fields() {
@@ -165,7 +200,7 @@ public final class LodestoneConfigScreen extends Screen {
 		private final String key;
 		private final String fallback;
 
-		Page(String key, String fallback) {
+		Section(String key, String fallback) {
 			this.key = key;
 			this.fallback = fallback;
 		}
@@ -177,13 +212,13 @@ public final class LodestoneConfigScreen extends Screen {
 		abstract List<ConfigField> fields();
 	}
 
-	private record ConfigField(Component label, String value, BiConsumer<LodestoneConfig, String> setter, EditBox box) {
+	private record ConfigField(Component label, String value, String searchText, BiConsumer<LodestoneConfig, String> setter, EditBox box) {
 		static ConfigField with(String key, String fallback, String value, BiConsumer<LodestoneConfig, String> setter) {
-			return new ConfigField(LodestoneText.text(key, fallback), value, setter, null);
+			return new ConfigField(LodestoneText.text(key, fallback), value, (key + " " + fallback).toLowerCase(java.util.Locale.ROOT), setter, null);
 		}
 
 		ConfigField withBox(EditBox box) {
-			return new ConfigField(this.label, this.value, this.setter, box);
+			return new ConfigField(this.label, this.value, this.searchText, this.setter, box);
 		}
 
 		String get() {

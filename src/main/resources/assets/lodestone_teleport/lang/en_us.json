@@ -22,6 +22,7 @@
   "text.lodestone_teleport.client.page.next": "Next",
   "text.lodestone_teleport.config.title": "Lodestone Warps Config",
   "text.lodestone_teleport.config.notice": "Client-side editor for the local config file. Remote servers use their own config.",
+  "text.lodestone_teleport.config.page.all": "All",
   "text.lodestone_teleport.config.page.cost": "Cost",
   "text.lodestone_teleport.config.page.registration": "Registration",
   "text.lodestone_teleport.config.page.teleport": "Teleport",
