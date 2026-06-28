@@ -3,11 +3,16 @@
 	"id": "lodestone_teleport",
 	"version": "${version}",
 	"name": "Lodestone Warps",
-	"description": "Server-side lodestone warp network for Minecraft 26.2.",
+	"description": "Turn vanilla Lodestones into a configurable warp network with server-side validation, vanilla Dialog support, and an optional enhanced client UI.",
 	"icon": "assets/lodestone_teleport/icon.png",
 	"authors": [
-		"simke"
+		"GSimken"
 	],
+	"contact": {
+		"homepage": "https://github.com/Gsimken/Lodestone-Warp",
+		"sources": "https://github.com/Gsimken/Lodestone-Warp",
+		"issues": "https://github.com/Gsimken/Lodestone-Warp/issues"
+	},
 	"license": "MIT",
 	"environment": "*",
 	"entrypoints": {
