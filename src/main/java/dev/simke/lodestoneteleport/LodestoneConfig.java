@@ -26,7 +26,7 @@ public final class LodestoneConfig {
 	public String costItem = "minecraft:diamond";
 	public String costType = "xp_levels";
 	public int baseCost = 1;
-	public int blocksPerExtraCost = 500;
+	public int blocksPerExtraCost = 1000;
 	public double crossDimensionMultiplier = 2.0D;
 	public int maxCost = 64;
 	public boolean allowCrossDimension = true;
@@ -97,10 +97,26 @@ public final class LodestoneConfig {
 		if (loaded == null || !loaded.isJsonObject()) {
 			return merged;
 		}
-		for (var entry : loaded.getAsJsonObject().entrySet()) {
+		JsonObject loadedObject = loaded.getAsJsonObject();
+		boolean legacyCostConfig = isLegacyDefaultCostConfig(loadedObject);
+		for (var entry : loadedObject.entrySet()) {
 			merged.add(entry.getKey(), entry.getValue());
 		}
+		if (legacyCostConfig) {
+			merged.addProperty("blocksPerExtraCost", 1000);
+		}
 		return merged;
+	}
+
+	private static boolean isLegacyDefaultCostConfig(JsonObject loadedObject) {
+		if (loadedObject.has("costType") || !loadedObject.has("blocksPerExtraCost")) {
+			return false;
+		}
+		try {
+			return loadedObject.get("blocksPerExtraCost").getAsInt() == 500;
+		} catch (RuntimeException exception) {
+			return false;
+		}
 	}
 
 	private static LodestoneConfig sanitize(LodestoneConfig config) {

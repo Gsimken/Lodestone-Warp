@@ -12,7 +12,7 @@ public record LodestoneTeleportCost(String type, Item item, String itemId, int a
 		int amount = config.baseCost;
 
 		if (!crossDimension && config.blocksPerExtraCost > 0) {
-			amount += (int) Math.floor(distance / config.blocksPerExtraCost);
+			amount = Math.max(amount, (int) Math.ceil(distance / config.blocksPerExtraCost));
 		}
 		if (crossDimension) {
 			amount = (int) Math.ceil(amount * config.crossDimensionMultiplier);
