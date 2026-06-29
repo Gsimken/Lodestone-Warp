@@ -41,7 +41,7 @@ public final class LodestoneConfig {
 	public boolean teleportEffects = true;
 	public String vanillaTeleportEffect = "end";
 	public String modTeleportEffect = "lodestone";
-	public String networkMode = "all";
+	public String networkMode = "discover";
 	public boolean requirePermissions = false;
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
@@ -161,7 +161,7 @@ public final class LodestoneConfig {
 
 	private static String cleanNetworkMode(String value) {
 		if (value == null) {
-			return "all";
+			return "discover";
 		}
 		String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
 		return switch (clean) {

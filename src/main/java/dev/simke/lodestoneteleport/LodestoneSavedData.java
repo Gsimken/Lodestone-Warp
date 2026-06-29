@@ -112,10 +112,6 @@ public final class LodestoneSavedData extends SavedData {
 	}
 
 	public boolean isDiscovered(UUID playerUuid, String id) {
-		LodestoneLocation location = byId.get(id);
-		if (location != null && location.global()) {
-			return true;
-		}
 		return discoveredByPlayer.getOrDefault(playerUuid, Set.of()).contains(id);
 	}
 
