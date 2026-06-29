@@ -30,7 +30,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
-	private static final Identifier EXPERIENCE_ORB_TEXTURE = Identifier.fromNamespaceAndPath(LodestoneTeleportMod.MOD_ID, "textures/gui/experience_orb.png");
+	private static final Identifier EXPERIENCE_ORB_SPRITE = Identifier.fromNamespaceAndPath(LodestoneTeleportMod.MOD_ID, "experience_orb");
 
 	private final String currentId;
 	private final String currentName;
@@ -207,7 +207,7 @@ public final class LodestoneWarpScreen extends Screen {
 			return;
 		}
 		if (destination.usesXpLevels()) {
-			graphics.blit(RenderPipelines.GUI_TEXTURED, EXPERIENCE_ORB_TEXTURE, x, y, 0.0F, 0.0F, 16, 16, 150, 150);
+			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, EXPERIENCE_ORB_SPRITE, x, y, 16, 16);
 		} else {
 			graphics.item(destination.costStack(), x, y);
 		}
