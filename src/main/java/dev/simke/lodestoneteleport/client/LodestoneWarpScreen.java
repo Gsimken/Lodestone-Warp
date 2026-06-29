@@ -29,7 +29,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
-	private static final Identifier EXPERIENCE_ORB_TEXTURE = Identifier.withDefaultNamespace("textures/entity/experience/experience_orb.png");
+	private static final Identifier ENCHANTING_LEVEL_SPRITE = Identifier.withDefaultNamespace("container/enchanting_table/level_1");
 
 	private final String currentId;
 	private final String currentName;
@@ -206,7 +206,7 @@ public final class LodestoneWarpScreen extends Screen {
 			return;
 		}
 		if (destination.usesXpLevels()) {
-			graphics.blit(RenderPipelines.GUI_TEXTURED, EXPERIENCE_ORB_TEXTURE, x, y, 0.0F, 0.0F, 16, 16, 64, 64);
+			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, ENCHANTING_LEVEL_SPRITE, x, y, 16, 16);
 		} else {
 			graphics.item(destination.costStack(), x, y);
 		}
