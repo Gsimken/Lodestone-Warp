@@ -1,12 +1,14 @@
 package dev.simke.lodestoneteleport.client;
 
 import dev.simke.lodestoneteleport.LodestoneText;
+import dev.simke.lodestoneteleport.LodestoneTeleportMod;
 import dev.simke.lodestoneteleport.network.LodestoneActionPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -28,6 +30,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
+	private static final Identifier EXPERIENCE_ORB_TEXTURE = Identifier.fromNamespaceAndPath(LodestoneTeleportMod.MOD_ID, "textures/gui/experience_orb.png");
 
 	private final String currentId;
 	private final String currentName;
@@ -204,20 +207,11 @@ public final class LodestoneWarpScreen extends Screen {
 			return;
 		}
 		if (destination.usesXpLevels()) {
-			drawExperienceMarker(graphics, x, y);
+			graphics.blit(RenderPipelines.GUI_TEXTURED, EXPERIENCE_ORB_TEXTURE, x, y, 0.0F, 0.0F, 16, 16, 150, 150);
 		} else {
 			graphics.item(destination.costStack(), x, y);
 		}
 		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, 0xFFFFFFFF);
-	}
-
-	private void drawExperienceMarker(GuiGraphicsExtractor graphics, int x, int y) {
-		graphics.fill(x + 7, y + 1, x + 9, y + 15, 0xFF3FAE27);
-		graphics.fill(x + 1, y + 7, x + 15, y + 9, 0xFF3FAE27);
-		graphics.fill(x + 4, y + 4, x + 12, y + 12, 0xFF8DFF3A);
-		graphics.fill(x + 6, y + 6, x + 10, y + 10, 0xFFFFF06A);
-		graphics.fill(x + 5, y + 5, x + 7, y + 7, 0xFFFFFFFF);
-		graphics.fill(x + 10, y + 10, x + 12, y + 12, 0xFF2E7E18);
 	}
 
 	private String truncate(String value, int width) {
