@@ -29,7 +29,6 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
-	private static final Identifier ENCHANTING_LEVEL_SPRITE = Identifier.withDefaultNamespace("container/enchanting_table/level_1");
 
 	private final String currentId;
 	private final String currentName;
@@ -206,11 +205,21 @@ public final class LodestoneWarpScreen extends Screen {
 			return;
 		}
 		if (destination.usesXpLevels()) {
-			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, ENCHANTING_LEVEL_SPRITE, x, y, 16, 16);
+			drawLevelCost(graphics, destination.costAmount(), x, y);
+			return;
 		} else {
 			graphics.item(destination.costStack(), x, y);
 		}
 		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, 0xFFFFFFFF);
+	}
+
+	private void drawLevelCost(GuiGraphicsExtractor graphics, int amount, int x, int y) {
+		int spriteLevel = Math.max(1, Math.min(3, amount));
+		Identifier sprite = Identifier.withDefaultNamespace("container/enchanting_table/level_" + spriteLevel);
+		graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, 16, 16);
+		if (amount > 3) {
+			graphics.text(this.font, "Lv " + amount, x + 19, y + 5, 0xFF8CFF6A);
+		}
 	}
 
 	private String truncate(String value, int width) {
