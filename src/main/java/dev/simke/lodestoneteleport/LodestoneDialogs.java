@@ -59,6 +59,9 @@ public final class LodestoneDialogs {
 			if (destination.id().equals(current.id())) {
 				continue;
 			}
+			if (!LodestoneDiscovery.canSee(player, data, destination)) {
+				continue;
+			}
 			if (!matches(destination, cleanQuery)) {
 				continue;
 			}

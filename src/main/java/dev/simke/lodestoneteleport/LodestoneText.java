@@ -79,6 +79,14 @@ public final class LodestoneText {
 			case "renamed" -> "Lodestone renamed to %s.";
 			case "removed" -> "Unlinked lodestone warp: %s.";
 			case "registered" -> "Lodestone registered: %s";
+			case "discovered" -> "Discovered lodestone: %s";
+			case "global.badge" -> "[Global]";
+			case "global.enabled" -> "Lodestone marked global: %s";
+			case "global.disabled" -> "Lodestone is no longer global: %s";
+			case "discover.granted" -> "Granted %s discovery of %s.";
+			case "discover.revoked" -> "Revoked %s discovery of %s.";
+			case "discover.list_header" -> "%s has discovered:";
+			case "discover.list_empty" -> "No discovered lodestones.";
 			case "list.empty" -> "No lodestones registered.";
 			case "list.header" -> "Registered lodestones:";
 			case "list.entry" -> "- %s: %s (%s)";
@@ -88,6 +96,7 @@ public final class LodestoneText {
 			case "error.cross_dimension_disabled" -> "Cross-dimension teleport is disabled.";
 			case "error.destination_removed" -> "The destination no longer has a lodestone and was removed.";
 			case "error.lodestone_not_registered" -> "This lodestone is not registered.";
+			case "error.not_discovered" -> "You have not discovered that lodestone.";
 			case "error.max_lodestones_global" -> "The server has reached the maximum number of registered lodestones.";
 			case "error.max_lodestones_player" -> "You have reached your maximum number of registered lodestones.";
 			case "error.need_cost" -> "You need %s.";
@@ -100,6 +109,7 @@ public final class LodestoneText {
 			case "error.no_permission.rename" -> "You do not have permission to rename lodestones.";
 			case "error.no_permission.create" -> "You do not have permission to register lodestones.";
 			case "error.no_permission.remove" -> "You do not have permission to remove registered lodestones.";
+			case "error.no_permission.global" -> "You do not have permission to manage global lodestones.";
 			case "error.lodestone_not_found" -> "I could not find that lodestone.";
 			case "error.invalid_action" -> "Invalid lodestone action.";
 			case "error.action_failed" -> "Could not run the lodestone action.";

@@ -38,8 +38,12 @@ public final class LodestoneNetworking {
 		root.putBoolean("canRename", LodestonePermissions.canRename(player));
 
 		ListTag destinations = new ListTag();
-		for (LodestoneLocation destination : LodestoneSavedData.from(player.level()).all()) {
+		LodestoneSavedData data = LodestoneSavedData.from(player.level());
+		for (LodestoneLocation destination : data.all()) {
 			if (destination.id().equals(current.id())) {
+				continue;
+			}
+			if (!LodestoneDiscovery.canSee(player, data, destination)) {
 				continue;
 			}
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);

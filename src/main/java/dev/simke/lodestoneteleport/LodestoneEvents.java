@@ -59,6 +59,9 @@ public final class LodestoneEvents {
 				}
 			}
 			LodestoneLocation location = existing.orElseGet(() -> data.register(level.dimension(), hit.getBlockPos(), player.getUUID(), player.getName().getString()));
+			if (LodestoneDiscovery.discover(serverPlayer, data, location) && existing.isPresent()) {
+				serverPlayer.sendSystemMessage(LodestoneText.text("discovered", "Discovered lodestone: %s", location.displayName()));
+			}
 			LodestoneUi.showDestinations(serverPlayer, location);
 			return InteractionResult.SUCCESS_SERVER;
 		}
@@ -119,6 +122,7 @@ public final class LodestoneEvents {
 			}
 
 			LodestoneLocation location = data.register(level.dimension(), placed, player.getUUID(), player.getName().getString());
+			LodestoneDiscovery.discover(player, data, location);
 			player.sendSystemMessage(LodestoneText.text("registered", "Registered lodestone: %s", location.displayName()));
 			if (pending.rename() && LodestonePermissions.canRename(player)) {
 				LodestoneUi.showRename(player, location);
