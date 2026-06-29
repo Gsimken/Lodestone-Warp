@@ -19,6 +19,7 @@ public final class LodestonePermissions {
 	public static final PermissionNode<Boolean> MODE_ALL = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "mode.all");
 	public static final PermissionNode<Boolean> MODE_DISCOVER = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "mode.discover");
 	public static final PermissionNode<Boolean> CONFIG = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "config");
+	public static final PermissionNode<Boolean> GLOBAL = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "global");
 
 	private LodestonePermissions() {
 	}
@@ -99,6 +100,10 @@ public final class LodestonePermissions {
 		return canConfig(player.createCommandSourceStack());
 	}
 
+	public static boolean canSetGlobal(CommandSourceStack source) {
+		return has(source, GLOBAL, false);
+	}
+
 	private static boolean has(CommandSourceStack source, PermissionNode<Boolean> permission, boolean openDefault) {
 		Boolean debugOverride = debugOverride(permission);
 		if (debugOverride != null) {
@@ -126,6 +131,7 @@ public final class LodestonePermissions {
 		if (permission == MODE_ALL) return "mode.all";
 		if (permission == MODE_DISCOVER) return "mode.discover";
 		if (permission == CONFIG) return "config";
+		if (permission == GLOBAL) return "global";
 		return "";
 	}
 

@@ -15,9 +15,11 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class LodestoneSavedData extends SavedData {
@@ -30,6 +32,7 @@ public final class LodestoneSavedData extends SavedData {
 
 	private final Map<String, LodestoneLocation> byId = new LinkedHashMap<>();
 	private final Map<String, String> idByPosition = new LinkedHashMap<>();
+	private final Map<UUID, Set<String>> discoveredByPlayer = new LinkedHashMap<>();
 	private long nextId = 1L;
 
 	public static LodestoneSavedData from(Level level) {
@@ -61,7 +64,8 @@ public final class LodestoneSavedData extends SavedData {
 				pos.immutable(),
 				ownerUuid,
 				ownerName,
-				System.currentTimeMillis()
+				System.currentTimeMillis(),
+				false
 			);
 			put(location);
 			return location;
@@ -81,10 +85,68 @@ public final class LodestoneSavedData extends SavedData {
 			current.pos(),
 			current.ownerUuid(),
 			current.ownerName(),
-			current.createdAt()
+			current.createdAt(),
+			current.global()
 		);
 		put(renamed);
 		return true;
+	}
+
+	public boolean setGlobal(String id, boolean global) {
+		LodestoneLocation current = byId.get(id);
+		if (current == null || current.global() == global) {
+			return false;
+		}
+		LodestoneLocation updated = new LodestoneLocation(
+			current.id(),
+			current.name(),
+			current.dimension(),
+			current.pos(),
+			current.ownerUuid(),
+			current.ownerName(),
+			current.createdAt(),
+			global
+		);
+		put(updated);
+		return true;
+	}
+
+	public boolean isDiscovered(UUID playerUuid, String id) {
+		LodestoneLocation location = byId.get(id);
+		if (location != null && location.global()) {
+			return true;
+		}
+		return discoveredByPlayer.getOrDefault(playerUuid, Set.of()).contains(id);
+	}
+
+	public boolean discover(UUID playerUuid, String id) {
+		if (!byId.containsKey(id)) {
+			return false;
+		}
+		boolean added = discoveredByPlayer.computeIfAbsent(playerUuid, ignored -> new HashSet<>()).add(id);
+		if (added) {
+			setDirty();
+		}
+		return added;
+	}
+
+	public boolean revokeDiscovery(UUID playerUuid, String id) {
+		Set<String> discovered = discoveredByPlayer.get(playerUuid);
+		if (discovered == null) {
+			return false;
+		}
+		boolean removed = discovered.remove(id);
+		if (discovered.isEmpty()) {
+			discoveredByPlayer.remove(playerUuid);
+		}
+		if (removed) {
+			setDirty();
+		}
+		return removed;
+	}
+
+	public Set<String> discoveredIds(UUID playerUuid) {
+		return Set.copyOf(discoveredByPlayer.getOrDefault(playerUuid, Set.of()));
 	}
 
 	public boolean remove(ResourceKey<Level> dimension, BlockPos pos) {
@@ -94,6 +156,9 @@ public final class LodestoneSavedData extends SavedData {
 			return false;
 		}
 		byId.remove(id);
+		for (Set<String> discovered : discoveredByPlayer.values()) {
+			discovered.remove(id);
+		}
 		setDirty();
 		return true;
 	}
@@ -119,9 +184,24 @@ public final class LodestoneSavedData extends SavedData {
 			entry.putString("owner_uuid", location.ownerUuid().toString());
 			entry.putString("owner_name", location.ownerName());
 			entry.putLong("created_at", location.createdAt());
+			entry.putBoolean("global", location.global());
 			list.add(entry);
 		}
 		tag.put("lodestones", list);
+		ListTag discoveries = new ListTag();
+		for (Map.Entry<UUID, Set<String>> playerEntry : discoveredByPlayer.entrySet()) {
+			CompoundTag entry = new CompoundTag();
+			entry.putString("player_uuid", playerEntry.getKey().toString());
+			ListTag ids = new ListTag();
+			for (String id : playerEntry.getValue()) {
+				CompoundTag idTag = new CompoundTag();
+				idTag.putString("id", id);
+				ids.add(idTag);
+			}
+			entry.put("ids", ids);
+			discoveries.add(entry);
+		}
+		tag.put("discoveries", discoveries);
 		return tag;
 	}
 
@@ -142,11 +222,25 @@ public final class LodestoneSavedData extends SavedData {
 				new BlockPos(entry.getIntOr("x", 0), entry.getIntOr("y", 0), entry.getIntOr("z", 0)),
 				ownerUuid,
 				entry.getStringOr("owner_name", "unknown"),
-				entry.getLongOr("created_at", 0L)
+				entry.getLongOr("created_at", 0L),
+				entry.getBooleanOr("global", false)
 			);
 			if (!location.id().isBlank()) {
 				data.byId.put(location.id(), location);
 				data.idByPosition.put(location.positionKey(), location.id());
+			}
+		}
+		for (CompoundTag entry : tag.getListOrEmpty("discoveries").compoundStream().toList()) {
+			UUID playerUuid = parseUuid(entry.getStringOr("player_uuid", "00000000-0000-0000-0000-000000000000"));
+			Set<String> ids = new HashSet<>();
+			for (CompoundTag idTag : entry.getListOrEmpty("ids").compoundStream().toList()) {
+				String id = idTag.getStringOr("id", "");
+				if (!id.isBlank()) {
+					ids.add(id);
+				}
+			}
+			if (!ids.isEmpty()) {
+				data.discoveredByPlayer.put(playerUuid, ids);
 			}
 		}
 		return data;

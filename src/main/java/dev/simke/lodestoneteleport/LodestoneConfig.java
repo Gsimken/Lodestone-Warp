@@ -41,6 +41,7 @@ public final class LodestoneConfig {
 	public boolean teleportEffects = true;
 	public String vanillaTeleportEffect = "end";
 	public String modTeleportEffect = "lodestone";
+	public String networkMode = "all";
 	public boolean requirePermissions = false;
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
@@ -118,6 +119,7 @@ public final class LodestoneConfig {
 		config.teleportCooldownSeconds = Math.max(0, config.teleportCooldownSeconds);
 		config.vanillaTeleportEffect = cleanEffect(config.vanillaTeleportEffect, "end");
 		config.modTeleportEffect = cleanEffect(config.modTeleportEffect, "lodestone");
+		config.networkMode = cleanNetworkMode(config.networkMode);
 		config.commandName = cleanCommandName(config.commandName, "warp");
 		config.fallbackCommandName = cleanCommandName(config.fallbackCommandName, "lodestone_warp");
 		config.serverLanguage = cleanLanguage(config.serverLanguage);
@@ -154,6 +156,17 @@ public final class LodestoneConfig {
 		return switch (clean) {
 			case "none", "off", "end", "lodestone" -> clean;
 			default -> fallback;
+		};
+	}
+
+	private static String cleanNetworkMode(String value) {
+		if (value == null) {
+			return "all";
+		}
+		String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
+		return switch (clean) {
+			case "all", "discover" -> clean;
+			default -> "all";
 		};
 	}
 

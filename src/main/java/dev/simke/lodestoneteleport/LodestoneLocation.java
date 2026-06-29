@@ -14,7 +14,8 @@ public record LodestoneLocation(
 	BlockPos pos,
 	UUID ownerUuid,
 	String ownerName,
-	long createdAt
+	long createdAt,
+	boolean global
 ) {
 	public String positionKey() {
 		return positionKey(dimension, pos);
