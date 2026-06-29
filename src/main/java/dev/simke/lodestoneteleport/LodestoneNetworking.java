@@ -55,6 +55,7 @@ public final class LodestoneNetworking {
 			item.putInt("y", destination.pos().getY());
 			item.putInt("z", destination.pos().getZ());
 			item.putString("cost", LodestoneText.cost(cost).getString());
+			item.putString("costType", cost.type());
 			item.putString("costItem", cost.itemId());
 			item.putInt("costAmount", cost.amount());
 			destinations.add(item);

@@ -564,6 +564,9 @@ public final class LodestoneCommands {
 		if (cost.amount() <= 0 || player.isCreative() || LodestonePermissions.canBypassCost(player)) {
 			return true;
 		}
+		if (cost.usesXpLevels()) {
+			return player.experienceLevel >= cost.amount();
+		}
 		Item costItem = cost.item();
 		Inventory inventory = player.getInventory();
 		int remaining = cost.amount();
@@ -585,6 +588,10 @@ public final class LodestoneCommands {
 
 	private static void consumeCost(ServerPlayer player, LodestoneTeleportCost cost) {
 		if (cost.amount() <= 0 || player.isCreative()) {
+			return;
+		}
+		if (cost.usesXpLevels()) {
+			player.giveExperienceLevels(-cost.amount());
 			return;
 		}
 		Inventory inventory = player.getInventory();

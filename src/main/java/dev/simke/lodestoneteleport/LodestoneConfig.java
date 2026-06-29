@@ -24,6 +24,7 @@ public final class LodestoneConfig {
 	private static LodestoneConfig INSTANCE = defaults();
 
 	public String costItem = "minecraft:diamond";
+	public String costType = "xp_levels";
 	public int baseCost = 1;
 	public int blocksPerExtraCost = 500;
 	public double crossDimensionMultiplier = 2.0D;
@@ -106,6 +107,7 @@ public final class LodestoneConfig {
 		if (config.costItem == null || Identifier.tryParse(config.costItem) == null) {
 			config.costItem = "minecraft:diamond";
 		}
+		config.costType = cleanCostType(config.costType);
 		config.baseCost = Math.max(0, config.baseCost);
 		config.blocksPerExtraCost = Math.max(0, config.blocksPerExtraCost);
 		config.crossDimensionMultiplier = Math.max(0.0D, config.crossDimensionMultiplier);
@@ -156,6 +158,18 @@ public final class LodestoneConfig {
 		return switch (clean) {
 			case "none", "off", "end", "lodestone" -> clean;
 			default -> fallback;
+		};
+	}
+
+	private static String cleanCostType(String value) {
+		if (value == null) {
+			return "xp_levels";
+		}
+		String clean = value.trim().toLowerCase(java.util.Locale.ROOT);
+		return switch (clean) {
+			case "xp", "level", "levels", "xp_level", "xp_levels" -> "xp_levels";
+			case "item", "items" -> "item";
+			default -> "xp_levels";
 		};
 	}
 

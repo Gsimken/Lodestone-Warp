@@ -38,7 +38,10 @@ public final class LodestoneText {
 
 	public static Component cost(LodestoneTeleportCost cost) {
 		if (cost.amount() <= 0) {
-			return text("cost.free", "gratis");
+			return text("cost.free", "free");
+		}
+		if (cost.usesXpLevels()) {
+			return text("cost.xp_levels", "%s levels", cost.amount());
 		}
 		return text("cost.item", "%sx %s", cost.amount(), item(cost));
 	}
@@ -71,6 +74,7 @@ public final class LodestoneText {
 			case "rename.title" -> "Name lodestone";
 			case "rename.body" -> "Choose a name for this lodestone.";
 			case "cost.free" -> "free";
+			case "cost.xp_levels" -> "%s levels";
 			case "cost.item" -> "%sx %s";
 			case "dimension.overworld" -> "overworld";
 			case "dimension.the_nether" -> "nether";

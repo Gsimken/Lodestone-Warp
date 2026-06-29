@@ -28,7 +28,7 @@ The most up-to-date documentation is kept in the wiki:
 - Searchable destination list.
 - Pagination in the custom mod UI.
 - Rename Lodestones from the UI.
-- Teleport cost with configurable item and dynamic distance scaling.
+- Teleport cost with configurable XP-level or item payment and dynamic distance scaling.
 - Stand-still teleport cast before travel.
 - Server-side teleport cooldown.
 - Configurable teleport particles and sounds.

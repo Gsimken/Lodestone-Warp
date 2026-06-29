@@ -206,6 +206,7 @@ public final class LodestoneConfigScreen extends Screen {
 			@Override
 			List<ConfigField> fields() {
 				return List.of(
+					text("cost_type", "config.field.cost_type", "Cost type", "xp_levels", "Type of cost charged for each teleport.", "xp_levels or item.", () -> LodestoneConfig.get().costType, (config, value) -> config.costType = value),
 					text("cost_item", "config.field.cost_item", "Cost item", "minecraft:diamond", "Item id charged for each teleport.", "Item identifier, for example minecraft:diamond.", () -> LodestoneConfig.get().costItem, (config, value) -> config.costItem = value),
 					integer("base_cost", "config.field.base_cost", "Base cost", "1", "Minimum item cost for a teleport.", "Whole number, 0 or higher.", () -> LodestoneConfig.get().baseCost, (config, value) -> config.baseCost = value),
 					integer("blocks_per_extra_cost", "config.field.blocks_per_extra_cost", "Blocks per extra cost", "500", "Adds one extra cost step every configured blocks in the same dimension.", "Whole number, 0 disables distance scaling.", () -> LodestoneConfig.get().blocksPerExtraCost, (config, value) -> config.blocksPerExtraCost = value),

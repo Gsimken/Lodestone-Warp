@@ -4,6 +4,11 @@
 
 - [x] Require players to be near a registered lodestone before allowing teleport actions, including manual `/lodestone_warps tp <id>` usage.
 - [x] Add configurable cost item.
+- [x] Add configurable XP-level or item costs.
+- [ ] Add multi-cost support:
+  - [ ] Charge multiple item stacks at once.
+  - [ ] Combine XP levels and item costs.
+  - [ ] Allow per-dimension or per-distance cost rules.
 - [x] Add server-side cooldown.
 - [x] Add maximum possible warps.
 - [x] Add server-side config commands and vanilla Dialog quick config UI.

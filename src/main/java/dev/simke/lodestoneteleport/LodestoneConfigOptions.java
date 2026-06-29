@@ -22,6 +22,7 @@ public final class LodestoneConfigOptions {
 	public static final String ADVANCED = "advanced";
 
 	private static final List<Option> OPTIONS = List.of(
+		text("cost_type", COST, "config.field.cost_type", "Cost type", "xp_levels", "Type of cost charged for each teleport.", "xp_levels or item.", config -> config.costType, (config, value) -> config.costType = value),
 		text("cost_item", COST, "config.field.cost_item", "Cost item", "minecraft:diamond", "Item id charged for each teleport.", "Item identifier, for example minecraft:diamond.", config -> config.costItem, (config, value) -> config.costItem = value),
 		integer("base_cost", COST, "config.field.base_cost", "Base cost", "1", "Minimum item cost for a teleport.", "Whole number, 0 or higher.", config -> config.baseCost, (config, value) -> config.baseCost = value),
 		integer("blocks_per_extra_cost", COST, "config.field.blocks_per_extra_cost", "Blocks per extra cost", "500", "Adds one extra cost step every configured blocks in the same dimension.", "Whole number, 0 disables distance scaling.", config -> config.blocksPerExtraCost, (config, value) -> config.blocksPerExtraCost = value),
