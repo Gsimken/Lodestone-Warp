@@ -1,6 +1,6 @@
 # Lodestone Warps
 
-**Last updated:** 2026-06-28
+**Last updated:** 2026-06-29
 
 **Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
 
@@ -39,6 +39,9 @@ The most up-to-date documentation is kept in the wiki:
 - Configurable command name, defaulting to `/warp`.
 - Safe fallback command, defaulting to `/lodestone_warp`.
 - Server-side config commands and a vanilla Dialog quick config UI for server owners.
+- Configurable network mode: show all Lodestones or only discovered Lodestones.
+- Per-player Lodestone discovery storage.
+- Admin-managed global Lodestones for lobbies and shared hubs.
 - LuckPerms-compatible permissions through Fabric Permissions API.
 - Optional config to disable permission checks for open servers.
 - Server-side language fallback for vanilla UI text.
@@ -85,6 +88,10 @@ Available subcommands:
 - `/warp remove <id>`
 - `/warp unlink <id>`
 - `/warp list`
+- `/warp global <id> <true|false>`
+- `/warp discover grant <player> <id>`
+- `/warp discover revoke <player> <id>`
+- `/warp discover list <player>`
 - `/warp reload`
 - `/warp config`
 - `/warp config list`
@@ -108,10 +115,15 @@ Permission nodes:
 - `lodestone_teleport.bypass_cooldown`
 - `lodestone_teleport.bypass_max_warps`
 - `lodestone_teleport.config`
+- `lodestone_teleport.global`
+- `lodestone_teleport.mode.all`
+- `lodestone_teleport.mode.discover`
 
 If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
 
 Server owners need `lodestone_teleport.config` or OP-level access to use `/warp reload`, `/warp config`, and server config editing actions.
+
+Admins need `lodestone_teleport.global` or OP-level access to mark Lodestones as global in discovery mode.
 
 Permission checks can be disabled in the server config.
 
@@ -127,7 +139,7 @@ Full config reference:
 
 ## Current Status
 
-Current release line: **0.4.x**
+Current release line: **0.5.x**
 
 This is still an early mod, but the core gameplay loop is playable:
 
@@ -135,6 +147,7 @@ This is still an early mod, but the core gameplay loop is playable:
 - open UI
 - search destinations
 - teleport with cost
+- use discovery mode
 - rename destinations
 - use permissions
 - support vanilla and modded clients

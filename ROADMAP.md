@@ -7,14 +7,15 @@
 - [x] Add server-side cooldown.
 - [x] Add maximum possible warps.
 - [x] Add server-side config commands and vanilla Dialog quick config UI.
-- [ ] Add Lodestone discovery modes:
-  - [ ] `all`: players can see and teleport to every registered Lodestone.
-  - [ ] `discover`: players can only see and teleport to Lodestones they have discovered.
-  - [ ] Config option for the default network mode.
-  - [ ] Per-player discovered Lodestone storage.
-  - [ ] Auto-discover when placing a Lodestone.
-  - [ ] Auto-discover when interacting with a registered Lodestone.
-  - [ ] Optional admin command to grant or revoke discoveries.
+- [x] Add Lodestone discovery modes:
+  - [x] `all`: players can see and teleport to every registered Lodestone.
+  - [x] `discover`: players can only see and teleport to Lodestones they have discovered.
+  - [x] Config option for the default network mode.
+  - [x] Per-player discovered Lodestone storage.
+  - [x] Auto-discover when placing a Lodestone.
+  - [x] Auto-discover when interacting with a registered Lodestone.
+  - [x] Optional admin command to grant or revoke discoveries.
+  - [x] Admin-managed global Lodestones for lobbies and shared hubs.
 - [ ] Add teleport animations and configuration:
   - [x] Basic vanilla-style effects using existing particles.
   - [x] Separate server-side effect preset when the client has the mod installed.
@@ -28,8 +29,9 @@
   - [x] `lodestone_teleport.bypass_cooldown`
   - [x] `lodestone_teleport.bypass_max_warps`
   - [x] `lodestone_teleport.config`
-  - [ ] `lodestone_teleport.mode.all`
-  - [ ] `lodestone_teleport.mode.discover`
+  - [x] `lodestone_teleport.global`
+  - [x] `lodestone_teleport.mode.all`
+  - [x] `lodestone_teleport.mode.discover`
 - [ ] Add configurable permission backend:
   - [ ] `luckperms`: use Fabric Permissions API / LuckPerms.
   - [ ] `own`: use Lodestone Warps' own permissions file.
