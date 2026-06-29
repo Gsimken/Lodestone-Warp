@@ -7,7 +7,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -205,21 +204,20 @@ public final class LodestoneWarpScreen extends Screen {
 			return;
 		}
 		if (destination.usesXpLevels()) {
-			drawLevelCost(graphics, destination.costAmount(), x, y);
-			return;
+			drawExperienceMarker(graphics, x, y);
 		} else {
 			graphics.item(destination.costStack(), x, y);
 		}
 		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, 0xFFFFFFFF);
 	}
 
-	private void drawLevelCost(GuiGraphicsExtractor graphics, int amount, int x, int y) {
-		int spriteLevel = Math.max(1, Math.min(3, amount));
-		Identifier sprite = Identifier.withDefaultNamespace("container/enchanting_table/level_" + spriteLevel);
-		graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, 16, 16);
-		if (amount > 3) {
-			graphics.text(this.font, "Lv " + amount, x + 19, y + 5, 0xFF8CFF6A);
-		}
+	private void drawExperienceMarker(GuiGraphicsExtractor graphics, int x, int y) {
+		graphics.fill(x + 7, y + 1, x + 9, y + 15, 0xFF3FAE27);
+		graphics.fill(x + 1, y + 7, x + 15, y + 9, 0xFF3FAE27);
+		graphics.fill(x + 4, y + 4, x + 12, y + 12, 0xFF8DFF3A);
+		graphics.fill(x + 6, y + 6, x + 10, y + 10, 0xFFFFF06A);
+		graphics.fill(x + 5, y + 5, x + 7, y + 7, 0xFFFFFFFF);
+		graphics.fill(x + 10, y + 10, x + 12, y + 12, 0xFF2E7E18);
 	}
 
 	private String truncate(String value, int width) {
