@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -28,6 +29,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
+	private static final Identifier EXPERIENCE_ORB_TEXTURE = Identifier.withDefaultNamespace("textures/entity/experience/experience_orb.png");
 
 	private final String currentId;
 	private final String currentName;
@@ -203,7 +205,11 @@ public final class LodestoneWarpScreen extends Screen {
 			graphics.text(this.font, destination.cost(), x, y + 4, 0xFF8CFF8C);
 			return;
 		}
-		graphics.item(destination.costStack(), x, y);
+		if (destination.usesXpLevels()) {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, EXPERIENCE_ORB_TEXTURE, x, y, 0.0F, 0.0F, 16, 16, 64, 64);
+		} else {
+			graphics.item(destination.costStack(), x, y);
+		}
 		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, 0xFFFFFFFF);
 	}
 
@@ -247,6 +253,7 @@ public final class LodestoneWarpScreen extends Screen {
 				tag.getIntOr("y", 0),
 				tag.getIntOr("z", 0),
 				tag.getStringOr("cost", ""),
+				tag.getStringOr("costType", "item"),
 				tag.getStringOr("costItem", "minecraft:diamond"),
 				tag.getIntOr("costAmount", 0)
 			));
@@ -258,7 +265,7 @@ public final class LodestoneWarpScreen extends Screen {
 		return tag.getIntOr(prefix + "X", 0) + " " + tag.getIntOr(prefix + "Y", 0) + " " + tag.getIntOr(prefix + "Z", 0) + " (" + tag.getStringOr(prefix + "Dimension", "") + ")";
 	}
 
-	private record Destination(String id, String name, String dimension, int x, int y, int z, String cost, String costItem, int costAmount) {
+	private record Destination(String id, String name, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
 		String coords() {
 			return x + " " + y + " " + z;
 		}
@@ -270,6 +277,10 @@ public final class LodestoneWarpScreen extends Screen {
 		ItemStack costStack() {
 			Item item = BuiltInRegistries.ITEM.getOptional(Identifier.tryParse(costItem)).orElse(Items.DIAMOND);
 			return new ItemStack(item);
+		}
+
+		boolean usesXpLevels() {
+			return "xp_levels".equals(costType);
 		}
 	}
 
