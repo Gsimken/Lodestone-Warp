@@ -37,6 +37,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private final String currentName;
 	private final String currentSubtitle;
 	private final boolean canRename;
+	private final boolean canEditCurrent;
 	private final boolean viewingAll;
 	private final List<Destination> destinations;
 	private final List<Button> destinationButtons = new ArrayList<>();
@@ -51,6 +52,7 @@ public final class LodestoneWarpScreen extends Screen {
 		this.currentName = data.getStringOr("currentName", "");
 		this.currentSubtitle = formatPosition(data, "current");
 		this.canRename = data.getBooleanOr("canRename", false);
+		this.canEditCurrent = data.getBooleanOr("canEditCurrent", this.canRename);
 		this.viewingAll = data.getBooleanOr("viewingAll", false);
 		this.destinations = readDestinations(data.getListOrEmpty("destinations"));
 	}
@@ -71,9 +73,9 @@ public final class LodestoneWarpScreen extends Screen {
 		});
 		addRenderableWidget(this.searchBox);
 
-		if (this.canRename) {
+		if (this.canEditCurrent) {
 			addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Rename this warp"), button -> {
-				this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, this.currentId, this.currentName, this.currentId));
+				sendAction("edit", this.currentId, "");
 			}).bounds(left, this.height - 38, PANEL_WIDTH, 20).build());
 		}
 
@@ -119,7 +121,7 @@ public final class LodestoneWarpScreen extends Screen {
 
 		for (int index = start; index < end; index++) {
 			Destination destination = filtered.get(index);
-			int teleportWidth = this.canRename ? PANEL_WIDTH - 52 : PANEL_WIDTH;
+			int teleportWidth = destination.canEdit() ? PANEL_WIDTH - 52 : PANEL_WIDTH;
 			Button teleport = Button.builder(Component.empty(), button -> {
 				sendAction("tp", destination.id(), "");
 				this.minecraft.setScreenAndShow(null);
@@ -129,9 +131,9 @@ public final class LodestoneWarpScreen extends Screen {
 			this.destinationButtons.add(teleport);
 			this.visibleRows.add(new VisibleRow(destination, y));
 			addRenderableWidget(teleport);
-			if (this.canRename) {
+			if (destination.canEdit()) {
 				Button edit = Button.builder(Component.literal("\u270e"), button -> {
-					this.minecraft.setScreenAndShow(new LodestoneRenameScreen(this, destination.id(), destination.name(), this.currentId));
+					sendAction("edit", destination.id(), "", this.currentId);
 				}).bounds(left + PANEL_WIDTH - 47, y, 47, ROW_HEIGHT).build();
 				this.destinationButtons.add(edit);
 				addRenderableWidget(edit);
@@ -244,7 +246,9 @@ public final class LodestoneWarpScreen extends Screen {
 		CompoundTag data = new CompoundTag();
 		data.putString("action", action);
 		data.putString("id", id);
-		if (!name.isBlank()) {
+		if ("visibility".equals(action)) {
+			data.putString("visibility", name);
+		} else if (!name.isBlank()) {
 			data.putString("name", name);
 		}
 		if (!returnId.isBlank()) {
@@ -261,6 +265,7 @@ public final class LodestoneWarpScreen extends Screen {
 				tag.getStringOr("id", ""),
 				tag.getStringOr("name", ""),
 				tag.getBooleanOr("global", false),
+				tag.getBooleanOr("canEdit", false),
 				tag.getStringOr("dimension", ""),
 				tag.getIntOr("x", 0),
 				tag.getIntOr("y", 0),
@@ -278,7 +283,7 @@ public final class LodestoneWarpScreen extends Screen {
 		return tag.getIntOr(prefix + "X", 0) + " " + tag.getIntOr(prefix + "Y", 0) + " " + tag.getIntOr(prefix + "Z", 0) + " (" + tag.getStringOr(prefix + "Dimension", "") + ")";
 	}
 
-	private record Destination(String id, String name, boolean global, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
+	private record Destination(String id, String name, boolean global, boolean canEdit, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
 		String coords() {
 			return x + " " + y + " " + z;
 		}

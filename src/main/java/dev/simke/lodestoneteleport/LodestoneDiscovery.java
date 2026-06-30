@@ -14,16 +14,25 @@ public final class LodestoneDiscovery {
 		if (!LodestonePermissions.canUse(player)) {
 			return false;
 		}
-		if (!isDiscoverMode()) {
+		if (location.ownedBy(player.getUUID())) {
 			return true;
 		}
 		if (canSeeAll(player)) {
 			return true;
 		}
+		if (location.privateWarp()) {
+			return false;
+		}
+		if (location.global()) {
+			return true;
+		}
+		if (!isDiscoverMode()) {
+			return true;
+		}
 		if (!LodestonePermissions.canUseDiscoverMode(player.createCommandSourceStack())) {
 			return false;
 		}
-		return location.global() || data.isDiscovered(player.getUUID(), location.id());
+		return data.isDiscovered(player.getUUID(), location.id());
 	}
 
 	public static boolean canSeeAll(ServerPlayer player) {
@@ -32,6 +41,9 @@ public final class LodestoneDiscovery {
 
 	public static boolean discover(ServerPlayer player, LodestoneSavedData data, LodestoneLocation location) {
 		if (!LodestonePermissions.canUse(player)) {
+			return false;
+		}
+		if (location.privateWarp() && !location.ownedBy(player.getUUID())) {
 			return false;
 		}
 		return data.discover(player.getUUID(), location.id());

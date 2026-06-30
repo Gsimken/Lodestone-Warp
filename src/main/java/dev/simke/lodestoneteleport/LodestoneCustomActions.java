@@ -51,6 +51,10 @@ public final class LodestoneCustomActions {
 					LodestoneCommands.remove(player.createCommandSourceStack(), id);
 					yield true;
 				}
+				case "visibility" -> {
+					LodestoneCommands.setVisibility(player.createCommandSourceStack(), id, payload.getStringOr("visibility", ""));
+					yield true;
+				}
 				case "config_open" -> {
 					LodestoneDialogs.showConfig(player, payload.getStringOr("category", LodestoneConfigOptions.ALL), readField(payload, "query"));
 					yield true;

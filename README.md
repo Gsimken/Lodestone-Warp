@@ -87,6 +87,7 @@ Available subcommands:
 - `/warp edit <id>`
 - `/warp remove <id>`
 - `/warp unlink <id>`
+- `/warp visibility <id> <private|discoverable|global>`
 - `/warp list`
 - `/warp global <id> <true|false>`
 - `/warp discover grant <player> <id|all>`
@@ -115,7 +116,16 @@ Permission nodes:
 - `lodestone_teleport.use`
 - `lodestone_teleport.rename`
 - `lodestone_teleport.create`
+- `lodestone_teleport.create.private`
+- `lodestone_teleport.create.discoverable`
+- `lodestone_teleport.create.global`
 - `lodestone_teleport.remove`
+- `lodestone_teleport.own.rename`
+- `lodestone_teleport.own.remove`
+- `lodestone_teleport.own.destroy`
+- `lodestone_teleport.own.visibility.private`
+- `lodestone_teleport.own.visibility.discoverable`
+- `lodestone_teleport.own.visibility.global`
 - `lodestone_teleport.admin`
 - `lodestone_teleport.bypass_cost`
 - `lodestone_teleport.bypass_cast`
@@ -126,11 +136,17 @@ Permission nodes:
 - `lodestone_teleport.mode.all`
 - `lodestone_teleport.mode.discover`
 
-Players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
+Players need `lodestone_teleport.use` to use warps and `lodestone_teleport.create` plus a matching `lodestone_teleport.create.*` permission to register Lodestones. `lodestone_teleport.rename`, `lodestone_teleport.remove`, and `lodestone_teleport.global` are broad staff permissions. The `lodestone_teleport.own.*` permissions apply only to Lodestones owned by that player.
 
 Server owners need `lodestone_teleport.config` or OP-level access to use `/warp reload`, `/warp config`, and server config editing actions.
 
-Admins need `lodestone_teleport.global` or OP-level access to mark Lodestones as global in discovery mode.
+Admins need `lodestone_teleport.global` or OP-level access to mark any Lodestone as global. Players can be allowed to change their own visibility with `lodestone_teleport.own.visibility.*`.
+
+Visibility modes:
+
+- `private`: only the owner can use it, unless a player has `lodestone_teleport.mode.all`.
+- `discoverable`: other players can discover it by touching it.
+- `global`: visible to everyone.
 
 The config permission lists accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*` or `*`.
 

@@ -12,7 +12,16 @@ public final class LodestonePermissions {
 	public static final PermissionNode<Boolean> USE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "use");
 	public static final PermissionNode<Boolean> RENAME = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "rename");
 	public static final PermissionNode<Boolean> CREATE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "create");
+	public static final PermissionNode<Boolean> CREATE_PRIVATE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "create.private");
+	public static final PermissionNode<Boolean> CREATE_DISCOVERABLE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "create.discoverable");
+	public static final PermissionNode<Boolean> CREATE_GLOBAL = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "create.global");
 	public static final PermissionNode<Boolean> REMOVE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "remove");
+	public static final PermissionNode<Boolean> OWN_RENAME = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "own.rename");
+	public static final PermissionNode<Boolean> OWN_REMOVE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "own.remove");
+	public static final PermissionNode<Boolean> OWN_DESTROY = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "own.destroy");
+	public static final PermissionNode<Boolean> OWN_VISIBILITY_PRIVATE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "own.visibility.private");
+	public static final PermissionNode<Boolean> OWN_VISIBILITY_DISCOVERABLE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "own.visibility.discoverable");
+	public static final PermissionNode<Boolean> OWN_VISIBILITY_GLOBAL = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "own.visibility.global");
 	public static final PermissionNode<Boolean> ADMIN = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "admin");
 	public static final PermissionNode<Boolean> BYPASS_COST = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_cost");
 	public static final PermissionNode<Boolean> BYPASS_CAST = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_cast");
@@ -50,12 +59,57 @@ public final class LodestonePermissions {
 		return canCreate(player.createCommandSourceStack());
 	}
 
+	public static boolean canCreateVisibility(ServerPlayer player, LodestoneVisibility visibility) {
+		CommandSourceStack source = player.createCommandSourceStack();
+		if (!canCreate(source)) {
+			return false;
+		}
+		if (visibility == LodestoneVisibility.PRIVATE && !LodestoneConfig.get().allowPersonalLodestones) {
+			return false;
+		}
+		return switch (visibility) {
+			case PRIVATE -> has(source, CREATE_PRIVATE);
+			case DISCOVERABLE -> has(source, CREATE_DISCOVERABLE);
+			case GLOBAL -> has(source, CREATE_GLOBAL) || canSetGlobal(source);
+		};
+	}
+
 	public static boolean canRemove(CommandSourceStack source) {
 		return has(source, REMOVE);
 	}
 
 	public static boolean canRemove(ServerPlayer player) {
 		return canRemove(player.createCommandSourceStack());
+	}
+
+	public static boolean canRename(ServerPlayer player, LodestoneLocation location) {
+		return canRename(player) || (location.ownedBy(player.getUUID()) && has(player.createCommandSourceStack(), OWN_RENAME));
+	}
+
+	public static boolean canRemove(ServerPlayer player, LodestoneLocation location) {
+		return canRemove(player) || (location.ownedBy(player.getUUID()) && has(player.createCommandSourceStack(), OWN_REMOVE));
+	}
+
+	public static boolean canDestroy(ServerPlayer player, LodestoneLocation location) {
+		return canRemove(player) || (location.ownedBy(player.getUUID()) && has(player.createCommandSourceStack(), OWN_DESTROY));
+	}
+
+	public static boolean canSetVisibility(ServerPlayer player, LodestoneLocation location, LodestoneVisibility visibility) {
+		CommandSourceStack source = player.createCommandSourceStack();
+		if (visibility == LodestoneVisibility.GLOBAL && canSetGlobal(source)) {
+			return true;
+		}
+		if (!location.ownedBy(player.getUUID())) {
+			return false;
+		}
+		if (visibility == LodestoneVisibility.PRIVATE && !LodestoneConfig.get().allowPersonalLodestones) {
+			return false;
+		}
+		return switch (visibility) {
+			case PRIVATE -> has(source, OWN_VISIBILITY_PRIVATE);
+			case DISCOVERABLE -> has(source, OWN_VISIBILITY_DISCOVERABLE);
+			case GLOBAL -> has(source, OWN_VISIBILITY_GLOBAL);
+		};
 	}
 
 	public static boolean canAdmin(CommandSourceStack source) {
@@ -155,7 +209,16 @@ public final class LodestonePermissions {
 		if (permission == USE) return "use";
 		if (permission == RENAME) return "rename";
 		if (permission == CREATE) return "create";
+		if (permission == CREATE_PRIVATE) return "create.private";
+		if (permission == CREATE_DISCOVERABLE) return "create.discoverable";
+		if (permission == CREATE_GLOBAL) return "create.global";
 		if (permission == REMOVE) return "remove";
+		if (permission == OWN_RENAME) return "own.rename";
+		if (permission == OWN_REMOVE) return "own.remove";
+		if (permission == OWN_DESTROY) return "own.destroy";
+		if (permission == OWN_VISIBILITY_PRIVATE) return "own.visibility.private";
+		if (permission == OWN_VISIBILITY_DISCOVERABLE) return "own.visibility.discoverable";
+		if (permission == OWN_VISIBILITY_GLOBAL) return "own.visibility.global";
 		if (permission == ADMIN) return "admin";
 		if (permission == BYPASS_COST) return "bypass_cost";
 		if (permission == BYPASS_CAST) return "bypass_cast";

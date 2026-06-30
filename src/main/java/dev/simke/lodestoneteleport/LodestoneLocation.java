@@ -15,7 +15,7 @@ public record LodestoneLocation(
 	UUID ownerUuid,
 	String ownerName,
 	long createdAt,
-	boolean global
+	LodestoneVisibility visibility
 ) {
 	private static final String GLOBAL_PREFIX = "\u25ce ";
 
@@ -28,7 +28,23 @@ public record LodestoneLocation(
 	}
 
 	public String displayNameWithGlobalPrefix() {
-		return global ? GLOBAL_PREFIX + displayName() : displayName();
+		return global() ? GLOBAL_PREFIX + displayName() : displayName();
+	}
+
+	public boolean global() {
+		return visibility == LodestoneVisibility.GLOBAL;
+	}
+
+	public boolean discoverable() {
+		return visibility == LodestoneVisibility.DISCOVERABLE;
+	}
+
+	public boolean privateWarp() {
+		return visibility == LodestoneVisibility.PRIVATE;
+	}
+
+	public boolean ownedBy(UUID uuid) {
+		return ownerUuid != null && ownerUuid.equals(uuid);
 	}
 
 	public static String positionKey(ResourceKey<Level> dimension, BlockPos pos) {

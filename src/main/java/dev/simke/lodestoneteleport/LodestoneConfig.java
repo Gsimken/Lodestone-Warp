@@ -33,6 +33,8 @@ public final class LodestoneConfig {
 	public double crossDimensionMultiplier = 2.0D;
 	public int maxCost = 64;
 	public boolean allowCrossDimension = true;
+	public boolean allowPersonalLodestones = true;
+	public String defaultLodestoneVisibility = "discoverable";
 	public int maxLodestonesGlobal = 0;
 	public int maxLodestonesPerPlayer = 0;
 	public boolean registerPlacedLodestonesOnlyWhenSneaking = true;
@@ -49,8 +51,15 @@ public final class LodestoneConfig {
 	public List<String> playerPermissions = List.of(
 		"lodestone_teleport.use",
 		"lodestone_teleport.create",
+		"lodestone_teleport.create.private",
+		"lodestone_teleport.create.discoverable",
 		"lodestone_teleport.rename",
 		"lodestone_teleport.remove",
+		"lodestone_teleport.own.rename",
+		"lodestone_teleport.own.remove",
+		"lodestone_teleport.own.destroy",
+		"lodestone_teleport.own.visibility.private",
+		"lodestone_teleport.own.visibility.discoverable",
 		"lodestone_teleport.mode.discover"
 	);
 	public List<String> adminPermissions = List.of(
@@ -58,6 +67,8 @@ public final class LodestoneConfig {
 		"lodestone_teleport.config",
 		"lodestone_teleport.global",
 		"lodestone_teleport.mode.all",
+		"lodestone_teleport.create.global",
+		"lodestone_teleport.own.visibility.global",
 		"lodestone_teleport.bypass_cost",
 		"lodestone_teleport.bypass_cast",
 		"lodestone_teleport.bypass_cooldown",
@@ -127,6 +138,11 @@ public final class LodestoneConfig {
 		return merged;
 	}
 
+	public LodestoneVisibility defaultVisibility() {
+		LodestoneVisibility visibility = LodestoneVisibility.from(defaultLodestoneVisibility, LodestoneVisibility.DISCOVERABLE);
+		return !allowPersonalLodestones && visibility == LodestoneVisibility.PRIVATE ? LodestoneVisibility.DISCOVERABLE : visibility;
+	}
+
 	private static boolean isLegacyDefaultCostConfig(JsonObject loadedObject) {
 		if (loadedObject.has("costType") || !loadedObject.has("blocksPerExtraCost")) {
 			return false;
@@ -147,6 +163,7 @@ public final class LodestoneConfig {
 		config.blocksPerExtraCost = Math.max(0, config.blocksPerExtraCost);
 		config.crossDimensionMultiplier = Math.max(0.0D, config.crossDimensionMultiplier);
 		config.maxCost = Math.max(0, config.maxCost);
+		config.defaultLodestoneVisibility = cleanVisibility(config.defaultLodestoneVisibility);
 		config.maxLodestonesGlobal = Math.max(0, config.maxLodestonesGlobal);
 		config.maxLodestonesPerPlayer = Math.max(0, config.maxLodestonesPerPlayer);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
@@ -159,6 +176,7 @@ public final class LodestoneConfig {
 		config.networkMode = cleanNetworkMode(config.networkMode);
 		config.playerPermissions = cleanPermissionList(config.playerPermissions, defaults().playerPermissions);
 		config.adminPermissions = cleanPermissionList(config.adminPermissions, defaults().adminPermissions);
+		addPermissionMigrationDefaults(config);
 		config.commandName = cleanCommandName(config.commandName, "warp");
 		config.fallbackCommandName = cleanCommandName(config.fallbackCommandName, "lodestone_warp");
 		config.serverLanguage = cleanLanguage(config.serverLanguage);
@@ -205,6 +223,34 @@ public final class LodestoneConfig {
 			return LodestoneTeleportMod.MOD_ID + "." + clean;
 		}
 		return clean;
+	}
+
+	private static void addPermissionMigrationDefaults(LodestoneConfig config) {
+		if (config.playerPermissions.contains(LodestoneTeleportMod.MOD_ID + ".create")
+			&& config.playerPermissions.stream().noneMatch(permission -> permission.startsWith(LodestoneTeleportMod.MOD_ID + ".create."))) {
+			addPermission(config.playerPermissions, "create.private");
+			addPermission(config.playerPermissions, "create.discoverable");
+			addPermission(config.playerPermissions, "own.visibility.private");
+			addPermission(config.playerPermissions, "own.visibility.discoverable");
+		}
+		if (config.playerPermissions.contains(LodestoneTeleportMod.MOD_ID + ".rename")) {
+			addPermission(config.playerPermissions, "own.rename");
+		}
+		if (config.playerPermissions.contains(LodestoneTeleportMod.MOD_ID + ".remove")) {
+			addPermission(config.playerPermissions, "own.remove");
+			addPermission(config.playerPermissions, "own.destroy");
+		}
+		if (config.adminPermissions.contains(LodestoneTeleportMod.MOD_ID + ".global")) {
+			addPermission(config.adminPermissions, "create.global");
+			addPermission(config.adminPermissions, "own.visibility.global");
+		}
+	}
+
+	private static void addPermission(List<String> permissions, String node) {
+		String fullNode = LodestoneTeleportMod.MOD_ID + "." + node;
+		if (!permissions.contains(fullNode)) {
+			permissions.add(fullNode);
+		}
 	}
 
 	private static String cleanCommandName(String value, String fallback) {
@@ -261,6 +307,10 @@ public final class LodestoneConfig {
 			case "all", "discover" -> clean;
 			default -> "all";
 		};
+	}
+
+	private static String cleanVisibility(String value) {
+		return LodestoneVisibility.from(value, LodestoneVisibility.DISCOVERABLE).id();
 	}
 
 	private static void save(Path path, LodestoneConfig config) {

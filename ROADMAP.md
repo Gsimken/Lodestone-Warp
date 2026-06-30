@@ -28,7 +28,16 @@
 - [x] Add basic permissions for use and rename.
 - [x] Add permissions for all relevant actions.
   - [x] `lodestone_teleport.create`
+  - [x] `lodestone_teleport.create.private`
+  - [x] `lodestone_teleport.create.discoverable`
+  - [x] `lodestone_teleport.create.global`
   - [x] `lodestone_teleport.remove`
+  - [x] `lodestone_teleport.own.rename`
+  - [x] `lodestone_teleport.own.remove`
+  - [x] `lodestone_teleport.own.destroy`
+  - [x] `lodestone_teleport.own.visibility.private`
+  - [x] `lodestone_teleport.own.visibility.discoverable`
+  - [x] `lodestone_teleport.own.visibility.global`
   - [x] `lodestone_teleport.admin`
   - [x] `lodestone_teleport.bypass_cost`
   - [x] `lodestone_teleport.bypass_cast`

@@ -93,21 +93,39 @@ public final class LodestoneDialogs {
 	}
 
 	public static void showRename(ServerPlayer player, LodestoneLocation location) {
+		showEdit(player, location);
+	}
+
+	public static void showEdit(ServerPlayer player, LodestoneLocation location) {
+		List<ActionButton> buttons = new ArrayList<>();
+		if (LodestonePermissions.canRename(player, location)) {
+			buttons.add(new ActionButton(
+				new CommonButtonData(LodestoneText.text("button.save", "Save"), INPUT_WIDTH),
+				Optional.of(renameAction(location.id()))
+			));
+		}
+		for (LodestoneVisibility visibility : LodestoneVisibility.values()) {
+			if (visibility != location.visibility() && LodestonePermissions.canSetVisibility(player, location, visibility)) {
+				buttons.add(customButton(visibilityLabel(visibility), "visibility", location.id(), visibility.id()));
+			}
+		}
+		if (LodestonePermissions.canRemove(player, location)) {
+			buttons.add(customButton(LodestoneText.text("button.remove", "[X]").withStyle(ChatFormatting.RED), "remove", location.id()));
+		}
+		if (buttons.isEmpty()) {
+			buttons.add(new ActionButton(new CommonButtonData(Component.translatable("gui.done"), INPUT_WIDTH), Optional.empty()));
+		}
+
 		CommonDialogData common = new CommonDialogData(
-			LodestoneText.text("rename.title", "Name lodestone"),
+			LodestoneText.text("edit.title", "Edit lodestone"),
 			Optional.empty(),
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(LodestoneText.text("rename.body", "Choose a name for this lodestone."), INPUT_WIDTH)),
+			List.of(new PlainMessage(LodestoneText.text("edit.body", "Change this lodestone name, visibility, or registration."), INPUT_WIDTH)),
 			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.text("input.name", "Name"), true, location.displayName(), 48, Optional.empty())))
 		);
-
-		ActionButton confirm = new ActionButton(
-			new CommonButtonData(LodestoneText.text("button.save", "Save"), INPUT_WIDTH),
-			Optional.of(renameAction(location.id()))
-		);
-		send(player, new NoticeDialog(common, confirm));
+		send(player, new MultiActionDialog(common, buttons, Optional.empty(), 1));
 	}
 
 	public static void showConfig(ServerPlayer player, String category, String query) {
@@ -202,6 +220,17 @@ public final class LodestoneDialogs {
 		return new ActionButton(
 			new CommonButtonData(label, tooltip, width),
 			Optional.of(new StaticAction(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))))
+		);
+	}
+
+	private static ActionButton customButton(Component label, String action, String id, String visibility) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", action);
+		payload.putString("id", id);
+		payload.putString("visibility", visibility);
+		return new ActionButton(
+			new CommonButtonData(label, DESTINATION_BUTTON_WIDTH),
+			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
 		);
 	}
 
@@ -321,6 +350,14 @@ public final class LodestoneDialogs {
 				.append(LodestoneText.text("menu.viewing_all", "Admin view: showing all lodestones").withStyle(ChatFormatting.GOLD));
 		}
 		return body;
+	}
+
+	private static Component visibilityLabel(LodestoneVisibility visibility) {
+		return LodestoneText.text("visibility." + visibility.id(), visibility.id()).withStyle(switch (visibility) {
+			case PRIVATE -> ChatFormatting.GRAY;
+			case DISCOVERABLE -> ChatFormatting.AQUA;
+			case GLOBAL -> ChatFormatting.GREEN;
+		});
 	}
 
 	private static Component destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {

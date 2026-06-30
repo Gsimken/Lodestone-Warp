@@ -72,6 +72,8 @@ public final class LodestoneText {
 			case "button.remove" -> "[X]";
 			case "button.save" -> "Save";
 			case "button.teleport" -> "[TP]";
+			case "edit.title" -> "Edit lodestone";
+			case "edit.body" -> "Change this lodestone name, visibility, or registration.";
 			case "rename.title" -> "Name lodestone";
 			case "rename.body" -> "Choose a name for this lodestone.";
 			case "cost.free" -> "free";
@@ -88,6 +90,11 @@ public final class LodestoneText {
 			case "global.badge" -> "[Global]";
 			case "global.enabled" -> "Lodestone marked global: %s";
 			case "global.disabled" -> "Lodestone is no longer global: %s";
+			case "visibility.private" -> "Make private";
+			case "visibility.discoverable" -> "Make discoverable";
+			case "visibility.global" -> "Make global";
+			case "visibility.current" -> "Visibility: %s";
+			case "visibility.changed" -> "Lodestone visibility changed to %s.";
 			case "discover.granted" -> "Granted %s discovery of %s.";
 			case "discover.revoked" -> "Revoked %s discovery of %s.";
 			case "discover.granted_all" -> "Granted %s discovery of all lodestones (%s new).";
@@ -119,7 +126,9 @@ public final class LodestoneText {
 			case "error.no_permission.create" -> "You do not have permission to register lodestones.";
 			case "error.no_permission.remove" -> "You do not have permission to remove registered lodestones.";
 			case "error.no_permission.global" -> "You do not have permission to manage global lodestones.";
+			case "error.no_permission.visibility" -> "You do not have permission to change that lodestone visibility.";
 			case "error.lodestone_not_found" -> "I could not find that lodestone.";
+			case "error.invalid_visibility" -> "Invalid visibility. Use private, discoverable, or global.";
 			case "error.invalid_action" -> "Invalid lodestone action.";
 			case "error.action_failed" -> "Could not run the lodestone action.";
 			default -> fallback;

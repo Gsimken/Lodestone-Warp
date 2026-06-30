@@ -55,6 +55,10 @@ public final class LodestoneSavedData extends SavedData {
 	}
 
 	public LodestoneLocation register(ResourceKey<Level> dimension, BlockPos pos, UUID ownerUuid, String ownerName) {
+		return register(dimension, pos, ownerUuid, ownerName, LodestoneConfig.get().defaultVisibility());
+	}
+
+	public LodestoneLocation register(ResourceKey<Level> dimension, BlockPos pos, UUID ownerUuid, String ownerName, LodestoneVisibility visibility) {
 		return at(dimension, pos).orElseGet(() -> {
 			String id = "lodestone_" + nextId++;
 			LodestoneLocation location = new LodestoneLocation(
@@ -65,7 +69,7 @@ public final class LodestoneSavedData extends SavedData {
 				ownerUuid,
 				ownerName,
 				System.currentTimeMillis(),
-				false
+				visibility
 			);
 			put(location);
 			return location;
@@ -86,15 +90,19 @@ public final class LodestoneSavedData extends SavedData {
 			current.ownerUuid(),
 			current.ownerName(),
 			current.createdAt(),
-			current.global()
+			current.visibility()
 		);
 		put(renamed);
 		return true;
 	}
 
 	public boolean setGlobal(String id, boolean global) {
+		return setVisibility(id, global ? LodestoneVisibility.GLOBAL : LodestoneVisibility.DISCOVERABLE);
+	}
+
+	public boolean setVisibility(String id, LodestoneVisibility visibility) {
 		LodestoneLocation current = byId.get(id);
-		if (current == null || current.global() == global) {
+		if (current == null || current.visibility() == visibility) {
 			return false;
 		}
 		LodestoneLocation updated = new LodestoneLocation(
@@ -105,7 +113,7 @@ public final class LodestoneSavedData extends SavedData {
 			current.ownerUuid(),
 			current.ownerName(),
 			current.createdAt(),
-			global
+			visibility
 		);
 		put(updated);
 		return true;
@@ -211,6 +219,7 @@ public final class LodestoneSavedData extends SavedData {
 			entry.putString("owner_name", location.ownerName());
 			entry.putLong("created_at", location.createdAt());
 			entry.putBoolean("global", location.global());
+			entry.putString("visibility", location.visibility().id());
 			list.add(entry);
 		}
 		tag.put("lodestones", list);
@@ -241,6 +250,9 @@ public final class LodestoneSavedData extends SavedData {
 			}
 			ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION, dimensionId);
 			UUID ownerUuid = parseUuid(entry.getStringOr("owner_uuid", "00000000-0000-0000-0000-000000000000"));
+			LodestoneVisibility visibility = entry.contains("visibility")
+				? LodestoneVisibility.from(entry.getStringOr("visibility", "discoverable"), LodestoneVisibility.DISCOVERABLE)
+				: (entry.getBooleanOr("global", false) ? LodestoneVisibility.GLOBAL : LodestoneVisibility.DISCOVERABLE);
 			LodestoneLocation location = new LodestoneLocation(
 				entry.getStringOr("id", ""),
 				entry.getStringOr("name", ""),
@@ -249,7 +261,7 @@ public final class LodestoneSavedData extends SavedData {
 				ownerUuid,
 				entry.getStringOr("owner_name", "unknown"),
 				entry.getLongOr("created_at", 0L),
-				entry.getBooleanOr("global", false)
+				visibility
 			);
 			if (!location.id().isBlank()) {
 				data.byId.put(location.id(), location);
