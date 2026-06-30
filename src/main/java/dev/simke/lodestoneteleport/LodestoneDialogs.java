@@ -69,7 +69,7 @@ public final class LodestoneDialogs {
 				break;
 			}
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);
-			buttons.add(customButton(Component.literal(destinationLabel(destination, cost)), Optional.of(LodestoneText.cost(cost)), "tp", destination.id()));
+			buttons.add(customButton(destinationLabel(destination, cost), Optional.of(LodestoneText.cost(cost)), "tp", destination.id()));
 			if (canRename) {
 				buttons.add(editButton(destination));
 			}
@@ -315,11 +315,18 @@ public final class LodestoneDialogs {
 		return LodestoneText.text("menu.body", "From %s", current.displayName());
 	}
 
-	private static String destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {
-		String name = truncate(destination.displayNameWithGlobalPrefix(), DESTINATION_LABEL_WIDTH - 6);
+	private static Component destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {
+		String name = truncate(destination.displayName(), DESTINATION_LABEL_WIDTH - 8);
 		String costLabel = cost.label();
-		int padding = Math.max(2, DESTINATION_LABEL_WIDTH - name.length() - costLabel.length());
-		return name + " ".repeat(padding) + costLabel;
+		int prefixLength = destination.global() ? 2 : 0;
+		int padding = Math.max(2, DESTINATION_LABEL_WIDTH - prefixLength - name.length() - costLabel.length());
+		Component label = Component.empty();
+		if (destination.global()) {
+			label = label.copy().append(Component.literal("\ud83c\udf10 ").withStyle(ChatFormatting.GREEN));
+		}
+		return label.copy()
+			.append(Component.literal(name))
+			.append(Component.literal(" ".repeat(padding) + costLabel));
 	}
 
 	private static String truncate(String value, int maxLength) {

@@ -197,7 +197,7 @@ public final class LodestoneWarpScreen extends Screen {
 			int textY = row.y() + 8;
 			int nameX = left + NAME_X;
 			if (destination.global()) {
-				graphics.text(this.font, "\ud83c\udf10", nameX, textY, 0xFFFFFFFF);
+				graphics.text(this.font, "\ud83c\udf10", nameX, textY, 0xFF55FF55);
 				nameX += GLOBAL_ICON_WIDTH;
 			}
 			graphics.text(this.font, truncate(destination.name(), destination.global() ? 131 : 145), nameX, textY, 0xFFFFFFFF);
