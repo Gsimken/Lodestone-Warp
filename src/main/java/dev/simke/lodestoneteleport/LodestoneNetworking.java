@@ -50,6 +50,7 @@ public final class LodestoneNetworking {
 			CompoundTag item = new CompoundTag();
 			item.putString("id", destination.id());
 			item.putString("name", destination.displayName());
+			item.putBoolean("global", destination.global());
 			item.putString("dimension", LodestoneText.dimension(destination.dimension()).getString());
 			item.putInt("x", destination.pos().getX());
 			item.putInt("y", destination.pos().getY());

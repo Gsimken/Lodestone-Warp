@@ -27,6 +27,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int ROW_HEIGHT = 24;
 	private static final int GAP = 5;
 	private static final int NAME_X = 8;
+	private static final int GLOBAL_ICON_WIDTH = 14;
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
@@ -194,7 +195,12 @@ public final class LodestoneWarpScreen extends Screen {
 		for (VisibleRow row : this.visibleRows) {
 			Destination destination = row.destination();
 			int textY = row.y() + 8;
-			graphics.text(this.font, truncate(destination.name(), 145), left + NAME_X, textY, 0xFFFFFFFF);
+			int nameX = left + NAME_X;
+			if (destination.global()) {
+				graphics.text(this.font, "\u25ce", nameX, textY, 0xFF8CFF8C);
+				nameX += GLOBAL_ICON_WIDTH;
+			}
+			graphics.text(this.font, truncate(destination.name(), destination.global() ? 131 : 145), nameX, textY, 0xFFFFFFFF);
 			graphics.text(this.font, destination.coords(), left + COORDS_X, textY, 0xFFD6D6D6);
 			graphics.text(this.font, truncate(destination.dimension(), 78), left + DIMENSION_X, textY, 0xFFD6D6D6);
 			drawCost(graphics, destination, left + COST_X, row.y() + 4);
@@ -249,6 +255,7 @@ public final class LodestoneWarpScreen extends Screen {
 			destinations.add(new Destination(
 				tag.getStringOr("id", ""),
 				tag.getStringOr("name", ""),
+				tag.getBooleanOr("global", false),
 				tag.getStringOr("dimension", ""),
 				tag.getIntOr("x", 0),
 				tag.getIntOr("y", 0),
@@ -266,7 +273,7 @@ public final class LodestoneWarpScreen extends Screen {
 		return tag.getIntOr(prefix + "X", 0) + " " + tag.getIntOr(prefix + "Y", 0) + " " + tag.getIntOr(prefix + "Z", 0) + " (" + tag.getStringOr(prefix + "Dimension", "") + ")";
 	}
 
-	private record Destination(String id, String name, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
+	private record Destination(String id, String name, boolean global, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
 		String coords() {
 			return x + " " + y + " " + z;
 		}

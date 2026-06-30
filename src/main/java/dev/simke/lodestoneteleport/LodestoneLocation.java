@@ -17,12 +17,18 @@ public record LodestoneLocation(
 	long createdAt,
 	boolean global
 ) {
+	private static final String GLOBAL_PREFIX = "\u25ce ";
+
 	public String positionKey() {
 		return positionKey(dimension, pos);
 	}
 
 	public String displayName() {
 		return name == null || name.isBlank() ? autoName(dimension, pos) : name;
+	}
+
+	public String displayNameWithGlobalPrefix() {
+		return global ? GLOBAL_PREFIX + displayName() : displayName();
 	}
 
 	public static String positionKey(ResourceKey<Level> dimension, BlockPos pos) {

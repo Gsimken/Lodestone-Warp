@@ -316,7 +316,7 @@ public final class LodestoneDialogs {
 	}
 
 	private static String destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {
-		String name = truncate(destination.displayName(), DESTINATION_LABEL_WIDTH - 6);
+		String name = truncate(destination.displayNameWithGlobalPrefix(), DESTINATION_LABEL_WIDTH - 6);
 		String costLabel = cost.label();
 		int padding = Math.max(2, DESTINATION_LABEL_WIDTH - name.length() - costLabel.length());
 		return name + " ".repeat(padding) + costLabel;

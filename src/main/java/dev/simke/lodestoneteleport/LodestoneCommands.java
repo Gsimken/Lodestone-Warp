@@ -501,9 +501,8 @@ public final class LodestoneCommands {
 	}
 
 	private static Component listEntry(LodestoneLocation location) {
-		return LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayName(), LodestoneText.dimension(location.dimension()))
+		return LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayNameWithGlobalPrefix(), LodestoneText.dimension(location.dimension()))
 			.copy()
-			.append(location.global() ? Component.literal(" ").append(LodestoneText.text("global.badge", "[Global]").withStyle(ChatFormatting.GREEN)) : Component.empty())
 			.append(Component.literal(" "))
 			.append(actionButton("button.teleport", "[TP]", ChatFormatting.AQUA, "tp", location.id()))
 			.append(Component.literal(" "))
