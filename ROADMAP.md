@@ -26,7 +26,7 @@
   - [x] Separate server-side effect preset when the client has the mod installed.
   - [ ] Enhanced client-side screen/camera effects when the client has the mod installed.
 - [x] Add basic permissions for use and rename.
-- [ ] Add permissions for all relevant actions.
+- [x] Add permissions for all relevant actions.
   - [x] `lodestone_teleport.create`
   - [x] `lodestone_teleport.remove`
   - [x] `lodestone_teleport.admin`
@@ -37,14 +37,8 @@
   - [x] `lodestone_teleport.global`
   - [x] `lodestone_teleport.mode.all`
   - [x] `lodestone_teleport.mode.discover`
-- [ ] Add configurable permission backend:
-  - [ ] `luckperms`: use Fabric Permissions API / LuckPerms.
-  - [ ] `own`: use Lodestone Warps' own permissions file.
-  - [ ] Keep LuckPerms as the default backend.
-  - [ ] Add fallback behavior when LuckPerms/Fabric permission checks are unavailable.
-- [ ] Add Lodestone Warps own permission file:
-  - [ ] Store player entries by username and UUID.
-  - [ ] Support entries like `"Username-UUID": ["lodestone.use", "lodestone.name", "lodestone.mode.discover"]`.
-  - [ ] Define final node naming before implementation.
-  - [ ] Add reload support for permission file.
-  - [ ] Add admin commands to inspect/set/remove own permissions.
+- [x] Add simple config permission fallback:
+  - [x] `playerPermissions` for permissions granted to every player.
+  - [x] `adminPermissions` for permissions granted to OP/gamemaster-level admins.
+  - [x] Keep LuckPerms/Fabric Permissions API as the recommended backend for groups and per-player control.
+- [ ] Document recommended LuckPerms setups for discovery servers, lobby/global warps, and staff-only management.

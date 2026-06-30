@@ -102,7 +102,12 @@ If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` ava
 
 ## Permissions
 
-Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API.
+Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API. It also has a simple config fallback with two lists:
+
+- `playerPermissions`: permissions granted to every player when `requirePermissions` is enabled.
+- `adminPermissions`: permissions granted to OP/gamemaster-level admins when `requirePermissions` is enabled.
+
+Use LuckPerms or another permission manager for per-player, group, inheritance, or temporary permissions.
 
 Permission nodes:
 
@@ -125,7 +130,9 @@ Server owners need `lodestone_teleport.config` or OP-level access to use `/warp 
 
 Admins need `lodestone_teleport.global` or OP-level access to mark Lodestones as global in discovery mode.
 
-Permission checks can be disabled in the server config.
+Permission checks can be disabled in the server config with `requirePermissions: false`.
+
+The config permission lists accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*` or `*`.
 
 ## Configuration
 

@@ -48,6 +48,8 @@
   "text.lodestone_teleport.config.field.mod_teleport_effect": "Mod effect",
   "text.lodestone_teleport.config.field.network_mode": "Network mode",
   "text.lodestone_teleport.config.field.require_permissions": "Require permissions",
+  "text.lodestone_teleport.config.field.player_permissions": "Player permissions",
+  "text.lodestone_teleport.config.field.admin_permissions": "Admin permissions",
   "text.lodestone_teleport.config.field.command_name": "Command name",
   "text.lodestone_teleport.config.field.fallback_command_name": "Fallback command",
   "text.lodestone_teleport.config.field.server_language": "Server language",

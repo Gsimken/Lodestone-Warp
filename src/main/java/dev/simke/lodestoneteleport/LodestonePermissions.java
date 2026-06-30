@@ -7,6 +7,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.server.permissions.Permissions;
 
+import java.util.List;
+
 public final class LodestonePermissions {
 	public static final PermissionNode<Boolean> USE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "use");
 	public static final PermissionNode<Boolean> RENAME = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "rename");
@@ -112,7 +114,32 @@ public final class LodestonePermissions {
 		if (!LodestoneConfig.get().requirePermissions) {
 			return openDefault || source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
 		}
-		return PermissionPredicates.require(permission, PermissionLevel.GAMEMASTERS).test(source);
+		return PermissionPredicates.require(permission, PermissionLevel.GAMEMASTERS).test(source) || hasConfiguredPermission(source, permission);
+	}
+
+	private static boolean hasConfiguredPermission(CommandSourceStack source, PermissionNode<Boolean> permission) {
+		String node = LodestoneTeleportMod.MOD_ID + "." + permissionName(permission);
+		LodestoneConfig config = LodestoneConfig.get();
+		if (containsPermission(config.playerPermissions, node)) {
+			return true;
+		}
+		if (!source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+			return false;
+		}
+		return containsPermission(config.adminPermissions, node);
+	}
+
+	private static boolean containsPermission(List<String> permissions, String node) {
+		if (permissions == null) {
+			return false;
+		}
+		String namespaceWildcard = LodestoneTeleportMod.MOD_ID + ".*";
+		for (String permission : permissions) {
+			if (permission.equals("*") || permission.equals(namespaceWildcard) || permission.equals(node)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static Boolean debugOverride(PermissionNode<Boolean> permission) {

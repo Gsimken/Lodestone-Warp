@@ -17,6 +17,9 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public final class LodestoneConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -44,6 +47,22 @@ public final class LodestoneConfig {
 	public String modTeleportEffect = "lodestone";
 	public String networkMode = "discover";
 	public boolean requirePermissions = false;
+	public List<String> playerPermissions = List.of(
+		"lodestone_teleport.use",
+		"lodestone_teleport.create",
+		"lodestone_teleport.rename",
+		"lodestone_teleport.remove",
+		"lodestone_teleport.mode.discover"
+	);
+	public List<String> adminPermissions = List.of(
+		"lodestone_teleport.admin",
+		"lodestone_teleport.config",
+		"lodestone_teleport.global",
+		"lodestone_teleport.mode.all",
+		"lodestone_teleport.bypass_cost",
+		"lodestone_teleport.bypass_cooldown",
+		"lodestone_teleport.bypass_max_warps"
+	);
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
 	public String serverLanguage = "en_us";
@@ -138,10 +157,54 @@ public final class LodestoneConfig {
 		config.vanillaTeleportEffect = cleanEffect(config.vanillaTeleportEffect, "end");
 		config.modTeleportEffect = cleanEffect(config.modTeleportEffect, "lodestone");
 		config.networkMode = cleanNetworkMode(config.networkMode);
+		config.playerPermissions = cleanPermissionList(config.playerPermissions, defaults().playerPermissions);
+		config.adminPermissions = cleanPermissionList(config.adminPermissions, defaults().adminPermissions);
 		config.commandName = cleanCommandName(config.commandName, "warp");
 		config.fallbackCommandName = cleanCommandName(config.fallbackCommandName, "lodestone_warp");
 		config.serverLanguage = cleanLanguage(config.serverLanguage);
 		return config;
+	}
+
+	public static List<String> parsePermissionList(String value, List<String> fallback) {
+		if (value == null) {
+			return new ArrayList<>(fallback);
+		}
+		return cleanPermissionList(List.of(value.split(",")), fallback);
+	}
+
+	public static String permissionListToString(List<String> permissions) {
+		return String.join(", ", cleanPermissionList(permissions, List.of()));
+	}
+
+	private static List<String> cleanPermissionList(List<String> permissions, List<String> fallback) {
+		if (permissions == null) {
+			return new ArrayList<>(fallback);
+		}
+		List<String> cleanPermissions = new ArrayList<>();
+		for (String permission : permissions) {
+			String clean = cleanPermission(permission);
+			if (!clean.isBlank() && !cleanPermissions.contains(clean)) {
+				cleanPermissions.add(clean);
+			}
+		}
+		return cleanPermissions;
+	}
+
+	private static String cleanPermission(String permission) {
+		if (permission == null) {
+			return "";
+		}
+		String clean = permission.trim().toLowerCase(Locale.ROOT);
+		if (clean.isBlank()) {
+			return "";
+		}
+		if ("*".equals(clean) || clean.endsWith(".*")) {
+			return clean;
+		}
+		if (!clean.contains(".")) {
+			return LodestoneTeleportMod.MOD_ID + "." + clean;
+		}
+		return clean;
 	}
 
 	private static String cleanCommandName(String value, String fallback) {
