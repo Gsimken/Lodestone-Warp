@@ -197,7 +197,7 @@ public final class LodestoneWarpScreen extends Screen {
 			int textY = row.y() + 8;
 			int nameX = left + NAME_X;
 			if (destination.global()) {
-				drawGlobalIcon(graphics, nameX, row.y() + 5);
+				graphics.text(this.font, "\ud83c\udf10", nameX, textY, 0xFFFFFFFF);
 				nameX += GLOBAL_ICON_WIDTH;
 			}
 			graphics.text(this.font, truncate(destination.name(), destination.global() ? 131 : 145), nameX, textY, 0xFFFFFFFF);
@@ -205,19 +205,6 @@ public final class LodestoneWarpScreen extends Screen {
 			graphics.text(this.font, truncate(destination.dimension(), 78), left + DIMENSION_X, textY, 0xFFD6D6D6);
 			drawCost(graphics, destination, left + COST_X, row.y() + 4);
 		}
-	}
-
-	private void drawGlobalIcon(GuiGraphicsExtractor graphics, int x, int y) {
-		graphics.fill(x + 4, y, x + 10, y + 1, 0xFF72D7FF);
-		graphics.fill(x + 2, y + 1, x + 12, y + 3, 0xFF2F8FD5);
-		graphics.fill(x + 1, y + 3, x + 13, y + 10, 0xFF1C65B0);
-		graphics.fill(x + 2, y + 10, x + 12, y + 12, 0xFF144D88);
-		graphics.fill(x + 4, y + 12, x + 10, y + 13, 0xFF0F3A66);
-		graphics.fill(x + 3, y + 3, x + 6, y + 6, 0xFF66D36E);
-		graphics.fill(x + 6, y + 5, x + 9, y + 8, 0xFF54B85F);
-		graphics.fill(x + 9, y + 2, x + 11, y + 5, 0xFF8CEB7A);
-		graphics.fill(x + 4, y + 8, x + 7, y + 11, 0xFF3E9E50);
-		graphics.fill(x + 3, y + 2, x + 5, y + 3, 0xFFFFFFFF);
 	}
 
 	private void drawCost(GuiGraphicsExtractor graphics, Destination destination, int x, int y) {
