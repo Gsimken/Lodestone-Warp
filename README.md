@@ -134,6 +134,13 @@ Permission checks can be disabled in the server config with `requirePermissions:
 
 The config permission lists accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*` or `*`.
 
+Permission compatibility warnings:
+
+- `lodestone_teleport.mode.all` + `lodestone_teleport.mode.discover` in `playerPermissions`: `mode.all` bypasses discovery for all players.
+- `lodestone_teleport.mode.all` + `lodestone_teleport.mode.discover` in `adminPermissions`: admins bypass discovery while also being marked as discovery users.
+- `networkMode: discover` + `lodestone_teleport.mode.all` in `playerPermissions`: discovery mode is effectively disabled for players.
+- `networkMode: discover` + `lodestone_teleport.mode.discover` without `lodestone_teleport.use` in `playerPermissions`: players can be in discovery mode but cannot use Lodestones.
+
 ## Configuration
 
 The config is generated on first run at:

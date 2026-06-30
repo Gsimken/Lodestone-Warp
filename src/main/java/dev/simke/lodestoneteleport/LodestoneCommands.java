@@ -389,6 +389,7 @@ public final class LodestoneCommands {
 		}
 		LodestoneConfig.load();
 		source.sendSuccess(() -> LodestoneText.text("config.server.reloaded", "Lodestone Warps config reloaded."), true);
+		LodestoneConfigWarnings.sendTo(source);
 		return 1;
 	}
 
@@ -446,6 +447,7 @@ public final class LodestoneCommands {
 			return 0;
 		}
 		source.sendSuccess(() -> LodestoneText.text("config.server.changed", "Set %s to %s.", option.get().id(), option.get().currentValue()), true);
+		LodestoneConfigWarnings.sendTo(source);
 		if (option.get().id().equals("command_name") || option.get().id().equals("fallback_command_name")) {
 			source.sendSystemMessage(LodestoneText.text("config.server.restart_required", "Restart the server for command name changes to take effect."));
 		}

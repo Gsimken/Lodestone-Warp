@@ -11,6 +11,7 @@ public final class LodestoneTeleportMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LodestoneConfig.load();
+		LodestoneConfigWarnings.logCurrent();
 		LodestoneNetworking.register();
 		LodestoneEvents.register();
 		LodestoneCommands.register();
