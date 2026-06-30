@@ -63,6 +63,10 @@ tasks.withType(JavaExec).configureEach {
 	}
 }
 
+tasks.named("runClient", JavaExec).configure {
+	args "--username", "FisiDev"
+}
+
 java {
 	withSourcesJar()
 	sourceCompatibility = JavaVersion.VERSION_25
