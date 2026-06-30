@@ -89,9 +89,10 @@ Available subcommands:
 - `/warp unlink <id>`
 - `/warp list`
 - `/warp global <id> <true|false>`
-- `/warp discover grant <player> <id>`
-- `/warp discover revoke <player> <id>`
+- `/warp discover grant <player> <id|all>`
+- `/warp discover revoke <player> <id|all>`
 - `/warp discover list <player>`
+- `/warp discover who <id>`
 - `/warp reload`
 - `/warp config`
 - `/warp config list`
@@ -117,6 +118,7 @@ Permission nodes:
 - `lodestone_teleport.remove`
 - `lodestone_teleport.admin`
 - `lodestone_teleport.bypass_cost`
+- `lodestone_teleport.bypass_cast`
 - `lodestone_teleport.bypass_cooldown`
 - `lodestone_teleport.bypass_max_warps`
 - `lodestone_teleport.config`

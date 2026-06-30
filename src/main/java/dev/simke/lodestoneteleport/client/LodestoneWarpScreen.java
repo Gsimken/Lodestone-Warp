@@ -37,6 +37,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private final String currentName;
 	private final String currentSubtitle;
 	private final boolean canRename;
+	private final boolean viewingAll;
 	private final List<Destination> destinations;
 	private final List<Button> destinationButtons = new ArrayList<>();
 	private final List<VisibleRow> visibleRows = new ArrayList<>();
@@ -50,6 +51,7 @@ public final class LodestoneWarpScreen extends Screen {
 		this.currentName = data.getStringOr("currentName", "");
 		this.currentSubtitle = formatPosition(data, "current");
 		this.canRename = data.getBooleanOr("canRename", false);
+		this.viewingAll = data.getBooleanOr("viewingAll", false);
 		this.destinations = readDestinations(data.getListOrEmpty("destinations"));
 	}
 
@@ -88,6 +90,9 @@ public final class LodestoneWarpScreen extends Screen {
 		graphics.centeredText(this.font, this.title, this.width / 2, top - 9, 0xFFFFFFFF);
 		graphics.text(this.font, LodestoneText.text("client.current_name", "Warp name: %s", this.currentName), left, top + 14, 0xFFFFD37A);
 		graphics.text(this.font, LodestoneText.text("client.current_coords", "Coords Warp: %s", this.currentSubtitle), left, top + 31, 0xFFA8A8A8);
+		if (this.viewingAll) {
+			graphics.text(this.font, LodestoneText.text("client.viewing_all", "Admin view: showing all lodestones"), left + PANEL_WIDTH - 208, top + 31, 0xFFFFAA00);
+		}
 		drawTableHeader(graphics, left, top + 83);
 		super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 		drawRows(graphics, left);

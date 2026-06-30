@@ -49,6 +49,7 @@ tasks.withType(JavaExec).configureEach {
 		'lodestone_teleport.remove',
 		'lodestone_teleport.admin',
 		'lodestone_teleport.bypass_cost',
+		'lodestone_teleport.bypass_cast',
 		'lodestone_teleport.bypass_cooldown',
 		'lodestone_teleport.bypass_max_warps',
 		'lodestone_teleport.mode.all',

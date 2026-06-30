@@ -15,6 +15,7 @@ public final class LodestonePermissions {
 	public static final PermissionNode<Boolean> REMOVE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "remove");
 	public static final PermissionNode<Boolean> ADMIN = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "admin");
 	public static final PermissionNode<Boolean> BYPASS_COST = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_cost");
+	public static final PermissionNode<Boolean> BYPASS_CAST = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_cast");
 	public static final PermissionNode<Boolean> BYPASS_COOLDOWN = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_cooldown");
 	public static final PermissionNode<Boolean> BYPASS_MAX_WARPS = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "bypass_max_warps");
 	public static final PermissionNode<Boolean> MODE_ALL = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "mode.all");
@@ -67,6 +68,14 @@ public final class LodestonePermissions {
 
 	public static boolean canBypassCost(ServerPlayer player) {
 		return canBypassCost(player.createCommandSourceStack());
+	}
+
+	public static boolean canBypassCast(CommandSourceStack source) {
+		return has(source, BYPASS_CAST);
+	}
+
+	public static boolean canBypassCast(ServerPlayer player) {
+		return canBypassCast(player.createCommandSourceStack());
 	}
 
 	public static boolean canBypassCooldown(CommandSourceStack source) {
@@ -149,6 +158,7 @@ public final class LodestonePermissions {
 		if (permission == REMOVE) return "remove";
 		if (permission == ADMIN) return "admin";
 		if (permission == BYPASS_COST) return "bypass_cost";
+		if (permission == BYPASS_CAST) return "bypass_cast";
 		if (permission == BYPASS_COOLDOWN) return "bypass_cooldown";
 		if (permission == BYPASS_MAX_WARPS) return "bypass_max_warps";
 		if (permission == MODE_ALL) return "mode.all";

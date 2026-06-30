@@ -29,6 +29,8 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public final class LodestoneCommands {
@@ -102,16 +104,20 @@ public final class LodestoneCommands {
 					.then(Commands.literal("grant")
 						.then(Commands.argument("player", EntityArgument.player())
 							.then(Commands.argument("id", StringArgumentType.word())
-								.suggests(LodestoneCommands::suggestLodestoneIds)
+								.suggests(LodestoneCommands::suggestLodestoneIdsOrAll)
 								.executes(context -> grantDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"))))))
 					.then(Commands.literal("revoke")
 						.then(Commands.argument("player", EntityArgument.player())
 							.then(Commands.argument("id", StringArgumentType.word())
-								.suggests(LodestoneCommands::suggestLodestoneIds)
+								.suggests(LodestoneCommands::suggestLodestoneIdsOrAll)
 								.executes(context -> revokeDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"))))))
 					.then(Commands.literal("list")
 						.then(Commands.argument("player", EntityArgument.player())
-							.executes(context -> listDiscoveries(context.getSource(), EntityArgument.getPlayer(context, "player"))))))
+							.executes(context -> listDiscoveries(context.getSource(), EntityArgument.getPlayer(context, "player")))))
+					.then(Commands.literal("who")
+						.then(Commands.argument("id", StringArgumentType.word())
+							.suggests(LodestoneCommands::suggestLodestoneIds)
+							.executes(context -> listDiscoverers(context.getSource(), StringArgumentType.getString(context, "id"))))))
 				.then(Commands.literal("list")
 					.requires(LodestonePermissions::canAdmin)
 					.executes(context -> list(context.getSource())))
@@ -185,12 +191,12 @@ public final class LodestoneCommands {
 
 		boolean bypassCost = LodestonePermissions.canBypassCost(source);
 		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
-		if (!hasCost(player, cost)) {
+		if (!bypassCost && !hasCost(player, cost)) {
 			source.sendFailure(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)));
 			return 0;
 		}
 
-		if (!fromCast && LodestoneConfig.get().teleportCastSeconds > 0) {
+		if (!fromCast && LodestoneConfig.get().teleportCastSeconds > 0 && !LodestonePermissions.canBypassCast(source)) {
 			if (LodestoneTeleportCasts.isCasting(player)) {
 				source.sendFailure(LodestoneText.text("teleport.cast_already", "You are already casting a teleport."));
 				return 0;
@@ -304,7 +310,7 @@ public final class LodestoneCommands {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
-		LodestoneDialogs.showRename(player, location.get());
+		LodestoneUi.showRename(player, location.get());
 		return 1;
 	}
 
@@ -342,6 +348,11 @@ public final class LodestoneCommands {
 
 	static int grantDiscovery(CommandSourceStack source, ServerPlayer target, String id) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		if ("all".equalsIgnoreCase(id)) {
+			int added = data.discoverAll(target.getUUID());
+			source.sendSuccess(() -> LodestoneText.text("discover.granted_all", "Granted %s discovery of all lodestones (%s new).", target.getName().getString(), added), true);
+			return Math.max(1, added);
+		}
 		Optional<LodestoneLocation> location = data.get(id);
 		if (location.isEmpty()) {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
@@ -354,6 +365,11 @@ public final class LodestoneCommands {
 
 	static int revokeDiscovery(CommandSourceStack source, ServerPlayer target, String id) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		if ("all".equalsIgnoreCase(id)) {
+			int removed = data.revokeAllDiscoveries(target.getUUID());
+			source.sendSuccess(() -> LodestoneText.text("discover.revoked_all", "Revoked %s discovery of all lodestones (%s removed).", target.getName().getString(), removed), true);
+			return Math.max(1, removed);
+		}
 		Optional<LodestoneLocation> location = data.get(id);
 		if (location.isEmpty()) {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
@@ -380,6 +396,27 @@ public final class LodestoneCommands {
 			source.sendSystemMessage(LodestoneText.text("discover.list_empty", "No discovered lodestones."));
 		}
 		return Math.max(1, count);
+	}
+
+	static int listDiscoverers(CommandSourceStack source, String id) {
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return 0;
+		}
+		Set<UUID> discoverers = data.discoverers(id);
+		source.sendSystemMessage(LodestoneText.text("discover.who_header", "%s has been discovered by:", location.get().displayName()));
+		if (discoverers.isEmpty()) {
+			source.sendSystemMessage(LodestoneText.text("discover.who_empty", "No players have discovered this lodestone."));
+			return 1;
+		}
+		for (UUID uuid : discoverers) {
+			ServerPlayer online = source.getServer().getPlayerList().getPlayer(uuid);
+			String name = online == null ? uuid.toString() : online.getName().getString() + " (" + uuid + ")";
+			source.sendSystemMessage(Component.literal("- " + name).withStyle(ChatFormatting.GRAY));
+		}
+		return discoverers.size();
 	}
 
 	static int reloadConfig(CommandSourceStack source) {
@@ -487,6 +524,14 @@ public final class LodestoneCommands {
 			}
 		}
 		return builder.buildFuture();
+	}
+
+	private static CompletableFuture<Suggestions> suggestLodestoneIdsOrAll(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+		String remaining = builder.getRemaining().toLowerCase(java.util.Locale.ROOT);
+		if ("all".startsWith(remaining)) {
+			builder.suggest("all");
+		}
+		return suggestLodestoneIds(context, builder);
 	}
 
 	private static int list(CommandSourceStack source) {

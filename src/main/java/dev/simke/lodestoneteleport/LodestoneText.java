@@ -62,6 +62,7 @@ public final class LodestoneText {
 		return switch (key) {
 			case "menu.body" -> "From %s";
 			case "menu.body.no_results" -> "From %s\nNo results for: %s";
+			case "menu.viewing_all" -> "Admin view: showing all lodestones";
 			case "input.search" -> "Search";
 			case "input.name" -> "Name";
 			case "button.search" -> "Search location";
@@ -89,8 +90,12 @@ public final class LodestoneText {
 			case "global.disabled" -> "Lodestone is no longer global: %s";
 			case "discover.granted" -> "Granted %s discovery of %s.";
 			case "discover.revoked" -> "Revoked %s discovery of %s.";
+			case "discover.granted_all" -> "Granted %s discovery of all lodestones (%s new).";
+			case "discover.revoked_all" -> "Revoked %s discovery of all lodestones (%s removed).";
 			case "discover.list_header" -> "%s has discovered:";
 			case "discover.list_empty" -> "No discovered lodestones.";
+			case "discover.who_header" -> "%s has been discovered by:";
+			case "discover.who_empty" -> "No players have discovered this lodestone.";
 			case "list.empty" -> "No lodestones registered.";
 			case "list.header" -> "Registered lodestones:";
 			case "list.entry" -> "- %s: %s (%s)";

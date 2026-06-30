@@ -27,6 +27,15 @@ public final class LodestoneNetworking {
 		ServerPlayNetworking.send(player, new LodestoneOpenScreenPayload(screenData(player, current)));
 	}
 
+	public static void openClientRenameScreen(ServerPlayer player, LodestoneLocation location) {
+		CompoundTag data = new CompoundTag();
+		data.putString("screen", "rename");
+		data.putString("id", location.id());
+		data.putString("name", location.displayName());
+		data.putString("returnId", location.id());
+		ServerPlayNetworking.send(player, new LodestoneOpenScreenPayload(data));
+	}
+
 	private static CompoundTag screenData(ServerPlayer player, LodestoneLocation current) {
 		CompoundTag root = new CompoundTag();
 		root.putString("currentId", current.id());
@@ -36,6 +45,7 @@ public final class LodestoneNetworking {
 		root.putInt("currentY", current.pos().getY());
 		root.putInt("currentZ", current.pos().getZ());
 		root.putBoolean("canRename", LodestonePermissions.canRename(player));
+		root.putBoolean("viewingAll", LodestoneDiscovery.canSeeAll(player));
 
 		ListTag destinations = new ListTag();
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());

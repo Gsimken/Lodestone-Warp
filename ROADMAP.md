@@ -31,6 +31,7 @@
   - [x] `lodestone_teleport.remove`
   - [x] `lodestone_teleport.admin`
   - [x] `lodestone_teleport.bypass_cost`
+  - [x] `lodestone_teleport.bypass_cast`
   - [x] `lodestone_teleport.bypass_cooldown`
   - [x] `lodestone_teleport.bypass_max_warps`
   - [x] `lodestone_teleport.config`

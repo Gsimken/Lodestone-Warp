@@ -10,7 +10,13 @@ public final class LodestoneTeleportClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		ClientPlayNetworking.registerGlobalReceiver(LodestoneOpenScreenPayload.TYPE, (payload, context) -> {
 			Minecraft client = context.client();
-			client.execute(() -> client.setScreenAndShow(new LodestoneWarpScreen(payload.data())));
+			client.execute(() -> {
+				if ("rename".equals(payload.data().getStringOr("screen", ""))) {
+					client.setScreenAndShow(new LodestoneRenameScreen(null, payload.data().getStringOr("id", ""), payload.data().getStringOr("name", ""), payload.data().getStringOr("returnId", "")));
+					return;
+				}
+				client.setScreenAndShow(new LodestoneWarpScreen(payload.data()));
+			});
 		});
 	}
 }

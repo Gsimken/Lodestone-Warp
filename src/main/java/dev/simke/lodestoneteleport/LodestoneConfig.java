@@ -59,6 +59,7 @@ public final class LodestoneConfig {
 		"lodestone_teleport.global",
 		"lodestone_teleport.mode.all",
 		"lodestone_teleport.bypass_cost",
+		"lodestone_teleport.bypass_cast",
 		"lodestone_teleport.bypass_cooldown",
 		"lodestone_teleport.bypass_max_warps"
 	);

@@ -126,6 +126,17 @@ public final class LodestoneSavedData extends SavedData {
 		return added;
 	}
 
+	public int discoverAll(UUID playerUuid) {
+		Set<String> discovered = discoveredByPlayer.computeIfAbsent(playerUuid, ignored -> new HashSet<>());
+		int before = discovered.size();
+		discovered.addAll(byId.keySet());
+		int added = discovered.size() - before;
+		if (added > 0) {
+			setDirty();
+		}
+		return added;
+	}
+
 	public boolean revokeDiscovery(UUID playerUuid, String id) {
 		Set<String> discovered = discoveredByPlayer.get(playerUuid);
 		if (discovered == null) {
@@ -141,8 +152,27 @@ public final class LodestoneSavedData extends SavedData {
 		return removed;
 	}
 
+	public int revokeAllDiscoveries(UUID playerUuid) {
+		Set<String> removed = discoveredByPlayer.remove(playerUuid);
+		if (removed == null || removed.isEmpty()) {
+			return 0;
+		}
+		setDirty();
+		return removed.size();
+	}
+
 	public Set<String> discoveredIds(UUID playerUuid) {
 		return Set.copyOf(discoveredByPlayer.getOrDefault(playerUuid, Set.of()));
+	}
+
+	public Set<UUID> discoverers(String id) {
+		Set<UUID> players = new HashSet<>();
+		for (Map.Entry<UUID, Set<String>> entry : discoveredByPlayer.entrySet()) {
+			if (entry.getValue().contains(id)) {
+				players.add(entry.getKey());
+			}
+		}
+		return Set.copyOf(players);
 	}
 
 	public boolean remove(ResourceKey<Level> dimension, BlockPos pos) {

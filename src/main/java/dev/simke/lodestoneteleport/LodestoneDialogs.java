@@ -86,7 +86,7 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(bodyText(current, cleanQuery, destinationCount == 0), INPUT_WIDTH)),
+			List.of(new PlainMessage(bodyText(player, current, cleanQuery, destinationCount == 0), INPUT_WIDTH)),
 			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Search"), true, cleanQuery, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), columns));
@@ -157,7 +157,7 @@ public final class LodestoneDialogs {
 			false,
 			DialogAction.CLOSE,
 			List.of(new PlainMessage(configOptionTooltip(option), INPUT_WIDTH)),
-			List.of(new Input("value", new TextInput(INPUT_WIDTH, LodestoneText.text("config.server.input.value", "Value"), true, option.currentValue(), 96, Optional.empty())))
+			List.of(new Input("value", new TextInput(INPUT_WIDTH, LodestoneText.text("config.server.input.value", "Value"), true, option.currentValue(), 512, Optional.empty())))
 		);
 		ActionButton confirm = new ActionButton(
 			new CommonButtonData(LodestoneText.text("button.save", "Save"), INPUT_WIDTH),
@@ -275,7 +275,7 @@ public final class LodestoneDialogs {
 		ChatFormatting valueColor = option.isDefault() ? ChatFormatting.WHITE : ChatFormatting.YELLOW;
 		Component state = option.type() == LodestoneConfigOptions.Type.BOOLEAN
 			? LodestoneText.text(Boolean.parseBoolean(option.currentValue()) ? "config.switch.on" : "config.switch.off", Boolean.parseBoolean(option.currentValue()) ? "ON" : "OFF")
-			: Component.literal(option.currentValue());
+			: Component.literal(truncate(option.currentValue(), 42));
 		return LodestoneText.text(option.labelKey(), option.labelFallback()).withStyle(ChatFormatting.AQUA)
 			.append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
 			.append(state.copy().withStyle(valueColor));
@@ -288,7 +288,7 @@ public final class LodestoneDialogs {
 			.append(Component.literal("\n"))
 			.append(LodestoneText.text("config.default", "Default: %s", option.defaultValue()).withStyle(option.isDefault() ? ChatFormatting.DARK_GRAY : ChatFormatting.YELLOW))
 			.append(Component.literal("\n"))
-			.append(LodestoneText.text("config.current", "Current: %s", option.currentValue()).withStyle(option.isDefault() ? ChatFormatting.GRAY : ChatFormatting.YELLOW));
+			.append(LodestoneText.text("config.current", "Current: %s", truncate(option.currentValue(), 64)).withStyle(option.isDefault() ? ChatFormatting.GRAY : ChatFormatting.YELLOW));
 	}
 
 	private static Action renameAction(String id) {
@@ -308,11 +308,19 @@ public final class LodestoneDialogs {
 			|| location.dimension().identifier().toString().toLowerCase().contains(needle);
 	}
 
-	private static Component bodyText(LodestoneLocation current, String query, boolean noResults) {
+	private static Component bodyText(ServerPlayer player, LodestoneLocation current, String query, boolean noResults) {
+		Component body;
 		if (noResults && !query.isBlank()) {
-			return LodestoneText.text("menu.body.no_results", "From %s\nNo results for: %s", current.displayName(), query);
+			body = LodestoneText.text("menu.body.no_results", "From %s\nNo results for: %s", current.displayName(), query);
+		} else {
+			body = LodestoneText.text("menu.body", "From %s", current.displayName());
 		}
-		return LodestoneText.text("menu.body", "From %s", current.displayName());
+		if (LodestoneDiscovery.canSeeAll(player)) {
+			return body.copy()
+				.append(Component.literal("\n"))
+				.append(LodestoneText.text("menu.viewing_all", "Admin view: showing all lodestones").withStyle(ChatFormatting.GOLD));
+		}
+		return body;
 	}
 
 	private static Component destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {
