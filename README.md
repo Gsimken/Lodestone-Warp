@@ -102,10 +102,10 @@ If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` ava
 
 ## Permissions
 
-Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API. It also has a simple config fallback with two lists:
+Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API. If a permission manager answers a permission request, that answer wins. If no permission manager answers, Lodestone Warps uses two config lists as defaults:
 
-- `playerPermissions`: permissions granted to every player when `requirePermissions` is enabled.
-- `adminPermissions`: permissions granted to OP/gamemaster-level admins when `requirePermissions` is enabled.
+- `playerPermissions`: default permissions granted to every player.
+- `adminPermissions`: default permissions granted to OP/gamemaster-level admins.
 
 Use LuckPerms or another permission manager for per-player, group, inheritance, or temporary permissions.
 
@@ -124,13 +124,11 @@ Permission nodes:
 - `lodestone_teleport.mode.all`
 - `lodestone_teleport.mode.discover`
 
-If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
+Players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
 
 Server owners need `lodestone_teleport.config` or OP-level access to use `/warp reload`, `/warp config`, and server config editing actions.
 
 Admins need `lodestone_teleport.global` or OP-level access to mark Lodestones as global in discovery mode.
-
-Permission checks can be disabled in the server config with `requirePermissions: false`.
 
 The config permission lists accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*` or `*`.
 

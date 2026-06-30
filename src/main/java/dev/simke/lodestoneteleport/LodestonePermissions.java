@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.permission.v1.PermissionNode;
 import net.fabricmc.fabric.api.permission.v1.PermissionPredicates;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.server.permissions.Permissions;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canUse(CommandSourceStack source) {
-		return has(source, USE, true);
+		return has(source, USE);
 	}
 
 	public static boolean canUse(ServerPlayer player) {
@@ -35,7 +34,7 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canRename(CommandSourceStack source) {
-		return has(source, RENAME, true);
+		return has(source, RENAME);
 	}
 
 	public static boolean canRename(ServerPlayer player) {
@@ -43,7 +42,7 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canCreate(CommandSourceStack source) {
-		return has(source, CREATE, true);
+		return has(source, CREATE);
 	}
 
 	public static boolean canCreate(ServerPlayer player) {
@@ -51,7 +50,7 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canRemove(CommandSourceStack source) {
-		return has(source, REMOVE, true);
+		return has(source, REMOVE);
 	}
 
 	public static boolean canRemove(ServerPlayer player) {
@@ -59,11 +58,11 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canAdmin(CommandSourceStack source) {
-		return has(source, ADMIN, false);
+		return has(source, ADMIN);
 	}
 
 	public static boolean canBypassCost(CommandSourceStack source) {
-		return has(source, BYPASS_COST, false);
+		return has(source, BYPASS_COST);
 	}
 
 	public static boolean canBypassCost(ServerPlayer player) {
@@ -71,7 +70,7 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canBypassCooldown(CommandSourceStack source) {
-		return has(source, BYPASS_COOLDOWN, false);
+		return has(source, BYPASS_COOLDOWN);
 	}
 
 	public static boolean canBypassCooldown(ServerPlayer player) {
@@ -79,7 +78,7 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canBypassMaxWarps(CommandSourceStack source) {
-		return has(source, BYPASS_MAX_WARPS, false);
+		return has(source, BYPASS_MAX_WARPS);
 	}
 
 	public static boolean canBypassMaxWarps(ServerPlayer player) {
@@ -87,15 +86,15 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canUseAllMode(CommandSourceStack source) {
-		return has(source, MODE_ALL, true);
+		return has(source, MODE_ALL);
 	}
 
 	public static boolean canUseDiscoverMode(CommandSourceStack source) {
-		return has(source, MODE_DISCOVER, true);
+		return has(source, MODE_DISCOVER);
 	}
 
 	public static boolean canConfig(CommandSourceStack source) {
-		return has(source, CONFIG, false);
+		return has(source, CONFIG);
 	}
 
 	public static boolean canConfig(ServerPlayer player) {
@@ -103,18 +102,15 @@ public final class LodestonePermissions {
 	}
 
 	public static boolean canSetGlobal(CommandSourceStack source) {
-		return has(source, GLOBAL, false);
+		return has(source, GLOBAL);
 	}
 
-	private static boolean has(CommandSourceStack source, PermissionNode<Boolean> permission, boolean openDefault) {
+	private static boolean has(CommandSourceStack source, PermissionNode<Boolean> permission) {
 		Boolean debugOverride = debugOverride(permission);
 		if (debugOverride != null) {
 			return debugOverride;
 		}
-		if (!LodestoneConfig.get().requirePermissions) {
-			return openDefault || source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
-		}
-		return PermissionPredicates.require(permission, PermissionLevel.GAMEMASTERS).test(source) || hasConfiguredPermission(source, permission);
+		return PermissionPredicates.require(permission, hasConfiguredPermission(source, permission)).test(source);
 	}
 
 	private static boolean hasConfiguredPermission(CommandSourceStack source, PermissionNode<Boolean> permission) {

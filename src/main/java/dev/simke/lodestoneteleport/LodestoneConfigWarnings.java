@@ -17,9 +17,6 @@ public final class LodestoneConfigWarnings {
 
 	public static List<Component> warnings(LodestoneConfig config) {
 		List<Component> warnings = new ArrayList<>();
-		if (!config.requirePermissions) {
-			return warnings;
-		}
 
 		if (has(config.playerPermissions, "mode.all") && has(config.playerPermissions, "mode.discover")) {
 			warnings.add(warning("config.warning.permissions.player_mode_conflict", "Both lodestone_teleport.mode.all and lodestone_teleport.mode.discover are configured for players. mode.all bypasses discovery and can affect the gameplay experience."));

@@ -17,13 +17,11 @@ public final class LodestoneDiscovery {
 		if (!isDiscoverMode()) {
 			return true;
 		}
-		if (LodestoneConfig.get().requirePermissions) {
-			if (LodestonePermissions.canUseAllMode(player.createCommandSourceStack())) {
-				return true;
-			}
-			if (!LodestonePermissions.canUseDiscoverMode(player.createCommandSourceStack())) {
-				return false;
-			}
+		if (LodestonePermissions.canUseAllMode(player.createCommandSourceStack())) {
+			return true;
+		}
+		if (!LodestonePermissions.canUseDiscoverMode(player.createCommandSourceStack())) {
+			return false;
 		}
 		return location.global() || data.isDiscovered(player.getUUID(), location.id());
 	}

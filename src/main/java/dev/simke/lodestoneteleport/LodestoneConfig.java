@@ -46,7 +46,6 @@ public final class LodestoneConfig {
 	public String vanillaTeleportEffect = "end";
 	public String modTeleportEffect = "lodestone";
 	public String networkMode = "discover";
-	public boolean requirePermissions = false;
 	public List<String> playerPermissions = List.of(
 		"lodestone_teleport.use",
 		"lodestone_teleport.create",
