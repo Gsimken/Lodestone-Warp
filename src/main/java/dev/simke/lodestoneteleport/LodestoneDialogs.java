@@ -340,9 +340,9 @@ public final class LodestoneDialogs {
 	private static Component bodyText(ServerPlayer player, LodestoneLocation current, String query, boolean noResults) {
 		Component body;
 		if (noResults && !query.isBlank()) {
-			body = LodestoneText.text("menu.body.no_results", "From %s\nNo results for: %s", current.displayName(), query);
+			body = LodestoneText.text("menu.body.no_results", "From %s\nNo results for: %s", displayNameWithVisibilityIcon(current), query);
 		} else {
-			body = LodestoneText.text("menu.body", "From %s", current.displayName());
+			body = LodestoneText.text("menu.body", "From %s", displayNameWithVisibilityIcon(current));
 		}
 		if (LodestoneDiscovery.canSeeAll(player)) {
 			return body.copy()
@@ -363,15 +363,28 @@ public final class LodestoneDialogs {
 	private static Component destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {
 		String name = truncate(destination.displayName(), DESTINATION_LABEL_WIDTH - 8);
 		String costLabel = cost.label();
-		int prefixLength = destination.global() ? 2 : 0;
+		int prefixLength = destination.global() || destination.privateWarp() ? 2 : 0;
 		int padding = Math.max(2, DESTINATION_LABEL_WIDTH - prefixLength - name.length() - costLabel.length());
-		Component label = Component.empty();
-		if (destination.global()) {
-			label = label.copy().append(Component.literal("\ud83c\udf10 ").withStyle(ChatFormatting.GREEN));
-		}
-		return label.copy()
+		return Component.empty()
+			.append(visibilityIcon(destination))
 			.append(Component.literal(name))
 			.append(Component.literal(" ".repeat(padding) + costLabel));
+	}
+
+	private static Component displayNameWithVisibilityIcon(LodestoneLocation location) {
+		return Component.empty()
+			.append(visibilityIcon(location))
+			.append(Component.literal(location.displayName()));
+	}
+
+	private static Component visibilityIcon(LodestoneLocation location) {
+		if (location.global()) {
+			return Component.literal("\ud83c\udf10 ").withStyle(ChatFormatting.GREEN);
+		}
+		if (location.privateWarp()) {
+			return Component.literal("\ud83d\udd12 ").withStyle(ChatFormatting.GOLD);
+		}
+		return Component.empty();
 	}
 
 	private static String truncate(String value, int maxLength) {

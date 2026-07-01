@@ -68,12 +68,15 @@ public final class LodestoneText {
 			case "button.search" -> "Search location";
 			case "button.rename" -> "Rename %s";
 			case "button.rename_short" -> "[\u270e]";
-			case "button.rename_current" -> "Rename this warp";
+			case "button.rename_current" -> "Edit this warp";
 			case "button.remove" -> "[X]";
+			case "button.remove_current" -> "Remove lodestone";
 			case "button.save" -> "Save";
+			case "button.mode" -> "Mode: %s";
 			case "button.teleport" -> "[TP]";
 			case "edit.title" -> "Edit lodestone";
 			case "edit.body" -> "Change this lodestone name, visibility, or registration.";
+			case "edit.saved" -> "Lodestone changes saved.";
 			case "rename.title" -> "Name lodestone";
 			case "rename.body" -> "Choose a name for this lodestone.";
 			case "cost.free" -> "free";
@@ -93,6 +96,9 @@ public final class LodestoneText {
 			case "visibility.private" -> "Make private";
 			case "visibility.discoverable" -> "Make discoverable";
 			case "visibility.global" -> "Make global";
+			case "visibility.value.private" -> "private";
+			case "visibility.value.discoverable" -> "discoverable";
+			case "visibility.value.global" -> "global";
 			case "visibility.current" -> "Visibility: %s";
 			case "visibility.changed" -> "Lodestone visibility changed to %s.";
 			case "discover.granted" -> "Granted %s discovery of %s.";
@@ -112,6 +118,7 @@ public final class LodestoneText {
 			case "error.cross_dimension_disabled" -> "Cross-dimension teleport is disabled.";
 			case "error.destination_removed" -> "The destination no longer has a lodestone and was removed.";
 			case "error.lodestone_not_registered" -> "This lodestone is not registered.";
+			case "error.private_registered" -> "This lodestone is already registered and private; it cannot be registered by another player.";
 			case "error.not_discovered" -> "You have not discovered that lodestone.";
 			case "error.max_lodestones_global" -> "The server has reached the maximum number of registered lodestones.";
 			case "error.max_lodestones_player" -> "You have reached your maximum number of registered lodestones.";

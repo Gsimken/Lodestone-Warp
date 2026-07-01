@@ -109,6 +109,11 @@ public final class LodestoneNetworking {
 						LodestoneCommands.rename(context.player().createCommandSourceStack(), id, data.getStringOr("name", ""));
 						refreshAfterRename(context.player(), data.getStringOr("returnId", ""));
 					}
+					case "save_edit" -> {
+						if (saveEdit(context.player(), data)) {
+							refreshAfterRename(context.player(), data.getStringOr("returnId", ""));
+						}
+					}
 					case "edit" -> LodestoneSavedData.from(context.player().level()).get(id)
 						.ifPresentOrElse(
 							location -> ServerPlayNetworking.send(context.player(), new LodestoneOpenScreenPayload(editData(context.player(), location, data.getStringOr("returnId", "")))),
@@ -128,6 +133,44 @@ public final class LodestoneNetworking {
 				context.player().sendSystemMessage(LodestoneText.text("error.action_failed", "Could not run the lodestone action."));
 			}
 		});
+	}
+
+	private static boolean saveEdit(ServerPlayer player, CompoundTag payload) {
+		String id = payload.getStringOr("id", "");
+		LodestoneSavedData data = LodestoneSavedData.from(player.level());
+		LodestoneLocation location = data.get(id).orElse(null);
+		if (location == null) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return false;
+		}
+
+		String requestedName = payload.getStringOr("name", "").trim();
+		String storedName = location.name() == null ? "" : location.name().trim();
+		boolean nameChanged = !requestedName.equals(storedName) && !(storedName.isBlank() && requestedName.equals(location.displayName()));
+		LodestoneVisibility requestedVisibility = LodestoneVisibility.from(payload.getStringOr("visibility", location.visibility().id()), null);
+		if (requestedVisibility == null) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.invalid_visibility", "Invalid visibility. Use private, discoverable, or global."));
+			return false;
+		}
+		boolean visibilityChanged = requestedVisibility != location.visibility();
+
+		if (nameChanged && !LodestonePermissions.canRename(player, location)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
+			return false;
+		}
+		if (visibilityChanged && !LodestonePermissions.canSetVisibility(player, location, requestedVisibility)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.visibility", "You do not have permission to change that lodestone visibility."));
+			return false;
+		}
+
+		if (nameChanged) {
+			data.rename(id, requestedName);
+		}
+		if (visibilityChanged) {
+			data.setVisibility(id, requestedVisibility);
+		}
+		player.sendSystemMessage(LodestoneText.text("edit.saved", "Lodestone changes saved."));
+		return true;
 	}
 
 	private static void refreshAfterRename(ServerPlayer player, String returnId) {

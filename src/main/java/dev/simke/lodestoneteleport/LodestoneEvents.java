@@ -63,7 +63,7 @@ public final class LodestoneEvents {
 			Optional<LodestoneVisibility> registrationVisibility = newVisibility;
 			LodestoneLocation location = existing.orElseGet(() -> data.register(level.dimension(), hit.getBlockPos(), player.getUUID(), player.getName().getString(), registrationVisibility.orElse(LodestoneVisibility.DISCOVERABLE)));
 			if (location.privateWarp() && !LodestoneDiscovery.canSee(serverPlayer, data, location)) {
-				serverPlayer.sendSystemMessage(LodestoneText.text("error.not_discovered", "You have not discovered that lodestone."));
+				serverPlayer.sendSystemMessage(LodestoneText.text("error.private_registered", "This lodestone is already registered and private; it cannot be registered by another player."));
 				return InteractionResult.SUCCESS_SERVER;
 			}
 			if (LodestoneDiscovery.discover(serverPlayer, data, location) && existing.isPresent()) {

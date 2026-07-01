@@ -4,6 +4,7 @@ import dev.simke.lodestoneteleport.LodestoneText;
 import dev.simke.lodestoneteleport.LodestoneTeleportMod;
 import dev.simke.lodestoneteleport.network.LodestoneActionPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -27,7 +28,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int ROW_HEIGHT = 24;
 	private static final int GAP = 5;
 	private static final int NAME_X = 8;
-	private static final int GLOBAL_ICON_WIDTH = 14;
+	private static final int VISIBILITY_ICON_WIDTH = 14;
 	private static final int COORDS_X = 160;
 	private static final int DIMENSION_X = 260;
 	private static final int COST_X = 350;
@@ -35,6 +36,7 @@ public final class LodestoneWarpScreen extends Screen {
 
 	private final String currentId;
 	private final String currentName;
+	private final String currentVisibility;
 	private final String currentSubtitle;
 	private final boolean canRename;
 	private final boolean canEditCurrent;
@@ -50,6 +52,7 @@ public final class LodestoneWarpScreen extends Screen {
 		super(LodestoneText.title());
 		this.currentId = data.getStringOr("currentId", "");
 		this.currentName = data.getStringOr("currentName", "");
+		this.currentVisibility = data.getStringOr("currentVisibility", "discoverable");
 		this.currentSubtitle = formatPosition(data, "current");
 		this.canRename = data.getBooleanOr("canRename", false);
 		this.canEditCurrent = data.getBooleanOr("canEditCurrent", this.canRename);
@@ -74,7 +77,7 @@ public final class LodestoneWarpScreen extends Screen {
 		addRenderableWidget(this.searchBox);
 
 		if (this.canEditCurrent) {
-			addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Rename this warp"), button -> {
+			addRenderableWidget(Button.builder(LodestoneText.text("button.rename_current", "Edit this warp"), button -> {
 				sendAction("edit", this.currentId, "");
 			}).bounds(left, this.height - 38, PANEL_WIDTH, 20).build());
 		}
@@ -90,7 +93,7 @@ public final class LodestoneWarpScreen extends Screen {
 		graphics.fill(left - 10, top - 18, left + PANEL_WIDTH + 10, this.height - 12, 0xCC101010);
 		graphics.outline(left - 10, top - 18, PANEL_WIDTH + 20, this.height - top + 6, 0xFF595959);
 		graphics.centeredText(this.font, this.title, this.width / 2, top - 9, 0xFFFFFFFF);
-		graphics.text(this.font, LodestoneText.text("client.current_name", "Warp name: %s", this.currentName), left, top + 14, 0xFFFFD37A);
+		graphics.text(this.font, LodestoneText.text("client.current_name", "Warp name: %s", currentNameWithIcon()), left, top + 14, 0xFFFFD37A);
 		graphics.text(this.font, LodestoneText.text("client.current_coords", "Coords Warp: %s", this.currentSubtitle), left, top + 31, 0xFFA8A8A8);
 		if (this.viewingAll) {
 			graphics.text(this.font, LodestoneText.text("client.viewing_all", "Admin view: showing all lodestones"), left + PANEL_WIDTH - 208, top + 31, 0xFFFFAA00);
@@ -205,9 +208,12 @@ public final class LodestoneWarpScreen extends Screen {
 			int nameX = left + NAME_X;
 			if (destination.global()) {
 				graphics.text(this.font, "\ud83c\udf10", nameX, textY, 0xFF55FF55);
-				nameX += GLOBAL_ICON_WIDTH;
+				nameX += VISIBILITY_ICON_WIDTH;
+			} else if (destination.privateWarp()) {
+				graphics.text(this.font, "\ud83d\udd12", nameX, textY, 0xFFFFD37A);
+				nameX += VISIBILITY_ICON_WIDTH;
 			}
-			graphics.text(this.font, truncate(destination.name(), destination.global() ? 131 : 145), nameX, textY, 0xFFFFFFFF);
+			graphics.text(this.font, truncate(destination.name(), destination.hasVisibilityIcon() ? 131 : 145), nameX, textY, 0xFFFFFFFF);
 			graphics.text(this.font, destination.coords(), left + COORDS_X, textY, 0xFFD6D6D6);
 			graphics.text(this.font, truncate(destination.dimension(), 78), left + DIMENSION_X, textY, 0xFFD6D6D6);
 			drawCost(graphics, destination, left + COST_X, row.y() + 4);
@@ -225,6 +231,20 @@ public final class LodestoneWarpScreen extends Screen {
 			graphics.item(destination.costStack(), x, y);
 		}
 		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, 0xFFFFFFFF);
+	}
+
+	private Component currentNameWithIcon() {
+		return Component.empty().append(visibilityIcon(this.currentVisibility)).append(Component.literal(this.currentName));
+	}
+
+	private static Component visibilityIcon(String visibility) {
+		if ("global".equals(visibility)) {
+			return Component.literal("\ud83c\udf10 ").withStyle(ChatFormatting.GREEN);
+		}
+		if ("private".equals(visibility)) {
+			return Component.literal("\ud83d\udd12 ").withStyle(ChatFormatting.GOLD);
+		}
+		return Component.empty();
 	}
 
 	private String truncate(String value, int width) {
@@ -257,6 +277,18 @@ public final class LodestoneWarpScreen extends Screen {
 		ClientPlayNetworking.send(new LodestoneActionPayload(data));
 	}
 
+	static void sendEditSave(String id, String name, String visibility, String returnId) {
+		CompoundTag data = new CompoundTag();
+		data.putString("action", "save_edit");
+		data.putString("id", id);
+		data.putString("name", name);
+		data.putString("visibility", visibility);
+		if (!returnId.isBlank()) {
+			data.putString("returnId", returnId);
+		}
+		ClientPlayNetworking.send(new LodestoneActionPayload(data));
+	}
+
 	private static List<Destination> readDestinations(ListTag tags) {
 		List<Destination> destinations = new ArrayList<>();
 		for (int index = 0; index < tags.size(); index++) {
@@ -265,6 +297,7 @@ public final class LodestoneWarpScreen extends Screen {
 				tag.getStringOr("id", ""),
 				tag.getStringOr("name", ""),
 				tag.getBooleanOr("global", false),
+				tag.getStringOr("visibility", tag.getBooleanOr("global", false) ? "global" : "discoverable"),
 				tag.getBooleanOr("canEdit", false),
 				tag.getStringOr("dimension", ""),
 				tag.getIntOr("x", 0),
@@ -283,13 +316,21 @@ public final class LodestoneWarpScreen extends Screen {
 		return tag.getIntOr(prefix + "X", 0) + " " + tag.getIntOr(prefix + "Y", 0) + " " + tag.getIntOr(prefix + "Z", 0) + " (" + tag.getStringOr(prefix + "Dimension", "") + ")";
 	}
 
-	private record Destination(String id, String name, boolean global, boolean canEdit, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
+	private record Destination(String id, String name, boolean global, String visibility, boolean canEdit, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
 		String coords() {
 			return x + " " + y + " " + z;
 		}
 
 		String searchText() {
-			return (name + " " + dimension + " " + x + " " + y + " " + z).toLowerCase(Locale.ROOT);
+			return (name + " " + visibility + " " + dimension + " " + x + " " + y + " " + z).toLowerCase(Locale.ROOT);
+		}
+
+		boolean privateWarp() {
+			return "private".equals(visibility);
+		}
+
+		boolean hasVisibilityIcon() {
+			return global || privateWarp();
 		}
 
 		ItemStack costStack() {
