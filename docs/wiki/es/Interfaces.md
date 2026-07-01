@@ -1,6 +1,8 @@
 # Interfaces
 
-**Última actualización:** 2026-06-27
+**Última actualización:** 2026-07-01
+
+Lodestone Warps tiene dos interfaces. El servidor elige automáticamente según si el jugador tiene instalado el mod en el cliente.
 
 ## UI Vanilla
 
@@ -11,10 +13,14 @@ Se usa cuando el jugador no tiene Lodestone Warps instalado en el cliente.
 Incluye:
 
 - botones de destinos
-- búsqueda
-- renombrado
+- input de búsqueda
+- flujo de edición/renombrado
+- acciones de visibilidad cuando el jugador tiene permisos
+- UI vanilla de config para admins
 - validación server-side
 - no requiere mod en cliente
+
+La UI vanilla puede mostrar texto con color y símbolos simples, pero no puede renderizar layouts custom completos ni iconos de items como la UI de mod.
 
 Como los clientes vanilla no tienen los archivos de idioma del mod, los textos dependen de:
 
@@ -37,10 +43,38 @@ Incluye:
 - tabla de destinos
 - búsqueda
 - paginación
-- íconos del costo
+- iconos de costo por XP/item
 - botones de edición
-- actualización instantánea después de renombrar
+- iconos de visibilidad:
+  - 🌐 global
+  - 🔒 privada
+- icono de visibilidad en el nombre de la Lodestone actual
+- actualización instantánea después de guardar/remover
 
-El servidor detecta automáticamente si el cliente soporta la UI de mod.
+## Pantalla de Edición del Mod
 
-Los jugadores sin el mod siguen usando la UI vanilla.
+La pantalla de edición del mod guarda cambios en staged:
+
+```text
+[textbox]
+[Mode][Remove]
+
+[Save][Cancel]
+```
+
+- `Mode` cicla localmente entre los modos de visibilidad permitidos para el jugador.
+- `Save` aplica nombre y visibilidad juntos.
+- `Cancel` cierra sin guardar cambios locales.
+- `Remove` desvincula la Lodestone inmediatamente cuando está permitido.
+
+El servidor vuelve a validar permisos antes de aplicar cualquier cambio.
+
+## Pantalla de Config con Mod Menu
+
+Cuando Mod Menu está instalado, Lodestone Warps expone un editor de config client-side.
+
+Esta pantalla edita el archivo local. Los servidores remotos siguen usando su propia config server-side.
+
+## Notas
+
+Los jugadores sin el mod siguen soportados mediante la UI vanilla.

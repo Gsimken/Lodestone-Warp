@@ -1,6 +1,6 @@
 # Configuration
 
-**Last updated:** 2026-06-27
+**Last updated:** 2026-07-01
 
 The config is generated on first run:
 
@@ -12,16 +12,25 @@ When an existing config is loaded, Lodestone Warps fills missing options with cu
 
 If Mod Menu is installed on the client, Lodestone Warps also exposes an optional in-game config screen. This edits the local config file only; remote servers keep using their own server-side config.
 
-## Options
+Server owners can also use the vanilla Dialog config UI:
+
+```mcfunction
+/warp config
+```
+
+## Example
 
 ```json
 {
   "costItem": "minecraft:diamond",
+  "costType": "xp_levels",
   "baseCost": 1,
-  "blocksPerExtraCost": 500,
+  "blocksPerExtraCost": 1000,
   "crossDimensionMultiplier": 2.0,
   "maxCost": 64,
   "allowCrossDimension": true,
+  "allowPersonalLodestones": true,
+  "defaultLodestoneVisibility": "discoverable",
   "maxLodestonesGlobal": 0,
   "maxLodestonesPerPlayer": 0,
   "registerPlacedLodestonesOnlyWhenSneaking": true,
@@ -34,7 +43,33 @@ If Mod Menu is installed on the client, Lodestone Warps also exposes an optional
   "teleportEffects": true,
   "vanillaTeleportEffect": "end",
   "modTeleportEffect": "lodestone",
-  "requirePermissions": false,
+  "networkMode": "discover",
+  "playerPermissions": [
+    "lodestone_teleport.use",
+    "lodestone_teleport.create",
+    "lodestone_teleport.create.private",
+    "lodestone_teleport.create.discoverable",
+    "lodestone_teleport.own.rename",
+    "lodestone_teleport.own.remove",
+    "lodestone_teleport.own.destroy",
+    "lodestone_teleport.own.visibility.private",
+    "lodestone_teleport.own.visibility.discoverable",
+    "lodestone_teleport.mode.discover"
+  ],
+  "adminPermissions": [
+    "lodestone_teleport.admin",
+    "lodestone_teleport.config",
+    "lodestone_teleport.global",
+    "lodestone_teleport.rename",
+    "lodestone_teleport.remove",
+    "lodestone_teleport.mode.all",
+    "lodestone_teleport.create.global",
+    "lodestone_teleport.own.visibility.global",
+    "lodestone_teleport.bypass_cost",
+    "lodestone_teleport.bypass_cast",
+    "lodestone_teleport.bypass_cooldown",
+    "lodestone_teleport.bypass_max_warps"
+  ],
   "commandName": "warp",
   "fallbackCommandName": "lodestone_warp",
   "serverLanguage": "en_us"
@@ -43,9 +78,16 @@ If Mod Menu is installed on the client, Lodestone Warps also exposes an optional
 
 ## Cost
 
+`costType`
+
+Controls how teleport cost is paid.
+
+- `xp_levels`: pay experience levels.
+- `item`: pay the configured `costItem`.
+
 `costItem`
 
-The item used as teleport payment.
+The item used as teleport payment when `costType` is `item`.
 
 Example:
 
@@ -57,9 +99,15 @@ Example:
 
 Minimum teleport cost.
 
+Default:
+
+```json
+"baseCost": 1
+```
+
 `blocksPerExtraCost`
 
-Adds extra cost based on same-dimension distance.
+Adds extra cost based on same-dimension distance. With the default `1000`, the cost increases by 1 per 1000 blocks.
 
 `crossDimensionMultiplier`
 
@@ -69,7 +117,21 @@ Multiplier used for cross-dimensional teleports.
 
 Maximum final cost. Use `0` for no cap.
 
-## Lodestone Registration
+## Lodestone Registration and Visibility
+
+`allowPersonalLodestones`
+
+Allows players to create and keep private Lodestones.
+
+`defaultLodestoneVisibility`
+
+Visibility assigned to newly registered Lodestones when the player has permission for that type.
+
+Supported values:
+
+- `private`
+- `discoverable`
+- `global`
 
 `maxLodestonesGlobal`
 
@@ -96,10 +158,27 @@ Controls automatic registration when placing a Lodestone.
 
 Controls what happens when a player right-clicks an unregistered Lodestone with an empty hand.
 
-- `false`: the block stays vanilla and is not registered.
+- `false`: the block stays vanilla and is not registered on normal use.
 - `true`: the block is registered on use if the player can create Lodestones and limits allow it.
 
 Even when this option is `false`, a player can sneak-right-click an unregistered Lodestone with an empty hand to register it intentionally, as long as they have create permission and limits allow it.
+
+## Discovery
+
+`networkMode`
+
+Controls which Lodestones players can see and teleport to.
+
+- `all`: players can see every registered Lodestone.
+- `discover`: players can see global Lodestones, Lodestones they own, and Lodestones they have discovered.
+
+Default:
+
+```json
+"networkMode": "discover"
+```
+
+Private Lodestones cannot be discovered or registered by another player. If another player tries, they receive a dedicated private-registration error.
 
 ## Teleport Rules
 
@@ -114,14 +193,6 @@ Players must be near a registered Lodestone before teleporting.
 - `8`: default radius in blocks.
 - `0`: disables this requirement.
 
-`teleportCooldownSeconds`
-
-Server-side cooldown after a successful teleport.
-
-- `3`: default cooldown in seconds.
-- `0`: disables cooldown.
-- Any positive value is measured in seconds.
-
 `teleportCastSeconds`
 
 Stand-still cast time before teleporting.
@@ -129,12 +200,22 @@ Stand-still cast time before teleporting.
 - `2`: default cast duration in seconds.
 - `0`: disables the cast and teleports immediately.
 
+Players with `lodestone_teleport.bypass_cast` skip the cast.
+
 `teleportCastMoveTolerance`
 
 How far the player can move during the cast before it is cancelled.
 
 - `0.2`: default tolerance in blocks.
 - `0`: requires the player to stay exactly still.
+
+`teleportCooldownSeconds`
+
+Server-side cooldown after a successful teleport.
+
+- `3`: default cooldown in seconds.
+- `0`: disables cooldown.
+- Players with `lodestone_teleport.bypass_cooldown` skip cooldown.
 
 ## Teleport Effects
 
@@ -178,32 +259,31 @@ The custom mod UI has pagination.
 
 ## Permissions
 
-`requirePermissions`
+`playerPermissions`
 
-- `true`: use LuckPerms/Fabric Permissions API.
-- `false`: everyone can use and rename Lodestones.
+Default permissions granted to every player when no permission manager answers a permission request.
+
+`adminPermissions`
+
+Default permissions granted to OP/gamemaster-level admins when no permission manager answers a permission request.
+
+LuckPerms or another Fabric Permissions-compatible manager is recommended for real group/player management. If a permission manager answers, its answer wins over these config defaults.
 
 ## Development Permission Overrides
 
-For local debugging, `runClient` and `runServer` can simulate permission results without LuckPerms:
+For local debugging, use JVM system properties. Put the `-D...` flags before `--args` if you use extra run arguments.
 
 ```powershell
-.\gradlew.bat runClient -Plodestone_teleport.use=true -Plodestone_teleport.rename=false
+.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.rename=false
 ```
 
 Example with granular permissions:
 
 ```powershell
-.\gradlew.bat runClient -Plodestone_teleport.use=true -Plodestone_teleport.create=false -Plodestone_teleport.bypass_cost=true
+.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.create=true -Dlodestone_teleport.create.private=true -Dlodestone_teleport.own.rename=true -Dlodestone_teleport.own.destroy=false
 ```
 
-The same flags can also be passed as JVM system properties:
-
-```powershell
-.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.rename=true
-```
-
-These overrides are intended for development only and take priority over `requirePermissions`.
+These overrides are intended for development only and take priority over config defaults.
 
 ## Commands
 

@@ -1,6 +1,6 @@
 # Lodestone Warps
 
-**Last updated:** 2026-06-29
+**Last updated:** 2026-07-01
 
 **Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
 
