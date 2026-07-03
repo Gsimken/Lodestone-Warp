@@ -12,6 +12,11 @@
 - [x] Add server-side cooldown.
 - [x] Add maximum possible warps.
 - [x] Add server-side config commands and vanilla Dialog quick config UI.
+- [x] Add pagination to the vanilla Dialog destination list.
+- [ ] Add advanced destination list controls:
+  - [ ] Add primary and secondary sort buttons.
+  - [ ] Sort by name, id, cost, and visibility.
+  - [ ] Add search/filter keywords for fields such as owner, visibility, dimension, cost, id, and name.
 - [x] Add Lodestone discovery modes:
   - [x] `all`: players can see and teleport to every registered Lodestone.
   - [x] `discover`: players can only see and teleport to Lodestones they have discovered.

@@ -379,6 +379,43 @@ public final class LodestoneCommands {
 		return 1;
 	}
 
+	static boolean saveEdit(ServerPlayer player, String id, String name, String visibilityValue) {
+		LodestoneSavedData data = LodestoneSavedData.from(player.level());
+		LodestoneLocation location = data.get(id).orElse(null);
+		if (location == null) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return false;
+		}
+
+		String requestedName = name == null ? "" : name.trim();
+		String storedName = location.name() == null ? "" : location.name().trim();
+		boolean nameChanged = !requestedName.equals(storedName) && !(storedName.isBlank() && requestedName.equals(location.displayName()));
+		LodestoneVisibility requestedVisibility = LodestoneVisibility.from(visibilityValue, null);
+		if (requestedVisibility == null) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.invalid_visibility", "Invalid visibility. Use private, discoverable, or global."));
+			return false;
+		}
+		boolean visibilityChanged = requestedVisibility != location.visibility();
+
+		if (nameChanged && !LodestonePermissions.canRename(player, location)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
+			return false;
+		}
+		if (visibilityChanged && !LodestonePermissions.canSetVisibility(player, location, requestedVisibility)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.visibility", "You do not have permission to change that lodestone visibility."));
+			return false;
+		}
+
+		if (nameChanged) {
+			data.rename(id, requestedName);
+		}
+		if (visibilityChanged) {
+			data.setVisibility(id, requestedVisibility);
+		}
+		player.sendSystemMessage(LodestoneText.text("edit.saved", "Lodestone changes saved."));
+		return true;
+	}
+
 	static int grantDiscovery(CommandSourceStack source, ServerPlayer target, String id) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if ("all".equalsIgnoreCase(id)) {

@@ -43,8 +43,30 @@ public final class LodestoneCustomActions {
 					data.get(id).ifPresent(location -> LodestoneDialogs.showDestinations(player, location, readField(payload, "query")));
 					yield true;
 				}
+				case "page" -> {
+					LodestoneSavedData data = LodestoneSavedData.from(player.level());
+					data.get(id).ifPresent(location -> LodestoneDialogs.showDestinations(player, location, readField(payload, "query"), payload.getIntOr("page", 0)));
+					yield true;
+				}
 				case "rename" -> {
 					LodestoneCommands.rename(player.createCommandSourceStack(), id, readField(payload, "name"));
+					yield true;
+				}
+				case "save_edit" -> {
+					LodestoneCommands.saveEdit(player, id, readField(payload, "name"), payload.getStringOr("visibility", ""));
+					yield true;
+				}
+				case "edit_mode" -> {
+					LodestoneSavedData data = LodestoneSavedData.from(player.level());
+					LodestoneVisibility visibility = LodestoneVisibility.from(payload.getStringOr("visibility", ""), null);
+					if (visibility == null) {
+						player.createCommandSourceStack().sendFailure(LodestoneText.text("error.invalid_visibility", "Invalid visibility. Use private, discoverable, or global."));
+						yield true;
+					}
+					data.get(id).ifPresentOrElse(
+						location -> LodestoneDialogs.showEdit(player, location, readField(payload, "name"), visibility),
+						() -> player.sendSystemMessage(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."))
+					);
 					yield true;
 				}
 				case "remove" -> {

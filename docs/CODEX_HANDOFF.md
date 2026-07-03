@@ -1,12 +1,12 @@
 # Codex Handoff - Lodestone Warps
 
-**Updated:** 2026-07-01
+**Updated:** 2026-07-03
 
 Use this as context when continuing work in a new Codex session.
 
 ## Repository
 
-- Repo path: `C:\Users\simke\Documents\Github\Waystone Teleport`
+- Repo path: `C:\Users\simke\Documents\Github\Lodestone-Warp`
 - GitHub: `https://github.com/Gsimken/Lodestone-Warp`
 - Current working branch: `codex/discovery-mode-0.5.0`
 - Mod name: `Lodestone Warps`
@@ -172,6 +172,27 @@ Mod UI features:
   - `🔒` private
 - Header shows the current Lodestone visibility icon.
 
+Vanilla Dialog UI current shape:
+
+```text
+From <current lodestone>
+< Page N / M >
+
+[Search input]
+
+[Search location][empty]
+[Destination TP][edit or empty]
+[Destination TP][edit or empty]
+[Edit this warp][empty]
+```
+
+- Destination list uses `maxDialogDestinations` as page size.
+- Pagination is currently attempted through clickable text in the dialog body using `ClickEvent.Custom` with action `page`.
+- This clickable body-text pagination compiles, but still needs in-client verification. If `PlainMessage` does not fire click events, fall back to buttons in the grid or a single page button.
+- `Search location` submits the search input and resets to page 0.
+- `Edit this warp` appears when the player can edit the current Lodestone through any allowed own/staff edit permission.
+- Destination edit buttons appear per destination when the player can edit that destination; otherwise an empty spacer button preserves the two-column layout.
+
 Mod edit screen shape:
 
 ```text
@@ -187,6 +208,19 @@ Mod edit screen shape:
 - `Remove` unlinks immediately.
 - Server revalidates permissions before applying changes.
 
+Vanilla edit dialog shape:
+
+```text
+[textbox]
+[Save]
+[Mode: current visibility]
+[Remove]
+```
+
+- `Mode` cycles locally through allowed visibility modes by reopening the dialog with pending state.
+- `Save` sends name + pending visibility together using `save_edit`.
+- Server uses the same `LodestoneCommands.saveEdit` validation path for vanilla and mod UI.
+
 ## Recent Work Completed
 
 - Added ownership-aware visibility model: private/discoverable/global.
@@ -196,8 +230,13 @@ Mod edit screen shape:
 - Added mod UI visibility icons.
 - Added current Lodestone visibility icon in mod and vanilla UI headers.
 - Added staged edit save flow for mod UI.
+- Added staged edit save flow for vanilla Dialog UI.
+- Added vanilla Dialog destination pagination using `maxDialogDestinations` as page size.
+- Added experimental clickable body-text page controls for vanilla Dialog UI (`< Page N / M >`).
+- Added per-destination edit/spacer column in vanilla Dialog UI.
 - Added private-registration error when another player tries to discover/register a private Lodestone.
 - Fixed default permission model so players do not get global rename/remove by default.
+- Added roadmap item for primary/secondary sorting and keyword filters.
 - Updated wiki docs in English and Spanish.
 
 ## Verification
@@ -212,6 +251,8 @@ Expected result: build succeeds.
 
 ## Suggested Next Steps
 
+- Verify in a vanilla client that clicking `<` and `>` in the Dialog body triggers pagination. If it does not, replace with grid buttons or a single page button.
+- Check vanilla Dialog layout at multiple destination counts and search states.
 - Test with two different player identities:
   - Player A creates private Lodestone.
   - Player B cannot discover/register/break it.

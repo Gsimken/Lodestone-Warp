@@ -28,8 +28,10 @@ import java.util.Optional;
 
 public final class LodestoneDialogs {
 	private static final int INPUT_WIDTH = 300;
-	private static final int DESTINATION_BUTTON_WIDTH = 250;
+	private static final int DESTINATION_BUTTON_WIDTH = 315;
 	private static final int EDIT_BUTTON_WIDTH = 40;
+	private static final int PAGE_BUTTON_WIDTH = EDIT_BUTTON_WIDTH;
+	private static final int FULL_ROW_BUTTON_WIDTH = 340;
 	private static final int CONFIG_BUTTON_WIDTH = 340;
 	private static final int GRID_COLUMNS = 2;
 	private static final int DESTINATION_LABEL_WIDTH = 25;
@@ -42,18 +44,20 @@ public final class LodestoneDialogs {
 	}
 
 	public static void showDestinations(ServerPlayer player, LodestoneLocation current, String query) {
+		showDestinations(player, current, query, 0);
+	}
+
+	public static void showDestinations(ServerPlayer player, LodestoneLocation current, String query, int page) {
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
 		List<ActionButton> buttons = new ArrayList<>();
 		int limit = LodestoneConfig.get().maxDialogDestinations;
 		String cleanQuery = query == null ? "" : query.trim();
-		boolean canRename = LodestonePermissions.canRename(player);
-		int columns = canRename ? GRID_COLUMNS : 1;
-		int destinationCount = 0;
+		boolean canEditCurrent = canEdit(player, current);
+		int columns = GRID_COLUMNS;
+		List<LodestoneLocation> destinations = new ArrayList<>();
 
 		buttons.add(searchButton(current.id()));
-		if (canRename) {
-			buttons.add(spacerButton());
-		}
+		buttons.add(spacerButton());
 
 		for (LodestoneLocation destination : data.all()) {
 			if (destination.id().equals(current.id())) {
@@ -65,18 +69,25 @@ public final class LodestoneDialogs {
 			if (!matches(destination, cleanQuery)) {
 				continue;
 			}
-			if (destinationCount >= limit) {
-				break;
-			}
+			destinations.add(destination);
+		}
+		int totalPages = Math.max(1, (int) Math.ceil(destinations.size() / (double) limit));
+		int currentPage = Math.max(0, Math.min(page, totalPages - 1));
+		int start = currentPage * limit;
+		int end = Math.min(destinations.size(), start + limit);
+
+		for (int index = start; index < end; index++) {
+			LodestoneLocation destination = destinations.get(index);
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);
 			buttons.add(customButton(destinationLabel(destination, cost), Optional.of(LodestoneText.cost(cost)), "tp", destination.id()));
-			if (canRename) {
+			if (canEdit(player, destination)) {
 				buttons.add(editButton(destination));
+			} else {
+				buttons.add(spacerButton());
 			}
-			destinationCount++;
 		}
-		if (canRename) {
-			buttons.add(customButton(LodestoneText.text("button.rename_current", "Rename this warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
+		if (canEditCurrent) {
+			buttons.add(customButton(LodestoneText.text("button.rename_current", "Edit this warp").withStyle(ChatFormatting.GOLD), "edit", current.id()));
 			buttons.add(spacerButton());
 		}
 
@@ -86,7 +97,7 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(bodyText(player, current, cleanQuery, destinationCount == 0), INPUT_WIDTH)),
+			List.of(new PlainMessage(bodyText(player, current, cleanQuery, destinations.isEmpty(), currentPage, totalPages), INPUT_WIDTH)),
 			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.text("input.search", "Search"), true, cleanQuery, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), columns));
@@ -97,17 +108,20 @@ public final class LodestoneDialogs {
 	}
 
 	public static void showEdit(ServerPlayer player, LodestoneLocation location) {
+		showEdit(player, location, location.displayName(), location.visibility());
+	}
+
+	public static void showEdit(ServerPlayer player, LodestoneLocation location, String pendingName, LodestoneVisibility pendingVisibility) {
 		List<ActionButton> buttons = new ArrayList<>();
-		if (LodestonePermissions.canRename(player, location)) {
+		if (LodestonePermissions.canRename(player, location) || pendingVisibility != location.visibility()) {
 			buttons.add(new ActionButton(
 				new CommonButtonData(LodestoneText.text("button.save", "Save"), INPUT_WIDTH),
-				Optional.of(renameAction(location.id()))
+				Optional.of(saveEditAction(location.id(), pendingVisibility))
 			));
 		}
-		for (LodestoneVisibility visibility : LodestoneVisibility.values()) {
-			if (visibility != location.visibility() && LodestonePermissions.canSetVisibility(player, location, visibility)) {
-				buttons.add(customButton(visibilityLabel(visibility), "visibility", location.id(), visibility.id()));
-			}
+		List<LodestoneVisibility> allowedVisibilities = allowedVisibilities(player, location);
+		if (allowedVisibilities.size() > 1) {
+			buttons.add(modeButton(location.id(), pendingVisibility, nextVisibility(allowedVisibilities, pendingVisibility)));
 		}
 		if (LodestonePermissions.canRemove(player, location)) {
 			buttons.add(customButton(LodestoneText.text("button.remove", "[X]").withStyle(ChatFormatting.RED), "remove", location.id()));
@@ -122,8 +136,8 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(LodestoneText.text("edit.body", "Change this lodestone name, visibility, or registration."), INPUT_WIDTH)),
-			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.text("input.name", "Name"), true, location.displayName(), 48, Optional.empty())))
+			List.of(new PlainMessage(editBody(pendingVisibility), INPUT_WIDTH)),
+			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.text("input.name", "Name"), true, pendingName, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), 1));
 	}
@@ -259,6 +273,21 @@ public final class LodestoneDialogs {
 		);
 	}
 
+	private static Component pageLink(String id, String query, int page, String label, boolean active) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", "page");
+		payload.putString("id", id);
+		payload.putString("query", query);
+		payload.putInt("page", Math.max(0, page));
+		Component component = Component.literal(label).withStyle(active ? ChatFormatting.AQUA : ChatFormatting.DARK_GRAY);
+		if (!active) {
+			return component;
+		}
+		return component.copy().withStyle(style -> style
+			.withUnderlined(true)
+			.withClickEvent(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))));
+	}
+
 	private static ActionButton configSearchButton(String category) {
 		CompoundTag payload = new CompoundTag();
 		payload.putString("action", "config_open");
@@ -327,6 +356,51 @@ public final class LodestoneDialogs {
 		return new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload));
 	}
 
+	private static Action saveEditAction(String id, LodestoneVisibility visibility) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", "save_edit");
+		payload.putString("id", id);
+		payload.putString("visibility", visibility.id());
+		return new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload));
+	}
+
+	private static ActionButton modeButton(String id, LodestoneVisibility currentVisibility, LodestoneVisibility nextVisibility) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", "edit_mode");
+		payload.putString("id", id);
+		payload.putString("visibility", nextVisibility.id());
+		return new ActionButton(
+			new CommonButtonData(LodestoneText.text("button.mode", "Mode: %s", visibilityValue(currentVisibility)).withStyle(visibilityColor(currentVisibility)), DESTINATION_BUTTON_WIDTH),
+			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
+		);
+	}
+
+	private static List<LodestoneVisibility> allowedVisibilities(ServerPlayer player, LodestoneLocation location) {
+		List<LodestoneVisibility> values = new ArrayList<>();
+		values.add(location.visibility());
+		for (LodestoneVisibility visibility : LodestoneVisibility.values()) {
+			if (visibility != location.visibility() && LodestonePermissions.canSetVisibility(player, location, visibility)) {
+				values.add(visibility);
+			}
+		}
+		return values;
+	}
+
+	private static LodestoneVisibility nextVisibility(List<LodestoneVisibility> visibilities, LodestoneVisibility current) {
+		int index = visibilities.indexOf(current);
+		if (index < 0) {
+			return visibilities.getFirst();
+		}
+		return visibilities.get((index + 1) % visibilities.size());
+	}
+
+	private static Component editBody(LodestoneVisibility visibility) {
+		return LodestoneText.text("edit.body", "Change this lodestone name, visibility, or registration.")
+			.copy()
+			.append(Component.literal("\n"))
+			.append(LodestoneText.text("visibility.current", "Visibility: %s", visibilityValue(visibility)).withStyle(visibilityColor(visibility)));
+	}
+
 	private static boolean matches(LodestoneLocation location, String query) {
 		if (query.isBlank()) {
 			return true;
@@ -337,12 +411,21 @@ public final class LodestoneDialogs {
 			|| location.dimension().identifier().toString().toLowerCase().contains(needle);
 	}
 
-	private static Component bodyText(ServerPlayer player, LodestoneLocation current, String query, boolean noResults) {
+	private static Component bodyText(ServerPlayer player, LodestoneLocation current, String query, boolean noResults, int page, int totalPages) {
 		Component body;
 		if (noResults && !query.isBlank()) {
 			body = LodestoneText.text("menu.body.no_results", "From %s\nNo results for: %s", displayNameWithVisibilityIcon(current), query);
 		} else {
 			body = LodestoneText.text("menu.body", "From %s", displayNameWithVisibilityIcon(current));
+		}
+		if (totalPages > 1) {
+			body = body.copy()
+				.append(Component.literal("\n"))
+				.append(pageLink(current.id(), query, page - 1, "<", page > 0))
+				.append(Component.literal("  "))
+				.append(LodestoneText.text("client.page", "Page %s / %s", page + 1, totalPages).withStyle(ChatFormatting.GRAY))
+				.append(Component.literal("  "))
+				.append(pageLink(current.id(), query, page + 1, ">", page < totalPages - 1));
 		}
 		if (LodestoneDiscovery.canSeeAll(player)) {
 			return body.copy()
@@ -358,6 +441,26 @@ public final class LodestoneDialogs {
 			case DISCOVERABLE -> ChatFormatting.AQUA;
 			case GLOBAL -> ChatFormatting.GREEN;
 		});
+	}
+
+	private static Component visibilityValue(LodestoneVisibility visibility) {
+		return LodestoneText.text("visibility.value." + visibility.id(), visibility.id());
+	}
+
+	private static ChatFormatting visibilityColor(LodestoneVisibility visibility) {
+		return switch (visibility) {
+			case PRIVATE -> ChatFormatting.GOLD;
+			case DISCOVERABLE -> ChatFormatting.AQUA;
+			case GLOBAL -> ChatFormatting.GREEN;
+		};
+	}
+
+	private static boolean canEdit(ServerPlayer player, LodestoneLocation location) {
+		return LodestonePermissions.canRename(player, location)
+			|| LodestonePermissions.canRemove(player, location)
+			|| LodestonePermissions.canSetVisibility(player, location, LodestoneVisibility.PRIVATE)
+			|| LodestonePermissions.canSetVisibility(player, location, LodestoneVisibility.DISCOVERABLE)
+			|| LodestonePermissions.canSetVisibility(player, location, LodestoneVisibility.GLOBAL);
 	}
 
 	private static Component destinationLabel(LodestoneLocation destination, LodestoneTeleportCost cost) {
