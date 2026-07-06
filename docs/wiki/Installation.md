@@ -1,5 +1,7 @@
 # Installation
 
+[English](Installation.md) | [Español](es/Instalacion.md)
+
 **Last updated:** 2026-06-27
 
 ## Server Requirements

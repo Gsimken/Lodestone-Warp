@@ -1,5 +1,7 @@
 # Solución de Problemas
 
+[English](../Troubleshooting.md) | [Español](Solucion-de-problemas.md)
+
 **Última actualización:** 2026-07-01
 
 ## La UI Vanilla Sale en Inglés o Español

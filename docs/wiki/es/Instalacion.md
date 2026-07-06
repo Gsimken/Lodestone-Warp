@@ -1,5 +1,7 @@
 # Instalación
 
+[English](../Installation.md) | [Español](Instalacion.md)
+
 **Última actualización:** 2026-06-27
 
 ## Requisitos del Servidor

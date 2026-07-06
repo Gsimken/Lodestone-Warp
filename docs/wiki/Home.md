@@ -1,5 +1,7 @@
 # Lodestone Warps Wiki
 
+[English](Home.md) | [Español](es/Inicio.md)
+
 **Last updated:** 2026-07-01
 
 Welcome to the Lodestone Warps wiki. This is the living documentation for server owners, pack makers, and contributors.

@@ -1,5 +1,7 @@
 # Troubleshooting
 
+[English](Troubleshooting.md) | [Español](es/Solucion-de-problemas.md)
+
 **Last updated:** 2026-07-01
 
 ## Vanilla UI Shows English or Spanish Unexpectedly

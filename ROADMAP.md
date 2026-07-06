@@ -17,6 +17,12 @@
   - [ ] Add primary and secondary sort buttons.
   - [ ] Sort by name, id, cost, and visibility.
   - [ ] Add search/filter keywords for fields such as owner, visibility, dimension, cost, id, and name.
+- [ ] Verify and polish custom mod UI parity with vanilla Dialog UI:
+  - [ ] Confirm discovery visibility, global/private icons, edit permissions, and admin view match vanilla behavior.
+  - [ ] Confirm any vanilla layout/config options that should apply to mod UI are either mirrored or intentionally documented as vanilla-only.
+  - [x] Add a client-only settings button to the mod UI for local table preferences.
+  - [x] Allow players with the mod installed to reorder, hide, and add table columns.
+  - [x] Add client-side favorite Lodestones with a clickable star and local-only sorting/filtering.
 - [x] Add Lodestone discovery modes:
   - [x] `all`: players can see and teleport to every registered Lodestone.
   - [x] `discover`: players can only see and teleport to Lodestones they have discovered.
@@ -30,6 +36,10 @@
   - [x] Basic vanilla-style effects using existing particles.
   - [x] Separate server-side effect preset when the client has the mod installed.
   - [ ] Enhanced client-side screen/camera effects when the client has the mod installed.
+- [ ] Add configurable player feedback channels:
+  - [ ] Allow disabling or reducing chat messages for teleport/cast/cooldown/status feedback.
+  - [ ] Allow showing key feedback as title/subtitle/actionbar messages instead.
+  - [ ] Keep sensible defaults for vanilla clients and richer presentation for clients with the mod installed.
 - [x] Add basic permissions for use and rename.
 - [x] Add permissions for all relevant actions.
   - [x] `lodestone_teleport.create`

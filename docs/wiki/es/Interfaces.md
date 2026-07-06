@@ -1,5 +1,7 @@
 # Interfaces
 
+[English](../User-Interfaces.md) | [Español](Interfaces.md)
+
 **Última actualización:** 2026-07-01
 
 Lodestone Warps tiene dos interfaces. El servidor elige automáticamente según si el jugador tiene instalado el mod en el cliente.

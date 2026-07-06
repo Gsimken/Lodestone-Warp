@@ -1,5 +1,7 @@
 # Configuration
 
+[English](Configuration.md) | [Español](es/Configuracion.md)
+
 **Last updated:** 2026-07-01
 
 The config is generated on first run:
@@ -36,6 +38,14 @@ Server owners can also use the vanilla Dialog config UI:
   "registerPlacedLodestonesOnlyWhenSneaking": true,
   "autoRegisterUntrackedLodestones": false,
   "maxDialogDestinations": 24,
+  "vanillaDialogDestinationColumnWidth": 245,
+  "vanillaDialogCostColumnWidth": 70,
+  "vanillaDialogEditColumnWidth": 70,
+  "vanillaDialogColumnOrder": "c,d,e",
+  "showVanillaDialogHeaderNavigation": true,
+  "showVanillaDialogButtonNavigation": true,
+  "showVanillaDialogDestinationSuffix": false,
+  "vanillaDialogDestinationSuffix": "[{x}, {y}, {z}, {dimension}]",
   "teleportSourceRange": 8,
   "teleportCastSeconds": 2,
   "teleportCastMoveTolerance": 0.2,
@@ -53,8 +63,7 @@ Server owners can also use the vanilla Dialog config UI:
     "lodestone_teleport.own.remove",
     "lodestone_teleport.own.destroy",
     "lodestone_teleport.own.visibility.private",
-    "lodestone_teleport.own.visibility.discoverable",
-    "lodestone_teleport.mode.discover"
+    "lodestone_teleport.own.visibility.discoverable"
   ],
   "adminPermissions": [
     "lodestone_teleport.admin",
@@ -172,6 +181,11 @@ Controls which Lodestones players can see and teleport to.
 - `all`: players can see every registered Lodestone.
 - `discover`: players can see global Lodestones, Lodestones they own, and Lodestones they have discovered.
 
+Mode permissions can override this default per player:
+
+- `lodestone_teleport.mode.discover` forces discovery rules even if `networkMode` is `all`.
+- `lodestone_teleport.mode.all` bypasses discovery even if `networkMode` is `discover`.
+
 Default:
 
 ```json
@@ -256,6 +270,62 @@ Supported presets:
 Maximum destinations shown in the vanilla Dialog UI.
 
 The custom mod UI has pagination.
+
+`vanillaDialogDestinationColumnWidth`
+
+Width of the destination column in the vanilla Dialog UI. Default: `245`.
+
+`vanillaDialogCostColumnWidth`
+
+Width of the cost column in the vanilla Dialog UI. Default: `70`.
+
+`vanillaDialogEditColumnWidth`
+
+Width of the edit/spacer column in the vanilla Dialog UI. Default: `70`.
+
+`vanillaDialogColumnOrder`
+
+Column order for the vanilla Dialog destination grid. Default: `c,d,e`.
+
+- `c`: cost column
+- `d`: destination column
+- `e`: edit column
+
+Examples: `c,d,e`, `d,c,e`, `d,e,c`.
+
+`showVanillaDialogHeaderNavigation`
+
+Shows clickable page arrows around the page label in the vanilla Dialog body. Default: `true`.
+
+`showVanillaDialogButtonNavigation`
+
+Shows page arrow buttons beside Search and Edit this warp in the vanilla Dialog grid. Default: `true`.
+
+`showVanillaDialogDestinationSuffix`
+
+Shows extra configured information after destination names in the vanilla Dialog UI. Default: `false`.
+
+`vanillaDialogDestinationSuffix`
+
+Suffix pattern appended to destination names when enabled.
+
+Examples:
+
+```json
+"vanillaDialogDestinationSuffix": "[{x}, {y}, {z}, {dimension}]"
+```
+
+```json
+"vanillaDialogDestinationSuffix": "({x}, {z}, {owner})"
+```
+
+Supported placeholders:
+
+- `{x}`
+- `{y}`
+- `{z}`
+- `{dimension}`
+- `{owner}`
 
 ## Permissions
 

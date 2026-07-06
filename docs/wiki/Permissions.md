@@ -1,5 +1,7 @@
 # Permissions
 
+[English](Permissions.md) | [Español](es/Permisos.md)
+
 **Last updated:** 2026-07-01
 
 Lodestone Warps uses Fabric Permissions API and is compatible with LuckPerms.
@@ -141,7 +143,7 @@ Broad staff permission for global Lodestone management.
 
 `lodestone_teleport.mode.discover`
 
-Uses discovery rules. Players see global Lodestones, owned Lodestones, and Lodestones they have discovered.
+Forces discovery rules for that player. Players see global Lodestones, owned Lodestones, and Lodestones they have discovered. This can force discovery even when `networkMode` is `all`.
 
 `lodestone_teleport.mode.all`
 

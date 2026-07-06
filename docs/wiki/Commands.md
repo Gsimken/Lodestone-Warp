@@ -1,5 +1,7 @@
 # Commands
 
+[English](Commands.md) | [Español](es/Comandos.md)
+
 **Last updated:** 2026-07-01
 
 ## Default Command
@@ -75,6 +77,12 @@ Grant discovery:
 
 ```mcfunction
 /warp discover grant <player> <id|all>
+```
+
+When using `all`, private Lodestones are excluded by default. To include private Lodestones intentionally, use:
+
+```mcfunction
+/warp discover grant <player> all add_private=true
 ```
 
 Revoke discovery:

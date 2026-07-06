@@ -1,5 +1,7 @@
 # Comandos
 
+[English](../Commands.md) | [Español](Comandos.md)
+
 **Última actualización:** 2026-07-01
 
 ## Comando Principal
@@ -75,6 +77,12 @@ Dar discovery:
 
 ```mcfunction
 /warp discover grant <jugador> <id|all>
+```
+
+Cuando usas `all`, las Lodestones privadas quedan excluidas por defecto. Para incluir Lodestones privadas intencionalmente, usa:
+
+```mcfunction
+/warp discover grant <jugador> all add_private=true
 ```
 
 Quitar discovery:
