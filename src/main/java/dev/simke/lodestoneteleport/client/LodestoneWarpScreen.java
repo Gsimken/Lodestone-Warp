@@ -27,17 +27,16 @@ public final class LodestoneWarpScreen extends Screen {
 	private static final int PANEL_WIDTH = 430;
 	private static final int ROW_HEIGHT = 24;
 	private static final int GAP = 5;
-	private static final int NAME_X = 8;
 	private static final int VISIBILITY_ICON_WIDTH = 14;
-	private static final int COORDS_X = 160;
-	private static final int DIMENSION_X = 260;
-	private static final int COST_X = 350;
+	private static final int EDIT_WIDTH = 47;
+	private static final int FAVORITE_WIDTH = 24;
 	private static final Identifier EXPERIENCE_ORB_SPRITE = Identifier.fromNamespaceAndPath(LodestoneTeleportMod.MOD_ID, "experience_orb");
 
 	private final String currentId;
 	private final String currentName;
 	private final String currentVisibility;
 	private final String currentSubtitle;
+	private final String currentOwner;
 	private final boolean canRename;
 	private final boolean canEditCurrent;
 	private final boolean viewingAll;
@@ -54,6 +53,7 @@ public final class LodestoneWarpScreen extends Screen {
 		this.currentName = data.getStringOr("currentName", "");
 		this.currentVisibility = data.getStringOr("currentVisibility", "discoverable");
 		this.currentSubtitle = formatPosition(data, "current");
+		this.currentOwner = data.getStringOr("currentOwner", "unknown");
 		this.canRename = data.getBooleanOr("canRename", false);
 		this.canEditCurrent = data.getBooleanOr("canEditCurrent", this.canRename);
 		this.viewingAll = data.getBooleanOr("viewingAll", false);
@@ -65,7 +65,11 @@ public final class LodestoneWarpScreen extends Screen {
 		int left = (this.width - PANEL_WIDTH) / 2;
 		int top = top();
 
-		this.searchBox = new EditBox(this.font, left, top + 58, PANEL_WIDTH, 20, LodestoneText.text("input.search", "Search"));
+		addRenderableWidget(Button.builder(Component.literal("\u2699"), button -> {
+			this.minecraft.setScreenAndShow(new LodestoneWarpSettingsScreen(this, this::refreshDestinations));
+		}).bounds(left + PANEL_WIDTH - 24, top - 14, 24, 20).build());
+
+		this.searchBox = new EditBox(this.font, left, top + 75, PANEL_WIDTH, 20, LodestoneText.text("input.search", "Search"));
 		this.searchBox.setHint(LodestoneText.text("input.search", "Search"));
 		this.searchBox.setMaxLength(64);
 		this.searchBox.setValue(this.query);
@@ -95,10 +99,11 @@ public final class LodestoneWarpScreen extends Screen {
 		graphics.centeredText(this.font, this.title, this.width / 2, top - 9, 0xFFFFFFFF);
 		graphics.text(this.font, LodestoneText.text("client.current_name", "Warp name: %s", currentNameWithIcon()), left, top + 14, 0xFFFFD37A);
 		graphics.text(this.font, LodestoneText.text("client.current_coords", "Coords Warp: %s", this.currentSubtitle), left, top + 31, 0xFFA8A8A8);
+		graphics.text(this.font, LodestoneText.text("client.current_owner", "Owner: %s", this.currentOwner), left, top + 48, 0xFFA8A8A8);
 		if (this.viewingAll) {
-			graphics.text(this.font, LodestoneText.text("client.viewing_all", "Admin view: showing all lodestones"), left + PANEL_WIDTH - 208, top + 31, 0xFFFFAA00);
+			graphics.text(this.font, LodestoneText.text("client.viewing_all", "Admin view: showing all lodestones"), left + PANEL_WIDTH - 208, top + 48, 0xFFFF5555);
 		}
-		drawTableHeader(graphics, left, top + 83);
+		drawTableHeader(graphics, left, top + 100);
 		super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 		drawRows(graphics, left);
 	}
@@ -111,10 +116,11 @@ public final class LodestoneWarpScreen extends Screen {
 		this.visibleRows.clear();
 
 		int left = (this.width - PANEL_WIDTH) / 2;
-		int y = top() + 98;
+		int y = top() + 115;
 		int bottom = this.height - 76;
 		String needle = this.query.toLowerCase(Locale.ROOT).trim();
 		List<Destination> filtered = filteredDestinations(needle);
+		sortDestinations(filtered);
 		int rowsPerPage = Math.max(1, (bottom - y + GAP) / (ROW_HEIGHT + GAP));
 		int totalPages = Math.max(1, (int) Math.ceil(filtered.size() / (double) rowsPerPage));
 		this.page = Math.min(this.page, totalPages - 1);
@@ -124,20 +130,31 @@ public final class LodestoneWarpScreen extends Screen {
 
 		for (int index = start; index < end; index++) {
 			Destination destination = filtered.get(index);
-			int teleportWidth = destination.canEdit() ? PANEL_WIDTH - 52 : PANEL_WIDTH;
+			boolean showFavorite = showColumn("favorite");
+			int rowLeft = showFavorite ? left + FAVORITE_WIDTH + GAP : left;
+			int editSpace = destination.canEdit() ? EDIT_WIDTH + GAP : 0;
+			int teleportWidth = PANEL_WIDTH - (showFavorite ? FAVORITE_WIDTH + GAP : 0) - editSpace;
+			if (showFavorite) {
+				Button favorite = Button.builder(favoriteLabel(destination), button -> {
+					LodestoneClientPreferences.toggleFavorite(destination.id());
+					refreshDestinations();
+				}).bounds(left, y, FAVORITE_WIDTH, ROW_HEIGHT).build();
+				this.destinationButtons.add(favorite);
+				addRenderableWidget(favorite);
+			}
 			Button teleport = Button.builder(Component.empty(), button -> {
 				sendAction("tp", destination.id(), "");
 				this.minecraft.setScreenAndShow(null);
 			})
-				.bounds(left, y, teleportWidth, ROW_HEIGHT)
+				.bounds(rowLeft, y, teleportWidth, ROW_HEIGHT)
 				.build();
 			this.destinationButtons.add(teleport);
-			this.visibleRows.add(new VisibleRow(destination, y));
+			this.visibleRows.add(new VisibleRow(destination, rowLeft, teleportWidth, y));
 			addRenderableWidget(teleport);
 			if (destination.canEdit()) {
 				Button edit = Button.builder(Component.literal("\u270e"), button -> {
 					sendAction("edit", destination.id(), "", this.currentId);
-				}).bounds(left + PANEL_WIDTH - 47, y, 47, ROW_HEIGHT).build();
+				}).bounds(left + PANEL_WIDTH - EDIT_WIDTH, y, EDIT_WIDTH, ROW_HEIGHT).build();
 				this.destinationButtons.add(edit);
 				addRenderableWidget(edit);
 			}
@@ -168,6 +185,20 @@ public final class LodestoneWarpScreen extends Screen {
 		return filtered;
 	}
 
+	private void sortDestinations(List<Destination> destinations) {
+		if (!LodestoneClientPreferences.get().sortFavoritesFirst) {
+			return;
+		}
+		destinations.sort((left, right) -> {
+			boolean leftFavorite = LodestoneClientPreferences.get().favorite(left.id());
+			boolean rightFavorite = LodestoneClientPreferences.get().favorite(right.id());
+			if (leftFavorite == rightFavorite) {
+				return left.name().compareToIgnoreCase(right.name());
+			}
+			return leftFavorite ? -1 : 1;
+		});
+	}
+
 	private void addPaginationButtons(int left, int totalPages) {
 		int y = this.height - 66;
 		Button previous = Button.builder(LodestoneText.text("client.page.previous", "Previous"), button -> {
@@ -195,29 +226,50 @@ public final class LodestoneWarpScreen extends Screen {
 	}
 
 	private void drawTableHeader(GuiGraphicsExtractor graphics, int left, int y) {
-		graphics.text(this.font, LodestoneText.text("client.column.name", "Name"), left + NAME_X, y, 0xFF8DEEFF);
-		graphics.text(this.font, LodestoneText.text("client.column.coords", "Coords"), left + COORDS_X, y, 0xFF8DEEFF);
-		graphics.text(this.font, LodestoneText.text("client.column.dimension", "Dimension"), left + DIMENSION_X, y, 0xFF8DEEFF);
-		graphics.text(this.font, LodestoneText.text("client.column.cost", "Cost"), left + COST_X, y, 0xFF8DEEFF);
+		List<String> columns = visibleTextColumns();
+		if (showColumn("favorite")) {
+			graphics.text(this.font, LodestoneText.text("client.column.favorite", "Fav"), left + 4, y, 0xFFFFD37A);
+			left += FAVORITE_WIDTH + GAP;
+		}
+		int width = PANEL_WIDTH - (showColumn("favorite") ? FAVORITE_WIDTH + GAP : 0) - EDIT_WIDTH - GAP;
+		for (ColumnLayout column : layoutColumns(left, width, columns)) {
+			graphics.text(this.font, columnTitle(column.key()), column.x(), y, 0xFF8DEEFF);
+		}
 	}
 
 	private void drawRows(GuiGraphicsExtractor graphics, int left) {
 		for (VisibleRow row : this.visibleRows) {
 			Destination destination = row.destination();
 			int textY = row.y() + 8;
-			int nameX = left + NAME_X;
-			if (destination.global()) {
-				graphics.text(this.font, "\ud83c\udf10", nameX, textY, 0xFF55FF55);
-				nameX += VISIBILITY_ICON_WIDTH;
-			} else if (destination.privateWarp()) {
-				graphics.text(this.font, "\ud83d\udd12", nameX, textY, 0xFFFFD37A);
-				nameX += VISIBILITY_ICON_WIDTH;
+			for (ColumnLayout column : layoutColumns(row.x(), row.width(), visibleTextColumns())) {
+				drawColumn(graphics, destination, column, textY);
 			}
-			graphics.text(this.font, truncate(destination.name(), destination.hasVisibilityIcon() ? 131 : 145), nameX, textY, 0xFFFFFFFF);
-			graphics.text(this.font, destination.coords(), left + COORDS_X, textY, 0xFFD6D6D6);
-			graphics.text(this.font, truncate(destination.dimension(), 78), left + DIMENSION_X, textY, 0xFFD6D6D6);
-			drawCost(graphics, destination, left + COST_X, row.y() + 4);
 		}
+	}
+
+	private void drawColumn(GuiGraphicsExtractor graphics, Destination destination, ColumnLayout column, int textY) {
+		if ("cost".equals(column.key())) {
+			drawCost(graphics, destination, column.x(), textY - 4);
+			return;
+		}
+		int textX = column.x();
+		String value = switch (column.key()) {
+			case "coords" -> destination.coords();
+			case "dimension" -> destination.dimension();
+			case "owner" -> destination.owner();
+			case "visibility" -> destination.visibility();
+			default -> destination.name();
+		};
+		if ("name".equals(column.key())) {
+			if (destination.global()) {
+				graphics.text(this.font, "\ud83c\udf10", textX, textY, 0xFF55FF55);
+				textX += VISIBILITY_ICON_WIDTH;
+			} else if (destination.privateWarp()) {
+				graphics.text(this.font, "\ud83d\udd12", textX, textY, 0xFFFFD37A);
+				textX += VISIBILITY_ICON_WIDTH;
+			}
+		}
+		graphics.text(this.font, truncate(value, column.width() - (textX - column.x()) - 2), textX, textY, columnColor(column.key()));
 	}
 
 	private void drawCost(GuiGraphicsExtractor graphics, Destination destination, int x, int y) {
@@ -252,6 +304,64 @@ public final class LodestoneWarpScreen extends Screen {
 			return value;
 		}
 		return this.font.plainSubstrByWidth(value, Math.max(1, width - this.font.width("..."))) + "...";
+	}
+
+	private Component favoriteLabel(Destination destination) {
+		return Component.literal(LodestoneClientPreferences.get().favorite(destination.id()) ? "\u2605" : "\u2606")
+			.withStyle(LodestoneClientPreferences.get().favorite(destination.id()) ? ChatFormatting.GOLD : ChatFormatting.GRAY);
+	}
+
+	private boolean showColumn(String key) {
+		return LodestoneClientPreferences.get().columns().contains(key);
+	}
+
+	private List<String> visibleTextColumns() {
+		return LodestoneClientPreferences.get().columns().stream()
+			.filter(column -> !"favorite".equals(column))
+			.toList();
+	}
+
+	private List<ColumnLayout> layoutColumns(int left, int width, List<String> columns) {
+		List<ColumnLayout> layouts = new ArrayList<>();
+		if (columns.isEmpty()) {
+			return layouts;
+		}
+		int remainingWidth = width;
+		int x = left + 8;
+		int gap = 8;
+		for (int index = 0; index < columns.size(); index++) {
+			String key = columns.get(index);
+			int columnWidth;
+			if (index == columns.size() - 1) {
+				columnWidth = Math.max(30, remainingWidth - 8);
+			} else {
+				columnWidth = Math.max(30, Math.min(preferredWidth(key), remainingWidth / (columns.size() - index)));
+			}
+			layouts.add(new ColumnLayout(key, x, columnWidth));
+			x += columnWidth + gap;
+			remainingWidth -= columnWidth + gap;
+		}
+		return layouts;
+	}
+
+	private int preferredWidth(String key) {
+		return switch (key) {
+			case "name" -> 145;
+			case "coords" -> 86;
+			case "dimension" -> 86;
+			case "owner" -> 92;
+			case "visibility" -> 78;
+			case "cost" -> 54;
+			default -> 70;
+		};
+	}
+
+	private Component columnTitle(String key) {
+		return LodestoneText.text("client.column." + key, key);
+	}
+
+	private int columnColor(String key) {
+		return "name".equals(key) ? 0xFFFFFFFF : 0xFFD6D6D6;
 	}
 
 	private int top() {
@@ -299,6 +409,7 @@ public final class LodestoneWarpScreen extends Screen {
 				tag.getBooleanOr("global", false),
 				tag.getStringOr("visibility", tag.getBooleanOr("global", false) ? "global" : "discoverable"),
 				tag.getBooleanOr("canEdit", false),
+				tag.getStringOr("owner", "unknown"),
 				tag.getStringOr("dimension", ""),
 				tag.getIntOr("x", 0),
 				tag.getIntOr("y", 0),
@@ -316,13 +427,13 @@ public final class LodestoneWarpScreen extends Screen {
 		return tag.getIntOr(prefix + "X", 0) + " " + tag.getIntOr(prefix + "Y", 0) + " " + tag.getIntOr(prefix + "Z", 0) + " (" + tag.getStringOr(prefix + "Dimension", "") + ")";
 	}
 
-	private record Destination(String id, String name, boolean global, String visibility, boolean canEdit, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
+	private record Destination(String id, String name, boolean global, String visibility, boolean canEdit, String owner, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount) {
 		String coords() {
 			return x + " " + y + " " + z;
 		}
 
 		String searchText() {
-			return (name + " " + visibility + " " + dimension + " " + x + " " + y + " " + z).toLowerCase(Locale.ROOT);
+			return (name + " " + owner + " " + visibility + " " + dimension + " " + x + " " + y + " " + z).toLowerCase(Locale.ROOT);
 		}
 
 		boolean privateWarp() {
@@ -343,6 +454,9 @@ public final class LodestoneWarpScreen extends Screen {
 		}
 	}
 
-	private record VisibleRow(Destination destination, int y) {
+	private record VisibleRow(Destination destination, int x, int width, int y) {
+	}
+
+	private record ColumnLayout(String key, int x, int width) {
 	}
 }

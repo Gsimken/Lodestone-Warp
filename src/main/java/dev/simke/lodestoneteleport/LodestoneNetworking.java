@@ -36,6 +36,7 @@ public final class LodestoneNetworking {
 		root.putString("currentId", current.id());
 		root.putString("currentName", current.displayName());
 		root.putString("currentVisibility", current.visibility().id());
+		root.putString("currentOwner", ownerName(current));
 		root.putString("currentDimension", LodestoneText.dimension(current.dimension()).getString());
 		root.putInt("currentX", current.pos().getX());
 		root.putInt("currentY", current.pos().getY());
@@ -57,6 +58,7 @@ public final class LodestoneNetworking {
 			CompoundTag item = new CompoundTag();
 			item.putString("id", destination.id());
 			item.putString("name", destination.displayName());
+			item.putString("owner", ownerName(destination));
 			item.putBoolean("global", destination.global());
 			item.putString("visibility", destination.visibility().id());
 			item.putBoolean("canEdit", canEdit(player, destination));
@@ -95,6 +97,10 @@ public final class LodestoneNetworking {
 			|| LodestonePermissions.canSetVisibility(player, location, LodestoneVisibility.PRIVATE)
 			|| LodestonePermissions.canSetVisibility(player, location, LodestoneVisibility.DISCOVERABLE)
 			|| LodestonePermissions.canSetVisibility(player, location, LodestoneVisibility.GLOBAL);
+	}
+
+	private static String ownerName(LodestoneLocation location) {
+		return location.ownerName() == null || location.ownerName().isBlank() ? "unknown" : location.ownerName();
 	}
 
 	private static void handleAction(LodestoneActionPayload payload, ServerPlayNetworking.Context context) {
