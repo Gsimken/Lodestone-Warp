@@ -29,6 +29,10 @@ public final class LodestoneClientPreferences {
 	public List<String> modUiColumns = new ArrayList<>(DEFAULT_COLUMNS);
 	public List<String> favoriteLodestones = new ArrayList<>();
 	public boolean sortFavoritesFirst = true;
+	public int modUiPanelX = -1;
+	public int modUiPanelY = -1;
+	public int modUiPanelWidth = 620;
+	public int modUiPanelHeight = 420;
 
 	private LodestoneClientPreferences() {
 	}
@@ -93,6 +97,14 @@ public final class LodestoneClientPreferences {
 		save();
 	}
 
+	public void setPanelBounds(int x, int y, int width, int height) {
+		this.modUiPanelX = x;
+		this.modUiPanelY = y;
+		this.modUiPanelWidth = width;
+		this.modUiPanelHeight = height;
+		save();
+	}
+
 	private static LodestoneClientPreferences defaults() {
 		return new LodestoneClientPreferences();
 	}
@@ -110,6 +122,8 @@ public final class LodestoneClientPreferences {
 	private static LodestoneClientPreferences sanitize(LodestoneClientPreferences preferences) {
 		preferences.modUiColumns = cleanColumns(preferences.modUiColumns);
 		preferences.favoriteLodestones = cleanStrings(preferences.favoriteLodestones);
+		preferences.modUiPanelWidth = Math.max(430, preferences.modUiPanelWidth);
+		preferences.modUiPanelHeight = Math.max(300, preferences.modUiPanelHeight);
 		return preferences;
 	}
 
