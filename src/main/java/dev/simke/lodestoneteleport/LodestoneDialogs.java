@@ -84,11 +84,12 @@ public final class LodestoneDialogs {
 		for (int index = start; index < end; index++) {
 			LodestoneLocation destination = destinations.get(index);
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);
+			LodestoneTeleportAvailability availability = LodestoneTeleportAvailability.check(player, data, destination, cost);
 			ActionButton edit = canEdit(player, destination) ? editButton(destination) : spacerButton(editButtonWidth());
 			addOrderedRow(
 				buttons,
-				costButton(cost),
-				customButton(destinationLabel(destination), Optional.of(destinationTooltip(destination)), "tp", destination.id()),
+				costButton(cost, availability),
+				destinationButton(destination, availability),
 				edit
 			);
 		}
@@ -232,6 +233,20 @@ public final class LodestoneDialogs {
 		return customButton(label, tooltip, destinationButtonWidth(), action, id);
 	}
 
+	private static ActionButton destinationButton(LodestoneLocation destination, LodestoneTeleportAvailability availability) {
+		if (availability.canTeleport()) {
+			return customButton(destinationLabel(destination), Optional.of(destinationTooltip(destination)), "tp", destination.id());
+		}
+		Component label = destinationLabel(destination)
+			.copy()
+			.append(Component.literal(" (" + availability.reason() + ")"))
+			.withStyle(ChatFormatting.GRAY);
+		return new ActionButton(
+			new CommonButtonData(label, Optional.of(destinationTooltip(destination).copy().append(Component.literal("\n" + availability.reason()).withStyle(ChatFormatting.RED))), destinationButtonWidth()),
+			Optional.empty()
+		);
+	}
+
 	private static ActionButton customButton(Component label, Optional<Component> tooltip, int width, String action, String id) {
 		CompoundTag payload = new CompoundTag();
 		payload.putString("action", action);
@@ -283,8 +298,12 @@ public final class LodestoneDialogs {
 	}
 
 	private static ActionButton costButton(LodestoneTeleportCost cost) {
+		return costButton(cost, LodestoneTeleportAvailability.enabled());
+	}
+
+	private static ActionButton costButton(LodestoneTeleportCost cost, LodestoneTeleportAvailability availability) {
 		return new ActionButton(
-			new CommonButtonData(Component.literal(cost.label()).withStyle(ChatFormatting.WHITE), Optional.of(LodestoneText.serverCost(cost)), costButtonWidth()),
+			new CommonButtonData(Component.literal(cost.label()).withStyle(availability.canTeleport() ? ChatFormatting.WHITE : ChatFormatting.GRAY), Optional.of(LodestoneText.serverCost(cost)), costButtonWidth()),
 			Optional.empty()
 		);
 	}
@@ -578,6 +597,9 @@ public final class LodestoneDialogs {
 	}
 
 	private static String ownerName(LodestoneLocation location) {
+		if (!LodestoneConfig.get().resolveOwnerNames) {
+			return "unknown";
+		}
 		return location.ownerName() == null || location.ownerName().isBlank() ? "unknown" : location.ownerName();
 	}
 
@@ -591,7 +613,7 @@ public final class LodestoneDialogs {
 			.replace("{y}", String.valueOf(location.pos().getY()))
 			.replace("{z}", String.valueOf(location.pos().getZ()))
 			.replace("{dimension}", LodestoneText.serverDimension(location.dimension()).getString())
-			.replace("{owner}", location.ownerName() == null || location.ownerName().isBlank() ? "unknown" : location.ownerName());
+			.replace("{owner}", ownerName(location));
 		return suffix.isBlank() ? "" : " " + suffix;
 	}
 

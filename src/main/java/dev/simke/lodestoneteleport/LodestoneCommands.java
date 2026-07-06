@@ -655,7 +655,7 @@ public final class LodestoneCommands {
 			.withClickEvent(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))));
 	}
 
-	private static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
+	static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
 		int range = LodestoneConfig.get().teleportSourceRange;
 		if (range <= 0) {
 			return true;
@@ -693,7 +693,7 @@ public final class LodestoneCommands {
 		return player.teleport(transition);
 	}
 
-	private static boolean hasCost(ServerPlayer player, LodestoneTeleportCost cost) {
+	static boolean hasCost(ServerPlayer player, LodestoneTeleportCost cost) {
 		if (cost.amount() <= 0 || player.isCreative() || LodestonePermissions.canBypassCost(player)) {
 			return true;
 		}

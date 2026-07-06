@@ -68,6 +68,7 @@ public final class LodestoneText {
 			case "vanilla_teleport_effect" -> "Preset de efecto usado para jugadores sin el mod de cliente.";
 			case "mod_teleport_effect" -> "Preset de efecto usado para jugadores con el mod de cliente instalado.";
 			case "network_mode" -> "Controla qué lodestones pueden ver y usar los jugadores.";
+			case "resolve_owner_names" -> "Envía nombres de dueños guardados a las interfaces de Lodestone Warps.";
 			case "player_permissions" -> "Permisos default usados para todos los jugadores cuando ningún administrador de permisos responde.";
 			case "admin_permissions" -> "Permisos default usados para admins OP/gamemaster cuando ningún administrador de permisos responde.";
 			case "command_name" -> "Comando principal registrado por Lodestone Warps. Requiere reiniciar el servidor.";
@@ -91,7 +92,7 @@ public final class LodestoneText {
 			case "blocks_per_extra_cost" -> "Número entero, 0 desactiva el escalado por distancia.";
 			case "cross_dimension_multiplier", "teleport_cast_move_tolerance" -> "Número decimal, 0 o mayor.";
 			case "max_cost", "max_lodestones_global", "max_lodestones_per_player" -> "Número entero, 0 significa sin límite.";
-			case "allow_cross_dimension", "allow_personal_lodestones", "sneak_place_only", "auto_register_untracked", "show_vanilla_dialog_destination_suffix", "teleport_effects" -> "true o false.";
+			case "allow_cross_dimension", "allow_personal_lodestones", "sneak_place_only", "auto_register_untracked", "show_vanilla_dialog_destination_suffix", "teleport_effects", "resolve_owner_names" -> "true o false. false muestra dueños como unknown.";
 			case "default_lodestone_visibility" -> "private, discoverable o global.";
 			case "max_dialog_destinations" -> "Número entero, 1 o mayor.";
 			case "vanilla_dialog_destination_column_width" -> "Número entero, 80 a 500.";
@@ -398,6 +399,7 @@ public final class LodestoneText {
 			case "config.field.vanilla_teleport_effect" -> "Efecto vanilla";
 			case "config.field.mod_teleport_effect" -> "Efecto con mod";
 			case "config.field.network_mode" -> "Modo de red";
+			case "config.field.resolve_owner_names" -> "Resolver nombres de dueños";
 			case "config.field.player_permissions" -> "Permisos de jugadores";
 			case "config.field.admin_permissions" -> "Permisos de admins";
 			case "config.field.command_name" -> "Nombre del comando";

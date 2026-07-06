@@ -36,7 +36,10 @@ public final class LodestoneNetworking {
 		root.putString("currentId", current.id());
 		root.putString("currentName", current.displayName());
 		root.putString("currentVisibility", current.visibility().id());
-		root.putString("currentOwner", ownerName(current));
+		String currentOwnerName = ownerName(current);
+		root.putString("currentOwner", currentOwnerName);
+		root.putString("currentOwnerName", currentOwnerName);
+		root.putString("currentOwnerUuid", ownerUuid(current));
 		root.putString("currentDimension", LodestoneText.dimension(current.dimension()).getString());
 		root.putInt("currentX", current.pos().getX());
 		root.putInt("currentY", current.pos().getY());
@@ -56,9 +59,12 @@ public final class LodestoneNetworking {
 			}
 			LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, destination);
 			CompoundTag item = new CompoundTag();
+			String destinationOwnerName = ownerName(destination);
 			item.putString("id", destination.id());
 			item.putString("name", destination.displayName());
-			item.putString("owner", ownerName(destination));
+			item.putString("owner", destinationOwnerName);
+			item.putString("ownerName", destinationOwnerName);
+			item.putString("ownerUuid", ownerUuid(destination));
 			item.putBoolean("global", destination.global());
 			item.putString("visibility", destination.visibility().id());
 			item.putBoolean("canEdit", canEdit(player, destination));
@@ -70,6 +76,9 @@ public final class LodestoneNetworking {
 			item.putString("costType", cost.type());
 			item.putString("costItem", cost.itemId());
 			item.putInt("costAmount", cost.amount());
+			LodestoneTeleportAvailability availability = LodestoneTeleportAvailability.check(player, data, destination, cost);
+			item.putBoolean("canTeleport", availability.canTeleport());
+			item.putString("disabledReason", availability.reason());
 			destinations.add(item);
 		}
 		root.put("destinations", destinations);
@@ -100,7 +109,14 @@ public final class LodestoneNetworking {
 	}
 
 	private static String ownerName(LodestoneLocation location) {
+		if (!LodestoneConfig.get().resolveOwnerNames) {
+			return "unknown";
+		}
 		return location.ownerName() == null || location.ownerName().isBlank() ? "unknown" : location.ownerName();
+	}
+
+	private static String ownerUuid(LodestoneLocation location) {
+		return LodestoneConfig.get().resolveOwnerNames ? location.ownerUuid().toString() : "";
 	}
 
 	private static void handleAction(LodestoneActionPayload payload, ServerPlayNetworking.Context context) {
