@@ -30,6 +30,12 @@ public final class LodestoneConfigWarnings {
 		if ("discover".equals(config.networkMode) && has(config.playerPermissions, "mode.discover") && !has(config.playerPermissions, "use")) {
 			warnings.add(warning("config.warning.permissions.discover_without_use", "Players have lodestone_teleport.mode.discover without lodestone_teleport.use. They can be in discovery mode but cannot use lodestones."));
 		}
+		if ("all".equals(config.networkMode) && has(config.playerPermissions, "mode.discover")) {
+			warnings.add(warning("config.warning.permissions.all_with_player_discover", "Network mode is all, but players have lodestone_teleport.mode.discover. That permission forces discovery rules for players."));
+		}
+		if ("all".equals(config.networkMode) && has(config.adminPermissions, "mode.discover")) {
+			warnings.add(warning("config.warning.permissions.all_with_admin_discover", "Network mode is all, but admins have lodestone_teleport.mode.discover. That permission forces discovery rules unless they also have lodestone_teleport.mode.all."));
+		}
 
 		return warnings;
 	}

@@ -112,7 +112,9 @@ public final class LodestoneCommands {
 						.then(Commands.argument("player", EntityArgument.player())
 							.then(Commands.argument("id", StringArgumentType.word())
 								.suggests(LodestoneCommands::suggestLodestoneIdsOrAll)
-								.executes(context -> grantDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"))))))
+								.executes(context -> grantDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"), false))
+								.then(Commands.literal("add_private=true")
+									.executes(context -> grantDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"), true))))))
 					.then(Commands.literal("revoke")
 						.then(Commands.argument("player", EntityArgument.player())
 							.then(Commands.argument("id", StringArgumentType.word())
@@ -416,11 +418,16 @@ public final class LodestoneCommands {
 		return true;
 	}
 
-	static int grantDiscovery(CommandSourceStack source, ServerPlayer target, String id) {
+	static int grantDiscovery(CommandSourceStack source, ServerPlayer target, String id, boolean includePrivate) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if ("all".equalsIgnoreCase(id)) {
-			int added = data.discoverAll(target.getUUID());
-			source.sendSuccess(() -> LodestoneText.text("discover.granted_all", "Granted %s discovery of all lodestones (%s new).", target.getName().getString(), added), true);
+			int added = data.discoverAll(target.getUUID(), includePrivate);
+			source.sendSuccess(() -> LodestoneText.text(
+				includePrivate ? "discover.granted_all_with_private" : "discover.granted_all",
+				includePrivate ? "Granted %s discovery of all lodestones, including private ones (%s new)." : "Granted %s discovery of all discoverable and global lodestones (%s new).",
+				target.getName().getString(),
+				added
+			), true);
 			return Math.max(1, added);
 		}
 		Optional<LodestoneLocation> location = data.get(id);

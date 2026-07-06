@@ -135,9 +135,18 @@ public final class LodestoneSavedData extends SavedData {
 	}
 
 	public int discoverAll(UUID playerUuid) {
+		return discoverAll(playerUuid, true);
+	}
+
+	public int discoverAll(UUID playerUuid, boolean includePrivate) {
 		Set<String> discovered = discoveredByPlayer.computeIfAbsent(playerUuid, ignored -> new HashSet<>());
 		int before = discovered.size();
-		discovered.addAll(byId.keySet());
+		for (LodestoneLocation location : byId.values()) {
+			if (!includePrivate && location.privateWarp()) {
+				continue;
+			}
+			discovered.add(location.id());
+		}
 		int added = discovered.size() - before;
 		if (added > 0) {
 			setDirty();

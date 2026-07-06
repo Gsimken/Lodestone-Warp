@@ -26,17 +26,17 @@ public final class LodestoneDiscovery {
 		if (location.global()) {
 			return true;
 		}
-		if (!isDiscoverMode()) {
+		if (LodestonePermissions.canUseAllMode(player.createCommandSourceStack())) {
 			return true;
 		}
-		if (!LodestonePermissions.canUseDiscoverMode(player.createCommandSourceStack())) {
-			return false;
+		if (!isDiscoverMode() && !LodestonePermissions.canUseDiscoverMode(player.createCommandSourceStack())) {
+			return true;
 		}
 		return data.isDiscovered(player.getUUID(), location.id());
 	}
 
 	public static boolean canSeeAll(ServerPlayer player) {
-		return isDiscoverMode() && LodestonePermissions.canUseAllMode(player.createCommandSourceStack());
+		return LodestonePermissions.canUseAllMode(player.createCommandSourceStack());
 	}
 
 	public static boolean discover(ServerPlayer player, LodestoneSavedData data, LodestoneLocation location) {
