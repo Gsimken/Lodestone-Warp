@@ -40,6 +40,14 @@ public final class LodestoneConfig {
 	public boolean registerPlacedLodestonesOnlyWhenSneaking = true;
 	public boolean autoRegisterUntrackedLodestones = false;
 	public int maxDialogDestinations = 24;
+	public int vanillaDialogDestinationColumnWidth = 245;
+	public int vanillaDialogCostColumnWidth = 70;
+	public int vanillaDialogEditColumnWidth = 70;
+	public String vanillaDialogColumnOrder = "c,d,e";
+	public boolean showVanillaDialogHeaderNavigation = true;
+	public boolean showVanillaDialogButtonNavigation = true;
+	public boolean showVanillaDialogDestinationSuffix = false;
+	public String vanillaDialogDestinationSuffix = "[{x}, {y}, {z}, {dimension}]";
 	public int teleportSourceRange = 8;
 	public int teleportCastSeconds = 2;
 	public double teleportCastMoveTolerance = 0.2D;
@@ -57,8 +65,7 @@ public final class LodestoneConfig {
 		"lodestone_teleport.own.remove",
 		"lodestone_teleport.own.destroy",
 		"lodestone_teleport.own.visibility.private",
-		"lodestone_teleport.own.visibility.discoverable",
-		"lodestone_teleport.mode.discover"
+		"lodestone_teleport.own.visibility.discoverable"
 	);
 	public List<String> adminPermissions = List.of(
 		"lodestone_teleport.admin",
@@ -167,6 +174,13 @@ public final class LodestoneConfig {
 		config.maxLodestonesGlobal = Math.max(0, config.maxLodestonesGlobal);
 		config.maxLodestonesPerPlayer = Math.max(0, config.maxLodestonesPerPlayer);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
+		config.vanillaDialogDestinationColumnWidth = clamp(config.vanillaDialogDestinationColumnWidth, 80, 500);
+		config.vanillaDialogCostColumnWidth = clamp(config.vanillaDialogCostColumnWidth, 30, 180);
+		config.vanillaDialogEditColumnWidth = clamp(config.vanillaDialogEditColumnWidth, 20, 120);
+		config.vanillaDialogColumnOrder = cleanVanillaDialogColumnOrder(config.vanillaDialogColumnOrder);
+		if (config.vanillaDialogDestinationSuffix == null || config.vanillaDialogDestinationSuffix.length() > 96) {
+			config.vanillaDialogDestinationSuffix = "[{x}, {y}, {z}, {dimension}]";
+		}
 		config.teleportSourceRange = Math.max(0, config.teleportSourceRange);
 		config.teleportCastSeconds = Math.max(0, config.teleportCastSeconds);
 		config.teleportCastMoveTolerance = Math.max(0.0D, config.teleportCastMoveTolerance);
@@ -311,6 +325,35 @@ public final class LodestoneConfig {
 
 	private static String cleanVisibility(String value) {
 		return LodestoneVisibility.from(value, LodestoneVisibility.DISCOVERABLE).id();
+	}
+
+	private static int clamp(int value, int min, int max) {
+		return Math.max(min, Math.min(max, value));
+	}
+
+	private static String cleanVanillaDialogColumnOrder(String value) {
+		if (value == null) {
+			return "c,d,e";
+		}
+		String clean = value.trim().toLowerCase(Locale.ROOT).replace(" ", "");
+		String[] parts = clean.split(",");
+		if (parts.length != 3) {
+			return "c,d,e";
+		}
+		boolean hasCost = false;
+		boolean hasDestination = false;
+		boolean hasEdit = false;
+		for (String part : parts) {
+			switch (part) {
+				case "c" -> hasCost = !hasCost;
+				case "d" -> hasDestination = !hasDestination;
+				case "e" -> hasEdit = !hasEdit;
+				default -> {
+					return "c,d,e";
+				}
+			}
+		}
+		return hasCost && hasDestination && hasEdit ? String.join(",", parts) : "c,d,e";
 	}
 
 	private static void save(Path path, LodestoneConfig config) {
