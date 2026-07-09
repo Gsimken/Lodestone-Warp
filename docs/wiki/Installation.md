@@ -24,7 +24,7 @@
 3. Add Fabric Permissions API.
 4. Add `lodestone-warps-<version>.jar`.
 5. Start the server once to generate the config.
-6. Edit `config/lodestone_teleport.json` if needed.
+6. Edit `config/lodestone_warp_and_tp/lodestone_teleport.json` if needed.
 
 Vanilla players can join without installing the mod.
 

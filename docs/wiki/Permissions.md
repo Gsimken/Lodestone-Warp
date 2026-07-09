@@ -2,7 +2,7 @@
 
 [English](Permissions.md) | [Español](es/Permisos.md)
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-08
 
 Lodestone Warps uses Fabric Permissions API and is compatible with LuckPerms.
 
@@ -36,6 +36,7 @@ lodestone_teleport.bypass_cooldown
 lodestone_teleport.bypass_max_warps
 lodestone_teleport.mode.all
 lodestone_teleport.mode.discover
+lodestone_teleport.limit.<number>
 ```
 
 ## Recommended Defaults
@@ -53,6 +54,7 @@ lodestone_teleport.own.destroy
 lodestone_teleport.own.visibility.private
 lodestone_teleport.own.visibility.discoverable
 lodestone_teleport.mode.discover
+lodestone_teleport.limit.10
 ```
 
 Admins should usually receive:
@@ -182,9 +184,44 @@ Allows teleporting without waiting for teleport cooldown.
 
 `lodestone_teleport.bypass_max_warps`
 
-Allows registering Lodestones even when `maxLodestonesGlobal` or `maxLodestonesPerPlayer` has been reached.
+Allows registering Lodestones even when `maxLodestonesGlobal` or the player's permission limit has been reached.
+
+## Limit Permissions
+
+`lodestone_teleport.limit.<number>`
+
+Sets the maximum number of Lodestones a player can own. The highest matching limit wins.
+
+Examples:
+
+- `lodestone_teleport.limit.3`
+- `lodestone_teleport.limit.10`
+- `lodestone.limit.25`
+
+Use `lodestone_teleport.bypass_max_warps` for staff or groups that should ignore this limit.
+
+## Config Fallback Permissions
+
+The config lists accept:
+
+- full nodes, such as `lodestone_teleport.use`
+- short nodes, such as `use`
+- wildcards, such as `lodestone_teleport.*`, `lodestone.*`, or `*`
+
+If you use LuckPerms, keep `playerPermissions` and `adminPermissions` minimal or empty so the permission manager is the single source of truth.
 
 ## LuckPerms Examples
+
+Recommended first setup:
+
+1. Stop the server.
+2. Open `config/lodestone_warp_and_tp/lodestone_teleport.json`.
+3. Remove or empty `playerPermissions` and `adminPermissions` if you want LuckPerms to control all permissions.
+4. Start the server.
+5. Run `/lp editor`.
+6. Add the player permissions below to the `default` group.
+7. Create an `admin` group and add the admin permissions below.
+8. Save and apply the LuckPerms editor changes.
 
 Give everyone basic discovery gameplay:
 
@@ -196,6 +233,7 @@ Give everyone basic discovery gameplay:
 /lp group default permission set lodestone_teleport.own.rename true
 /lp group default permission set lodestone_teleport.own.destroy true
 /lp group default permission set lodestone_teleport.mode.discover true
+/lp group default permission set lodestone_teleport.limit.10 true
 ```
 
 Give admins global management:

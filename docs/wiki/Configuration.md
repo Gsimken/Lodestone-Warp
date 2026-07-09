@@ -2,12 +2,12 @@
 
 [English](Configuration.md) | [Español](es/Configuracion.md)
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-08
 
 The config is generated on first run:
 
 ```text
-config/lodestone_teleport.json
+config/lodestone_warp_and_tp/lodestone_teleport.json
 ```
 
 When an existing config is loaded, Lodestone Warps fills missing options with current defaults and writes the normalized file back to disk.
@@ -34,7 +34,6 @@ Server owners can also use the vanilla Dialog config UI:
   "allowPersonalLodestones": true,
   "defaultLodestoneVisibility": "discoverable",
   "maxLodestonesGlobal": 0,
-  "maxLodestonesPerPlayer": 0,
   "registerPlacedLodestonesOnlyWhenSneaking": true,
   "autoRegisterUntrackedLodestones": false,
   "maxDialogDestinations": 24,
@@ -81,7 +80,8 @@ Server owners can also use the vanilla Dialog config UI:
   ],
   "commandName": "warp",
   "fallbackCommandName": "lodestone_warp",
-  "serverLanguage": "en_us"
+  "serverLanguage": "en_us",
+  "pauseGameInSingleplayerUi": true
 }
 ```
 
@@ -149,12 +149,7 @@ Maximum registered Lodestones on the server.
 - `0`: unlimited.
 - Positive values cap the whole server network.
 
-`maxLodestonesPerPlayer`
-
-Maximum registered Lodestones owned by each player.
-
-- `0`: unlimited.
-- Players with `lodestone_teleport.bypass_max_warps` ignore this and the global cap.
+Per-player Lodestone limits are permission-based. Grant permissions such as `lodestone_teleport.limit.5` or `lodestone.limit.10`; the highest matching number is used. Players with `lodestone_teleport.bypass_max_warps` ignore per-player limits and the global cap.
 
 `registerPlacedLodestonesOnlyWhenSneaking`
 
@@ -338,6 +333,13 @@ Default permissions granted to every player when no permission manager answers a
 Default permissions granted to OP/gamemaster-level admins when no permission manager answers a permission request.
 
 LuckPerms or another Fabric Permissions-compatible manager is recommended for real group/player management. If a permission manager answers, its answer wins over these config defaults.
+
+`pauseGameInSingleplayerUi`
+
+Client-side option used only when the mod UI is opened in singleplayer. Dedicated servers ignore this value.
+
+- `true`: the singleplayer world pauses while the client UI is open.
+- `false`: the singleplayer world keeps ticking while the client UI is open.
 
 ## Development Permission Overrides
 

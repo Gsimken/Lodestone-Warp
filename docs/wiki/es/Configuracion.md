@@ -2,12 +2,12 @@
 
 [English](../Configuration.md) | [Español](Configuracion.md)
 
-**Última actualización:** 2026-07-01
+**Última actualización:** 2026-07-08
 
 La configuración se genera en el primer inicio:
 
 ```text
-config/lodestone_teleport.json
+config/lodestone_warp_and_tp/lodestone_teleport.json
 ```
 
 Cuando se carga una configuración existente, Lodestone Warps rellena las opciones faltantes con los defaults actuales y vuelve a escribir el archivo normalizado.
@@ -34,7 +34,6 @@ Los dueños de servidor también pueden usar la UI vanilla de config:
   "allowPersonalLodestones": true,
   "defaultLodestoneVisibility": "discoverable",
   "maxLodestonesGlobal": 0,
-  "maxLodestonesPerPlayer": 0,
   "registerPlacedLodestonesOnlyWhenSneaking": true,
   "autoRegisterUntrackedLodestones": false,
   "maxDialogDestinations": 24,
@@ -81,7 +80,8 @@ Los dueños de servidor también pueden usar la UI vanilla de config:
   ],
   "commandName": "warp",
   "fallbackCommandName": "lodestone_warp",
-  "serverLanguage": "en_us"
+  "serverLanguage": "en_us",
+  "pauseGameInSingleplayerUi": true
 }
 ```
 
@@ -137,12 +137,7 @@ Cantidad máxima de Lodestones registradas en el servidor.
 - `0`: ilimitado.
 - Valores positivos limitan toda la red.
 
-`maxLodestonesPerPlayer`
-
-Cantidad máxima de Lodestones registradas por cada jugador.
-
-- `0`: ilimitado.
-- Jugadores con `lodestone_teleport.bypass_max_warps` ignoran este límite y el límite global.
+Los límites de Lodestones por jugador ahora se controlan por permisos. Usa permisos como `lodestone_teleport.limit.5` o `lodestone.limit.10`; se aplica el número más alto encontrado. Jugadores con `lodestone_teleport.bypass_max_warps` ignoran el límite por jugador y el límite global.
 
 `registerPlacedLodestonesOnlyWhenSneaking`
 
@@ -309,6 +304,13 @@ Permisos default entregados a todos los jugadores cuando ningún administrador d
 Permisos default entregados a admins OP/gamemaster cuando ningún administrador de permisos responde.
 
 LuckPerms u otro administrador compatible con Fabric Permissions es lo recomendado para grupos, jugadores específicos e herencia. Si un administrador de permisos responde, esa respuesta gana sobre estos defaults.
+
+`pauseGameInSingleplayerUi`
+
+Opción de cliente usada solo cuando la UI de mod se abre en singleplayer. Los servidores dedicados ignoran este valor.
+
+- `true`: el mundo singleplayer se pausa mientras la UI de cliente está abierta.
+- `false`: el mundo singleplayer sigue avanzando mientras la UI de cliente está abierta.
 
 ## Overrides de Permisos para Desarrollo
 

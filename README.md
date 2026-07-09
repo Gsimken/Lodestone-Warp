@@ -1,6 +1,6 @@
 # Lodestone Warps
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-08
 
 **Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
 
@@ -23,7 +23,7 @@ The most up-to-date documentation is kept in the wiki:
 - Optional Mod Menu config screen when installed on the client.
 - Sneak-place Lodestones to register them as warps by default.
 - Optional auto-registration for old or untracked Lodestones when interacted with.
-- Configurable global and per-player Lodestone registration limits.
+- Configurable global Lodestone limit and permission-based per-player limits.
 - Removes registered Lodestones when broken.
 - Searchable destination list.
 - Pagination in the custom mod UI.
@@ -43,7 +43,7 @@ The most up-to-date documentation is kept in the wiki:
 - Per-player Lodestone discovery storage.
 - Admin-managed global Lodestones for lobbies and shared hubs.
 - LuckPerms-compatible permissions through Fabric Permissions API.
-- Optional config to disable permission checks for open servers.
+- Config fallback permissions for open servers without LuckPerms.
 - Server-side language fallback for vanilla UI text.
 
 ## Requirements
@@ -135,8 +135,9 @@ Permission nodes:
 - `lodestone_teleport.global`
 - `lodestone_teleport.mode.all`
 - `lodestone_teleport.mode.discover`
+- `lodestone_teleport.limit.<number>`
 
-Players need `lodestone_teleport.use` to use warps and `lodestone_teleport.create` plus a matching `lodestone_teleport.create.*` permission to register Lodestones. `lodestone_teleport.rename`, `lodestone_teleport.remove`, and `lodestone_teleport.global` are broad staff permissions. The `lodestone_teleport.own.*` permissions apply only to Lodestones owned by that player.
+Players need `lodestone_teleport.use` to use warps and `lodestone_teleport.create` plus a matching `lodestone_teleport.create.*` permission to register Lodestones. Use `lodestone_teleport.limit.10` style permissions to set per-player Lodestone limits; the highest matching limit wins. `lodestone_teleport.rename`, `lodestone_teleport.remove`, and `lodestone_teleport.global` are broad staff permissions. The `lodestone_teleport.own.*` permissions apply only to Lodestones owned by that player.
 
 Server owners need `lodestone_teleport.config` or OP-level access to use `/warp reload`, `/warp config`, and server config editing actions.
 
@@ -148,7 +149,7 @@ Visibility modes:
 - `discoverable`: other players can discover it by touching it.
 - `global`: visible to everyone.
 
-The config permission lists accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*` or `*`.
+The config permission lists accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*`, `lodestone.*`, or `*`.
 
 Permission compatibility warnings:
 
@@ -161,7 +162,7 @@ Permission compatibility warnings:
 
 The config is generated on first run at:
 
-`config/lodestone_teleport.json`
+`config/lodestone_warp_and_tp/lodestone_teleport.json`
 
 Full config reference:
 
