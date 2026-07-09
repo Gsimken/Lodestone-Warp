@@ -63,6 +63,8 @@ public final class LodestoneWarpScreen extends Screen {
 	private double dragOffsetX;
 	private double dragOffsetY;
 	private int tableScrollX;
+	private boolean draggingTableScroll;
+	private int tableScrollDragOffset;
 	private boolean pageHasEditButtons;
 	private long lastCooldownSecond = -1L;
 
@@ -177,7 +179,7 @@ public final class LodestoneWarpScreen extends Screen {
 		super.extractRenderState(graphics, mouseX, mouseY, partialTick);
 		this.tableScrollX = clamp(this.tableScrollX, 0, tableMaxScroll());
 		drawFixedTableHeader(graphics, top + 128);
-		graphics.enableScissor(dataLeft(), top + 122, dataRight(), panelBottom() - 72);
+		graphics.enableScissor(dataLeft(), top + 122, dataRight(), tableRowsBottom() + 4);
 		drawScrollableTableHeader(graphics, top + 128);
 		drawScrollableRows(graphics);
 		graphics.disableScissor();
@@ -187,6 +189,8 @@ public final class LodestoneWarpScreen extends Screen {
 			graphics.setTooltipForNextFrame(this.font, LodestoneText.text("client.tooltip.move", "Drag here to move this window."), mouseX, mouseY);
 		} else if (inResizeHandle(mouseX, mouseY)) {
 			graphics.setTooltipForNextFrame(this.font, LodestoneText.text("client.tooltip.resize", "Drag this corner to resize."), mouseX, mouseY);
+		} else if (inTableScrollBar(mouseX, mouseY)) {
+			graphics.setTooltipForNextFrame(this.font, LodestoneText.text("client.tooltip.table_scroll", "Drag to scroll columns."), mouseX, mouseY);
 		}
 	}
 
@@ -200,7 +204,7 @@ public final class LodestoneWarpScreen extends Screen {
 		int left = tableLeft();
 		int y = panelTop() + 143;
 		int panelWidth = contentWidth();
-		int bottom = panelBottom() - 70;
+		int bottom = tableRowsBottom();
 		String needle = this.query.toLowerCase(Locale.ROOT).trim();
 		List<Destination> filtered = filteredDestinations(needle);
 		sortDestinations(filtered);
@@ -531,6 +535,15 @@ public final class LodestoneWarpScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		if (event.button() == 0 && inTableScrollBar(event.x(), event.y())) {
+			this.draggingTableScroll = true;
+			this.tableScrollDragOffset = (int) event.x() - tableScrollThumbX();
+			if (this.tableScrollDragOffset < 0 || this.tableScrollDragOffset > tableScrollThumbWidth()) {
+				this.tableScrollDragOffset = tableScrollThumbWidth() / 2;
+			}
+			updateTableScrollFromMouse(event.x());
+			return true;
+		}
 		if (event.button() == 0 && inResizeHandle(event.x(), event.y())) {
 			this.resizingPanel = true;
 			return true;
@@ -557,6 +570,10 @@ public final class LodestoneWarpScreen extends Screen {
 
 	@Override
 	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+		if (event.button() == 0 && this.draggingTableScroll) {
+			updateTableScrollFromMouse(event.x());
+			return true;
+		}
 		if (event.button() == 0 && this.resizingPanel) {
 			LodestoneClientPreferences preferences = LodestoneClientPreferences.get();
 			preferences.modUiPanelWidth = clamp((int) event.x() - panelLeft(), MIN_PANEL_WIDTH, this.width - panelLeft() - 8);
@@ -576,6 +593,10 @@ public final class LodestoneWarpScreen extends Screen {
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
+		if (event.button() == 0 && this.draggingTableScroll) {
+			this.draggingTableScroll = false;
+			return true;
+		}
 		if (event.button() == 0 && (this.draggingPanel || this.resizingPanel)) {
 			this.draggingPanel = false;
 			this.resizingPanel = false;
@@ -669,7 +690,15 @@ public final class LodestoneWarpScreen extends Screen {
 	}
 
 	private boolean inTableArea(double mouseX, double mouseY) {
-		return mouseX >= tableLeft() && mouseX <= tableRight() && mouseY >= panelTop() + 122 && mouseY <= panelBottom() - 72;
+		return mouseX >= tableLeft() && mouseX <= tableRight() && mouseY >= panelTop() + 122 && mouseY <= tableRowsBottom() + 4;
+	}
+
+	private boolean inTableScrollBar(double mouseX, double mouseY) {
+		return tableMaxScroll() > 0
+			&& mouseX >= dataLeft()
+			&& mouseX <= dataLeft() + dataViewportWidth()
+			&& mouseY >= tableScrollY() - 5
+			&& mouseY <= tableScrollY() + 9;
 	}
 
 	private int tableLeft() {
@@ -723,12 +752,48 @@ public final class LodestoneWarpScreen extends Screen {
 			return;
 		}
 		int x = dataLeft();
-		int y = panelBottom() - 86;
+		int y = tableScrollY();
 		int width = dataViewportWidth();
-		int thumbWidth = Math.max(28, width * width / Math.max(width, dataTotalWidth()));
-		int thumbX = x + (width - thumbWidth) * this.tableScrollX / maxScroll;
+		int thumbWidth = tableScrollThumbWidth();
+		int thumbX = tableScrollThumbX();
 		graphics.fill(x, y, x + width, y + 3, 0x66000000);
 		graphics.fill(thumbX, y, thumbX + thumbWidth, y + 3, 0xFF8DEEFF);
+	}
+
+	private int tableRowsBottom() {
+		return panelBottom() - 100;
+	}
+
+	private int tableScrollY() {
+		return panelBottom() - 84;
+	}
+
+	private int tableScrollThumbWidth() {
+		int width = dataViewportWidth();
+		return Math.max(28, width * width / Math.max(width, dataTotalWidth()));
+	}
+
+	private int tableScrollThumbX() {
+		int maxScroll = tableMaxScroll();
+		if (maxScroll <= 0) {
+			return dataLeft();
+		}
+		int width = dataViewportWidth();
+		int thumbWidth = tableScrollThumbWidth();
+		return dataLeft() + (width - thumbWidth) * this.tableScrollX / maxScroll;
+	}
+
+	private void updateTableScrollFromMouse(double mouseX) {
+		int maxScroll = tableMaxScroll();
+		if (maxScroll <= 0) {
+			this.tableScrollX = 0;
+			return;
+		}
+		int trackWidth = dataViewportWidth();
+		int thumbWidth = tableScrollThumbWidth();
+		int available = Math.max(1, trackWidth - thumbWidth);
+		int thumbLeft = clamp((int) Math.round(mouseX - dataLeft() - this.tableScrollDragOffset), 0, available);
+		this.tableScrollX = clamp((int) Math.round(thumbLeft * maxScroll / (double) available), 0, maxScroll);
 	}
 
 	private static int clamp(int value, int min, int max) {

@@ -43,6 +43,7 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 		int y = top() + 56;
 		for (String column : rows()) {
 			boolean enabled = this.columns.contains(column);
+			boolean movable = canMoveColumn(column);
 			addRenderableWidget(Button.builder(columnLabel(column, enabled), button -> {
 				toggleColumn(column);
 				rebuildWidgets();
@@ -50,21 +51,21 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 
 			Button dragHandle = Button.builder(Component.literal("\u2630"), button -> {
 			}).bounds(left + TOGGLE_WIDTH + 5, y, DRAG_HANDLE_WIDTH, 20).build();
-			dragHandle.active = enabled;
+			dragHandle.active = enabled && movable;
 			addRenderableWidget(dragHandle);
 
 			Button upButton = Button.builder(Component.literal("\u25b2"), button -> {
 				moveColumn(column, -1);
 				rebuildWidgets();
 			}).bounds(left + 205, y, MOVE_BUTTON_WIDTH, 20).build();
-			upButton.active = enabled && this.columns.indexOf(column) > 0;
+			upButton.active = enabled && movable && this.columns.indexOf(column) > firstMovableIndex();
 			addRenderableWidget(upButton);
 
 			Button downButton = Button.builder(Component.literal("\u25bc"), button -> {
 				moveColumn(column, 1);
 				rebuildWidgets();
 			}).bounds(left + 238, y, MOVE_BUTTON_WIDTH, 20).build();
-			downButton.active = enabled && this.columns.indexOf(column) >= 0 && this.columns.indexOf(column) < this.columns.size() - 1;
+			downButton.active = enabled && movable && this.columns.indexOf(column) >= 0 && this.columns.indexOf(column) < this.columns.size() - 1;
 			addRenderableWidget(downButton);
 
 			addRenderableWidget(Button.builder(LodestoneText.text("client.settings.add_last", "Add last"), button -> {
@@ -124,7 +125,7 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if (event.button() == 0) {
 			String column = rowAt(event.y());
-			if (column != null && this.columns.contains(column) && event.x() >= dragHandleLeft() && event.x() <= dragHandleLeft() + DRAG_HANDLE_WIDTH) {
+			if (column != null && this.columns.contains(column) && canMoveColumn(column) && event.x() >= dragHandleLeft() && event.x() <= dragHandleLeft() + DRAG_HANDLE_WIDTH) {
 				this.draggingColumn = column;
 				return true;
 			}
@@ -136,7 +137,7 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 	public boolean mouseReleased(MouseButtonEvent event) {
 		if (event.button() == 0 && this.draggingColumn != null) {
 			String target = rowAt(event.y());
-			if (target != null && this.columns.contains(target) && !target.equals(this.draggingColumn)) {
+			if (target != null && this.columns.contains(target) && canMoveColumn(target) && !target.equals(this.draggingColumn)) {
 				moveColumnTo(this.draggingColumn, target);
 				this.draggingColumn = null;
 				rebuildWidgets();
@@ -165,9 +166,12 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 	}
 
 	private void moveColumn(String column, int direction) {
+		if (!canMoveColumn(column)) {
+			return;
+		}
 		int index = this.columns.indexOf(column);
 		int next = index + direction;
-		if (index < 0 || next < 0 || next >= this.columns.size()) {
+		if (index < 0 || next < firstMovableIndex() || next >= this.columns.size()) {
 			return;
 		}
 		this.columns.remove(index);
@@ -175,6 +179,9 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 	}
 
 	private void moveColumnTo(String column, String target) {
+		if (!canMoveColumn(column) || !canMoveColumn(target)) {
+			return;
+		}
 		int from = this.columns.indexOf(column);
 		int to = this.columns.indexOf(target);
 		if (from < 0 || to < 0 || from == to) {
@@ -185,6 +192,15 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 			to--;
 		}
 		this.columns.add(to, column);
+	}
+
+	private boolean canMoveColumn(String column) {
+		return this.columns.contains(column) && !"favorite".equals(column);
+	}
+
+	private int firstMovableIndex() {
+		int favorite = this.columns.indexOf("favorite");
+		return favorite == 0 ? 1 : 0;
 	}
 
 	private void saveAndClose() {

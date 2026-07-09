@@ -53,6 +53,7 @@
   "text.lodestone_teleport.client.tooltip.edit_destination": "Editar %s.",
   "text.lodestone_teleport.client.tooltip.move": "Arrastra aquí para mover esta ventana.",
   "text.lodestone_teleport.client.tooltip.resize": "Arrastra esta esquina para cambiar el tamaño.",
+  "text.lodestone_teleport.client.tooltip.table_scroll": "Arrastra para desplazar columnas.",
   "text.lodestone_teleport.client.tooltip.drag_column": "Suelta sobre otra columna activa para reordenar.",
   "text.lodestone_teleport.config.title": "Configuración de Lodestone Warps",
   "text.lodestone_teleport.config.notice": "Editor del archivo de config local del cliente. Los servidores remotos usan su propia config.",
