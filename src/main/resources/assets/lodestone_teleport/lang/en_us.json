@@ -176,6 +176,7 @@
   "text.lodestone_teleport.error.need_cost": "You need %s.",
   "text.lodestone_teleport.error.need_near_lodestone": "You must be near a registered lodestone to teleport.",
   "text.lodestone_teleport.error.cooldown": "You must wait %s seconds before teleporting again.",
+  "text.lodestone_teleport.error.cooldown_reopen": "You must wait %s seconds before teleporting again. Reopen this UI after the cooldown.",
   "text.lodestone_teleport.teleport.cast_start": "Casting teleport... stand still for %s seconds.",
   "text.lodestone_teleport.teleport.cast_cancelled": "Teleport cancelled: you moved.",
   "text.lodestone_teleport.teleport.cast_already": "You are already casting a teleport.",

@@ -176,6 +176,7 @@
   "text.lodestone_teleport.error.need_cost": "Necesitas %s.",
   "text.lodestone_teleport.error.need_near_lodestone": "Debes estar cerca de una lodestone registrada para teletransportarte.",
   "text.lodestone_teleport.error.cooldown": "Debes esperar %s segundos antes de teletransportarte otra vez.",
+  "text.lodestone_teleport.error.cooldown_reopen": "Debes esperar %s segundos antes de teletransportarte otra vez. Vuelve a abrir esta UI cuando termine el cooldown.",
   "text.lodestone_teleport.teleport.cast_start": "Canalizando teleport... quédate quieto por %s segundos.",
   "text.lodestone_teleport.teleport.cast_cancelled": "Teleport cancelado: te moviste.",
   "text.lodestone_teleport.teleport.cast_already": "Ya estás canalizando un teleport.",

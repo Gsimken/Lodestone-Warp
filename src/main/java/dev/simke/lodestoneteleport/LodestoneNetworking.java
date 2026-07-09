@@ -47,6 +47,8 @@ public final class LodestoneNetworking {
 		root.putBoolean("canRename", LodestonePermissions.canRename(player));
 		root.putBoolean("canEditCurrent", canEdit(player, current));
 		root.putBoolean("viewingAll", LodestoneDiscovery.canSeeAll(player));
+		long cooldownSeconds = LodestonePermissions.canBypassCooldown(player) ? 0L : LodestoneTeleportCooldowns.remainingSeconds(player);
+		root.putInt("cooldownSeconds", (int) Math.min(Integer.MAX_VALUE, cooldownSeconds));
 
 		ListTag destinations = new ListTag();
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
@@ -79,6 +81,7 @@ public final class LodestoneNetworking {
 			LodestoneTeleportAvailability availability = LodestoneTeleportAvailability.check(player, data, destination, cost);
 			item.putBoolean("canTeleport", availability.canTeleport());
 			item.putString("disabledReason", availability.reason());
+			item.putInt("cooldownSeconds", availability.canTeleport() ? 0 : (int) Math.min(Integer.MAX_VALUE, cooldownSeconds));
 			destinations.add(item);
 		}
 		root.put("destinations", destinations);

@@ -21,7 +21,7 @@ public record LodestoneTeleportAvailability(boolean canTeleport, String reason) 
 		}
 		long cooldown = LodestonePermissions.canBypassCooldown(player) ? 0L : LodestoneTeleportCooldowns.remainingSeconds(player);
 		if (cooldown > 0L) {
-			return disabled(LodestoneText.text("error.cooldown", "You must wait %s seconds before teleporting again.", cooldown).getString());
+			return disabled(LodestoneText.text("error.cooldown_reopen", "You must wait %s seconds before teleporting again. Reopen this UI after the cooldown.", cooldown).getString());
 		}
 		if (!LodestoneCommands.hasCost(player, cost)) {
 			return disabled(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)).getString());

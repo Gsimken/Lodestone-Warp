@@ -51,6 +51,8 @@ public final class LodestoneWarpScreen extends Screen {
 	private final boolean canEditCurrent;
 	private final boolean viewingAll;
 	private final List<Destination> destinations;
+	private final long openedAtMillis;
+	private final int initialCooldownSeconds;
 	private final List<Button> destinationButtons = new ArrayList<>();
 	private final List<VisibleRow> visibleRows = new ArrayList<>();
 	private EditBox searchBox;
@@ -62,6 +64,7 @@ public final class LodestoneWarpScreen extends Screen {
 	private double dragOffsetY;
 	private int tableScrollX;
 	private boolean pageHasEditButtons;
+	private long lastCooldownSecond = -1L;
 
 	public LodestoneWarpScreen(CompoundTag data) {
 		super(LodestoneText.title());
@@ -73,6 +76,8 @@ public final class LodestoneWarpScreen extends Screen {
 		this.canRename = data.getBooleanOr("canRename", false);
 		this.canEditCurrent = data.getBooleanOr("canEditCurrent", this.canRename);
 		this.viewingAll = data.getBooleanOr("viewingAll", false);
+		this.initialCooldownSeconds = data.getIntOr("cooldownSeconds", 0);
+		this.openedAtMillis = System.currentTimeMillis();
 		this.destinations = readDestinations(data.getListOrEmpty("destinations"));
 	}
 
@@ -138,6 +143,19 @@ public final class LodestoneWarpScreen extends Screen {
 		}
 
 		refreshDestinations();
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (this.initialCooldownSeconds <= 0) {
+			return;
+		}
+		long remaining = remainingCooldownSeconds();
+		if (remaining != this.lastCooldownSecond) {
+			this.lastCooldownSecond = remaining;
+			refreshDestinations();
+		}
 	}
 
 	@Override
@@ -222,10 +240,11 @@ public final class LodestoneWarpScreen extends Screen {
 			})
 				.bounds(rowLeft, y, teleportWidth, ROW_HEIGHT)
 				.build();
-			teleport.active = destination.canTeleport();
-			teleport.setTooltip(Tooltip.create(destination.canTeleport()
+			boolean canTeleportNow = canTeleportNow(destination);
+			teleport.active = canTeleportNow;
+			teleport.setTooltip(Tooltip.create(canTeleportNow
 				? LodestoneText.text("client.tooltip.teleport", "Teleport to %s.", destination.name())
-				: LodestoneText.text("client.tooltip.teleport_disabled", "Unavailable: %s", destination.disabledReason())));
+				: LodestoneText.text("client.tooltip.teleport_disabled", "Unavailable: %s", disabledReason(destination))));
 			this.destinationButtons.add(teleport);
 			this.visibleRows.add(new VisibleRow(destination, rowLeft, teleportWidth, y));
 			addRenderableWidget(teleport);
@@ -271,8 +290,10 @@ public final class LodestoneWarpScreen extends Screen {
 			if (LodestoneClientPreferences.get().sortFavoritesFirst && leftFavorite != rightFavorite) {
 				return leftFavorite ? -1 : 1;
 			}
-			if (left.canTeleport() != right.canTeleport()) {
-				return left.canTeleport() ? -1 : 1;
+			boolean leftAvailable = canTeleportNow(left);
+			boolean rightAvailable = canTeleportNow(right);
+			if (leftAvailable != rightAvailable) {
+				return leftAvailable ? -1 : 1;
 			}
 			int costCompare = Integer.compare(left.costAmount(), right.costAmount());
 			if (costCompare != 0) {
@@ -354,7 +375,7 @@ public final class LodestoneWarpScreen extends Screen {
 			case "visibility" -> destination.visibility();
 			default -> destination.name();
 		};
-		int color = destination.canTeleport() ? columnColor(column.key()) : 0xFF8A8A8A;
+		int color = canTeleportNow(destination) ? columnColor(column.key()) : 0xFF8A8A8A;
 		if ("name".equals(column.key())) {
 			if (destination.global()) {
 				graphics.text(this.font, "\ud83c\udf10", textX, textY, 0xFF55FF55);
@@ -369,7 +390,7 @@ public final class LodestoneWarpScreen extends Screen {
 
 	private void drawCost(GuiGraphicsExtractor graphics, Destination destination, int x, int y) {
 		if (destination.costAmount() <= 0) {
-			graphics.text(this.font, destination.cost(), x, y + 4, destination.canTeleport() ? 0xFF8CFF8C : 0xFF8A8A8A);
+			graphics.text(this.font, destination.cost(), x, y + 4, canTeleportNow(destination) ? 0xFF8CFF8C : 0xFF8A8A8A);
 			return;
 		}
 		if (destination.usesXpLevels()) {
@@ -377,7 +398,7 @@ public final class LodestoneWarpScreen extends Screen {
 		} else {
 			graphics.item(destination.costStack(), x, y);
 		}
-		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, destination.canTeleport() ? 0xFFFFFFFF : 0xFF8A8A8A);
+		graphics.text(this.font, String.valueOf(destination.costAmount()), x + 19, y + 5, canTeleportNow(destination) ? 0xFFFFFFFF : 0xFF8A8A8A);
 	}
 
 	private Component currentNameWithIcon() {
@@ -404,6 +425,27 @@ public final class LodestoneWarpScreen extends Screen {
 	private Component favoriteLabel(Destination destination) {
 		return Component.literal(LodestoneClientPreferences.get().favorite(destination.id()) ? "\u2605" : "\u2606")
 			.withStyle(LodestoneClientPreferences.get().favorite(destination.id()) ? ChatFormatting.GOLD : ChatFormatting.GRAY);
+	}
+
+	private boolean canTeleportNow(Destination destination) {
+		return destination.canTeleport() || (destination.cooldownSeconds() > 0 && remainingCooldownSeconds() <= 0);
+	}
+
+	private String disabledReason(Destination destination) {
+		long remaining = remainingCooldownSeconds();
+		if (destination.cooldownSeconds() > 0 && remaining > 0) {
+			return LodestoneText.text("error.cooldown", "You must wait %s seconds before teleporting again.", remaining).getString();
+		}
+		return destination.disabledReason();
+	}
+
+	private long remainingCooldownSeconds() {
+		if (this.initialCooldownSeconds <= 0) {
+			return 0L;
+		}
+		long elapsed = Math.max(0L, System.currentTimeMillis() - this.openedAtMillis);
+		long remainingMillis = this.initialCooldownSeconds * 1000L - elapsed;
+		return remainingMillis <= 0L ? 0L : (long) Math.ceil(remainingMillis / 1000.0D);
 	}
 
 	private boolean showColumn(String key) {
@@ -744,7 +786,8 @@ public final class LodestoneWarpScreen extends Screen {
 				tag.getStringOr("costItem", "minecraft:diamond"),
 				tag.getIntOr("costAmount", 0),
 				tag.getBooleanOr("canTeleport", true),
-				tag.getStringOr("disabledReason", "")
+				tag.getStringOr("disabledReason", ""),
+				tag.getIntOr("cooldownSeconds", 0)
 			));
 		}
 		return destinations;
@@ -764,7 +807,7 @@ public final class LodestoneWarpScreen extends Screen {
 		return "unknown";
 	}
 
-	private record Destination(String id, String name, boolean global, String visibility, boolean canEdit, String owner, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount, boolean canTeleport, String disabledReason) {
+	private record Destination(String id, String name, boolean global, String visibility, boolean canEdit, String owner, String dimension, int x, int y, int z, String cost, String costType, String costItem, int costAmount, boolean canTeleport, String disabledReason, int cooldownSeconds) {
 		String coords() {
 			return x + " " + y + " " + z;
 		}
