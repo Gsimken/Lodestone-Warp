@@ -4,6 +4,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.common.ClientboundShowDialogPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.dialog.ActionButton;
@@ -135,7 +136,7 @@ public final class LodestoneDialogs {
 			buttons.add(modeButton(location.id(), pendingVisibility, nextVisibility(allowedVisibilities, pendingVisibility)));
 		}
 		if (LodestonePermissions.canRemove(player, location)) {
-			buttons.add(customButton(LodestoneText.serverText("button.remove", "[X]").withStyle(ChatFormatting.RED), "remove", location.id()));
+			buttons.add(customButton(LodestoneText.serverText("button.remove_current", "Unlink lodestone").withStyle(ChatFormatting.RED), "remove", location.id()));
 		}
 		if (buttons.isEmpty()) {
 			buttons.add(new ActionButton(new CommonButtonData(Component.translatable("gui.done"), INPUT_WIDTH), Optional.empty()));
@@ -147,7 +148,7 @@ public final class LodestoneDialogs {
 			true,
 			false,
 			DialogAction.CLOSE,
-			List.of(new PlainMessage(editBody(pendingVisibility), INPUT_WIDTH)),
+			List.of(new PlainMessage(editBody(player, location, pendingVisibility), INPUT_WIDTH)),
 			List.of(new Input("name", new TextInput(INPUT_WIDTH, LodestoneText.serverText("input.name", "Name"), true, pendingName, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), 1));
@@ -459,11 +460,16 @@ public final class LodestoneDialogs {
 		return visibilities.get((index + 1) % visibilities.size());
 	}
 
-	private static Component editBody(LodestoneVisibility visibility) {
-		return LodestoneText.serverText("edit.body", "Change this lodestone name, visibility, or registration.")
+	private static Component editBody(ServerPlayer player, LodestoneLocation location, LodestoneVisibility visibility) {
+		MutableComponent body = LodestoneText.serverText("edit.body", "Change this lodestone name, visibility, or registration.")
 			.copy()
 			.append(Component.literal("\n"))
 			.append(LodestoneText.serverText("visibility.current", "Visibility: %s", visibilityValue(visibility)).withStyle(visibilityColor(visibility)));
+		if (!LodestonePermissions.canRename(player, location)) {
+			body.append(Component.literal("\n"))
+				.append(LodestoneText.serverText("error.no_permission.rename_specific", "You do not have permission to edit this lodestone name.").withStyle(ChatFormatting.RED));
+		}
+		return body;
 	}
 
 	private static boolean matches(LodestoneLocation location, String query) {

@@ -158,9 +158,15 @@ public final class LodestoneConfigOptions {
 		}
 
 		public boolean matches(String query) {
+			String translatedLabel = LodestoneText.serverText(labelKey, labelFallback).getString().toLowerCase(Locale.ROOT);
+			String translatedDescription = LodestoneText.serverConfigDescription(id, description).toLowerCase(Locale.ROOT);
+			String translatedAcceptedValues = LodestoneText.serverConfigAcceptedValues(id, acceptedValues).toLowerCase(Locale.ROOT);
 			return id.contains(query)
 				|| labelFallback.toLowerCase(Locale.ROOT).contains(query)
 				|| description.toLowerCase(Locale.ROOT).contains(query)
+				|| translatedLabel.contains(query)
+				|| translatedDescription.contains(query)
+				|| translatedAcceptedValues.contains(query)
 				|| currentValue().toLowerCase(Locale.ROOT).contains(query);
 		}
 	}

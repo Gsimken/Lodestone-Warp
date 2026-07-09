@@ -198,7 +198,7 @@ public final class LodestoneText {
 			case "button.rename_short" -> "[\u270e]";
 			case "button.rename_current" -> "Edit this warp";
 			case "button.remove" -> "[X]";
-			case "button.remove_current" -> "Remove lodestone";
+			case "button.remove_current" -> "Unlink lodestone";
 			case "button.save" -> "Save";
 			case "button.mode" -> "Mode: %s";
 			case "button.teleport" -> "[TP]";
@@ -254,11 +254,13 @@ public final class LodestoneText {
 			case "error.need_cost" -> "You need %s.";
 			case "error.need_near_lodestone" -> "You must be near a registered lodestone to teleport.";
 			case "error.cooldown" -> "You must wait %s seconds before teleporting again.";
+			case "error.cooldown_reopen" -> "You must wait %s seconds before teleporting again. Reopen this UI after the cooldown.";
 			case "teleport.cast_start" -> "Casting teleport... stand still for %s seconds.";
 			case "teleport.cast_cancelled" -> "Teleport cancelled: you moved.";
 			case "teleport.cast_already" -> "You are already casting a teleport.";
 			case "error.no_permission.use" -> "You do not have permission to use lodestones.";
 			case "error.no_permission.rename" -> "You do not have permission to rename lodestones.";
+			case "error.no_permission.rename_specific" -> "You do not have permission to edit this lodestone name.";
 			case "error.no_permission.create" -> "You do not have permission to register lodestones.";
 			case "error.no_permission.remove" -> "You do not have permission to remove registered lodestones.";
 			case "error.no_permission.global" -> "You do not have permission to manage global lodestones.";
@@ -273,6 +275,7 @@ public final class LodestoneText {
 			case "config.server.body.search" -> "Search server config.\nWiki: %s\nSearch: %s";
 			case "config.accepted_values" -> "Accepted: %s";
 			case "config.permissions_wiki" -> "More info in the permissions wiki: %s";
+			case "config.button.default" -> "D";
 			default -> fallback;
 		};
 	}
@@ -291,7 +294,7 @@ public final class LodestoneText {
 			case "button.rename_short" -> "[\u270e]";
 			case "button.rename_current" -> "Editar este warp";
 			case "button.remove" -> "[X]";
-			case "button.remove_current" -> "Eliminar lodestone";
+			case "button.remove_current" -> "Desvincular lodestone";
 			case "button.save" -> "Guardar";
 			case "button.mode" -> "Modo: %s";
 			case "button.teleport" -> "[TP]";
@@ -347,11 +350,13 @@ public final class LodestoneText {
 			case "error.need_cost" -> "Necesitas %s.";
 			case "error.need_near_lodestone" -> "Debes estar cerca de una lodestone registrada para teletransportarte.";
 			case "error.cooldown" -> "Debes esperar %s segundos antes de teletransportarte otra vez.";
+			case "error.cooldown_reopen" -> "Debes esperar %s segundos antes de teletransportarte otra vez. Vuelve a abrir esta UI cuando termine el cooldown.";
 			case "teleport.cast_start" -> "Canalizando teleport... quédate quieto por %s segundos.";
 			case "teleport.cast_cancelled" -> "Teleport cancelado: te moviste.";
 			case "teleport.cast_already" -> "Ya estás canalizando un teleport.";
 			case "error.no_permission.use" -> "No tienes permiso para usar lodestones.";
 			case "error.no_permission.rename" -> "No tienes permiso para renombrar lodestones.";
+			case "error.no_permission.rename_specific" -> "No tienes permiso para editar el nombre de esta lodestone.";
 			case "error.no_permission.create" -> "No tienes permiso para registrar lodestones.";
 			case "error.no_permission.remove" -> "No tienes permiso para remover lodestones registradas.";
 			case "error.no_permission.config" -> "No tienes permiso para configurar Lodestone Warps.";
@@ -418,6 +423,7 @@ public final class LodestoneText {
 			case "config.current" -> "Actual: %s";
 			case "config.accepted_values" -> "Acepta: %s";
 			case "config.permissions_wiki" -> "Más info en la wiki de permisos: %s";
+			case "config.button.default" -> "D";
 			case "config.switch.on" -> "ON";
 			case "config.switch.off" -> "OFF";
 			default -> fallback;

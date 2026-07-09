@@ -20,6 +20,8 @@ import java.util.function.Supplier;
 public final class LodestoneConfigScreen extends Screen {
 	private static final int MARGIN = 28;
 	private static final int FIELD_WIDTH = 260;
+	private static final int RESET_WIDTH = 28;
+	private static final int RESET_GAP = 4;
 	private static final int ROW_HEIGHT = 24;
 
 	private final Screen parent;
@@ -71,17 +73,19 @@ public final class LodestoneConfigScreen extends Screen {
 
 		int y = top + 104;
 		int fieldX = Math.max(left + 220, right - FIELD_WIDTH);
+		int controlWidth = right - fieldX - RESET_WIDTH - RESET_GAP;
 		for (ConfigField field : filtered.stream().skip(this.scrollOffset).limit(visibleRows).toList()) {
 			if (field.booleanField()) {
 				ConfigField visibleField = field;
 				Button button = Button.builder(field.booleanTitle(), widget -> {
 					visibleField.toggle(this.drafts);
 					widget.setMessage(visibleField.booleanTitle());
-				}).bounds(fieldX, y + 4, right - fieldX, 18).build();
+				}).bounds(fieldX, y + 4, controlWidth, 18).build();
 				addRenderableWidget(button);
-				this.fields.add(field);
+				addResetButton(visibleField, right - RESET_WIDTH, y + 4);
+				this.fields.add(visibleField);
 			} else {
-				EditBox box = new EditBox(this.font, fieldX, y + 4, right - fieldX, 18, field.label());
+				EditBox box = new EditBox(this.font, fieldX, y + 4, controlWidth, 18, field.label());
 				box.setMaxLength(96);
 				box.setValue(field.get());
 				ConfigField visibleField = field.withBox(box);
@@ -90,6 +94,7 @@ public final class LodestoneConfigScreen extends Screen {
 					visibleField.setValue(value);
 				});
 				addRenderableWidget(box);
+				addResetButton(visibleField, right - RESET_WIDTH, y + 4);
 				this.fields.add(visibleField);
 			}
 			y += ROW_HEIGHT;
@@ -177,6 +182,13 @@ public final class LodestoneConfigScreen extends Screen {
 		rebuildWidgets();
 	}
 
+	private void addResetButton(ConfigField field, int x, int y) {
+		addRenderableWidget(Button.builder(LodestoneText.text("config.button.default", "D"), button -> {
+			this.drafts.put(field.key(), field.defaultValue());
+			rebuildWidgets();
+		}).bounds(x, y, RESET_WIDTH, 18).build());
+	}
+
 	private List<ConfigField> filteredFields() {
 		ACTIVE_SCREEN = this;
 		String cleanQuery = this.query.trim().toLowerCase(java.util.Locale.ROOT);
@@ -257,8 +269,8 @@ public final class LodestoneConfigScreen extends Screen {
 					text("mod_teleport_effect", "config.field.mod_teleport_effect", "Mod effect", "lodestone", "Effect preset used for players with the client mod installed.", "none, off, end, or lodestone.", () -> LodestoneConfig.get().modTeleportEffect, (config, value) -> config.modTeleportEffect = value),
 					text("network_mode", "config.field.network_mode", "Network mode", "discover", "Controls which Lodestones players can see and teleport to.", "all or discover.", () -> LodestoneConfig.get().networkMode, (config, value) -> config.networkMode = value),
 					bool("resolve_owner_names", "config.field.resolve_owner_names", "Resolve owner names", "true", "Sends stored owner names to Lodestone Warps UIs.", "true or false. false hides owners as unknown.", () -> LodestoneConfig.get().resolveOwnerNames, (config, value) -> config.resolveOwnerNames = value),
-					text("player_permissions", "config.field.player_permissions", "Player permissions", "lodestone_teleport.use, lodestone_teleport.create, lodestone_teleport.create.private, lodestone_teleport.create.discoverable, lodestone_teleport.own.rename, lodestone_teleport.own.remove, lodestone_teleport.own.destroy", "Default permissions used for every player when no permission manager answers.", "Comma-separated permission nodes. Bare names like use are accepted. Supports * and lodestone_teleport.*.", () -> LodestoneConfig.permissionListToString(LodestoneConfig.get().playerPermissions), (config, value) -> config.playerPermissions = LodestoneConfig.parsePermissionList(value, List.of())),
-					text("admin_permissions", "config.field.admin_permissions", "Admin permissions", "lodestone_teleport.admin, lodestone_teleport.config, lodestone_teleport.global, lodestone_teleport.mode.all, lodestone_teleport.bypass_cost, lodestone_teleport.bypass_cast, lodestone_teleport.bypass_cooldown, lodestone_teleport.bypass_max_warps", "Default permissions used for gamemaster-level admins when no permission manager answers.", "Comma-separated permission nodes. Bare names like config are accepted. Supports * and lodestone_teleport.*.", () -> LodestoneConfig.permissionListToString(LodestoneConfig.get().adminPermissions), (config, value) -> config.adminPermissions = LodestoneConfig.parsePermissionList(value, List.of())),
+					text("player_permissions", "config.field.player_permissions", "Player permissions", "lodestone_teleport.use, lodestone_teleport.create, lodestone_teleport.create.private, lodestone_teleport.create.discoverable, lodestone_teleport.own.rename, lodestone_teleport.own.remove, lodestone_teleport.own.destroy", "Default permissions used for every player when no permission manager answers.", "Comma-separated permission nodes. Bare names like use are accepted. Supports *, lodestone_teleport.*, lodestone.*, and lodestone_teleport.limit.10. More info in the wiki.", () -> LodestoneConfig.permissionListToString(LodestoneConfig.get().playerPermissions), (config, value) -> config.playerPermissions = LodestoneConfig.parsePermissionList(value, List.of())),
+					text("admin_permissions", "config.field.admin_permissions", "Admin permissions", "lodestone_teleport.admin, lodestone_teleport.config, lodestone_teleport.global, lodestone_teleport.mode.all, lodestone_teleport.bypass_cost, lodestone_teleport.bypass_cast, lodestone_teleport.bypass_cooldown, lodestone_teleport.bypass_max_warps", "Default permissions used for gamemaster-level admins when no permission manager answers.", "Comma-separated permission nodes. Bare names like config are accepted. Supports *, lodestone_teleport.*, lodestone.*, and lodestone_teleport.limit.10. More info in the wiki.", () -> LodestoneConfig.permissionListToString(LodestoneConfig.get().adminPermissions), (config, value) -> config.adminPermissions = LodestoneConfig.parsePermissionList(value, List.of())),
 					text("command_name", "config.field.command_name", "Command name", "warp", "Primary command registered by Lodestone Warps.", "Letters, numbers, underscore, dash, or dot.", () -> LodestoneConfig.get().commandName, (config, value) -> config.commandName = value),
 					text("fallback_command_name", "config.field.fallback_command_name", "Fallback command", "lodestone_warp", "Fallback command kept available when the primary command conflicts.", "Letters, numbers, underscore, dash, or dot.", () -> LodestoneConfig.get().fallbackCommandName, (config, value) -> config.fallbackCommandName = value),
 					text("server_language", "config.field.server_language", "Server language", "en_us", "Fallback language for server-generated text shown to vanilla clients.", "en_us or es_es.", () -> LodestoneConfig.get().serverLanguage, (config, value) -> config.serverLanguage = value),
@@ -310,15 +322,18 @@ public final class LodestoneConfigScreen extends Screen {
 		}
 
 		static ConfigField with(String id, String key, String fallback, String value, String defaultValue, String description, String acceptedValues, BiConsumer<LodestoneConfig, String> setter) {
+			Component label = LodestoneText.text(key, fallback);
+			String translatedDescription = LodestoneText.serverConfigDescription(id, description);
+			String translatedAcceptedValues = LodestoneText.serverConfigAcceptedValues(id, acceptedValues);
 			return new ConfigField(
 				id,
-				LodestoneText.text(key, fallback),
+				label,
 				LodestoneConfigScreen.currentValue(id, value),
 				value,
 				defaultValue,
 				Component.literal(description),
 				Component.literal(acceptedValues),
-				(id + " " + key + " " + fallback + " " + description + " " + acceptedValues).toLowerCase(java.util.Locale.ROOT),
+				(id + " " + key + " " + fallback + " " + label.getString() + " " + description + " " + acceptedValues + " " + translatedDescription + " " + translatedAcceptedValues).toLowerCase(java.util.Locale.ROOT),
 				setter,
 				null,
 				false
@@ -326,15 +341,18 @@ public final class LodestoneConfigScreen extends Screen {
 		}
 
 		static ConfigField bool(String id, String key, String fallback, String value, String defaultValue, String description, String acceptedValues, BiConsumer<LodestoneConfig, String> setter) {
+			Component label = LodestoneText.text(key, fallback);
+			String translatedDescription = LodestoneText.serverConfigDescription(id, description);
+			String translatedAcceptedValues = LodestoneText.serverConfigAcceptedValues(id, acceptedValues);
 			return new ConfigField(
 				id,
-				LodestoneText.text(key, fallback),
+				label,
 				LodestoneConfigScreen.currentValue(id, value),
 				value,
 				defaultValue,
 				Component.literal(description),
 				Component.literal(acceptedValues),
-				(id + " " + key + " " + fallback + " " + description + " " + acceptedValues).toLowerCase(java.util.Locale.ROOT),
+				(id + " " + key + " " + fallback + " " + label.getString() + " " + description + " " + acceptedValues + " " + translatedDescription + " " + translatedAcceptedValues).toLowerCase(java.util.Locale.ROOT),
 				setter,
 				null,
 				true
@@ -351,6 +369,10 @@ public final class LodestoneConfigScreen extends Screen {
 
 		String key() {
 			return this.id;
+		}
+
+		String defaultValue() {
+			return this.defaultValue;
 		}
 
 		void setValue(String value) {
