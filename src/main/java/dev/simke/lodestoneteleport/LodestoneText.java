@@ -273,6 +273,12 @@ public final class LodestoneText {
 			case "config.warning.permissions.all_with_admin_discover" -> "Network mode is all, but admins have lodestone_teleport.mode.discover. That permission forces discovery rules unless they also have lodestone_teleport.mode.all.";
 			case "config.server.body" -> "Search server config.\nWiki: %s";
 			case "config.server.body.search" -> "Search server config.\nWiki: %s\nSearch: %s";
+			case "config.permission.title" -> "Permissions: %s";
+			case "config.permission.body" -> "Toggle, add, or remove fallback permissions.";
+			case "config.permission.search" -> "Search: %s";
+			case "config.permission.add" -> "Add permission";
+			case "config.permission.input" -> "Permission";
+			case "config.permission.remove" -> "Remove";
 			case "config.accepted_values" -> "Accepted: %s";
 			case "config.permissions_wiki" -> "More info in the permissions wiki: %s";
 			case "config.button.default" -> "D";
@@ -416,6 +422,12 @@ public final class LodestoneText {
 			case "config.server.title" -> "Config del servidor";
 			case "config.server.body" -> "Busca en la configuración del servidor.\nWiki: %s";
 			case "config.server.body.search" -> "Busca en la configuración del servidor.\nWiki: %s\nBúsqueda: %s";
+			case "config.permission.title" -> "Permisos: %s";
+			case "config.permission.body" -> "Activa, desactiva, agrega o elimina permisos fallback.";
+			case "config.permission.search" -> "Búsqueda: %s";
+			case "config.permission.add" -> "Agregar permiso";
+			case "config.permission.input" -> "Permiso";
+			case "config.permission.remove" -> "Eliminar";
 			case "config.server.button.reload" -> "Recargar desde disco";
 			case "config.server.edit_title" -> "Editar %s";
 			case "config.server.input.value" -> "Valor";

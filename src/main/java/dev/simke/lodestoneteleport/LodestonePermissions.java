@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 public final class LodestonePermissions {
@@ -218,14 +219,15 @@ public final class LodestonePermissions {
 		return containsPermission(config.adminPermissions, node) || containsPermission(config.adminPermissions, shortNode);
 	}
 
-	private static boolean containsPermission(List<String> permissions, String node) {
+	private static boolean containsPermission(Map<String, Boolean> permissions, String node) {
 		if (permissions == null) {
 			return false;
 		}
 		String namespaceWildcard = LEGACY_PERMISSION_PREFIX + "*";
 		String shortWildcard = SHORT_PERMISSION_PREFIX + "*";
-		for (String permission : permissions) {
-			if (permission.equals("*") || permission.equals(namespaceWildcard) || permission.equals(shortWildcard) || permission.equals(node)) {
+		for (var entry : permissions.entrySet()) {
+			String permission = entry.getKey();
+			if (Boolean.TRUE.equals(entry.getValue()) && (permission.equals("*") || permission.equals(namespaceWildcard) || permission.equals(shortWildcard) || permission.equals(node))) {
 				return true;
 			}
 		}
@@ -255,13 +257,15 @@ public final class LodestonePermissions {
 		return limit;
 	}
 
-	private static int highestLimit(List<String> permissions) {
+	private static int highestLimit(Map<String, Boolean> permissions) {
 		int limit = -1;
 		if (permissions == null) {
 			return limit;
 		}
-		for (String permission : permissions) {
-			limit = Math.max(limit, parseLimitPermission(permission));
+		for (var entry : permissions.entrySet()) {
+			if (Boolean.TRUE.equals(entry.getValue())) {
+				limit = Math.max(limit, parseLimitPermission(entry.getKey()));
+			}
 		}
 		return limit;
 	}

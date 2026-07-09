@@ -8,8 +8,8 @@ Lodestone Warps usa Fabric Permissions API y es compatible con LuckPerms.
 
 Si un administrador de permisos responde una consulta, esa respuesta gana. Si ningún administrador responde, Lodestone Warps usa:
 
-- `playerPermissions`: permisos default para todos los jugadores.
-- `adminPermissions`: permisos default para admins OP/gamemaster.
+- `playerPermissions`: mapa de permisos fallback para todos los jugadores.
+- `adminPermissions`: mapa de permisos fallback para admins OP/gamemaster.
 
 ## Nodos
 
@@ -200,13 +200,22 @@ Usa `lodestone_teleport.bypass_max_warps` para staff o grupos que deban ignorar 
 
 ## Permisos Fallback de Config
 
-Las listas de config aceptan:
+Los mapas de config usan valores booleanos:
+
+```json
+"lodestone_teleport.use": true,
+"lodestone_teleport.rename": false
+```
+
+Esto permite desactivar permisos sin eliminarlos. Los permisos conocidos que falten pueden volver a escribirse como `false`, lo que facilita auditar el archivo.
+
+Los mapas de config aceptan:
 
 - nodos completos, como `lodestone_teleport.use`
 - nodos cortos, como `use`
 - wildcards, como `lodestone_teleport.*`, `lodestone.*` o `*`
 
-Si usas LuckPerms, deja `playerPermissions` y `adminPermissions` mínimos o vacíos para que LuckPerms sea la fuente principal de permisos.
+Si usas LuckPerms, deja `playerPermissions` y `adminPermissions` desactivados o vacíos para que LuckPerms sea la fuente principal de permisos.
 
 ## Ejemplos con LuckPerms
 
@@ -214,7 +223,7 @@ Setup recomendado inicial:
 
 1. Detén el servidor.
 2. Abre `config/lodestone_warp_and_tp/lodestone_teleport.json`.
-3. Elimina o vacía `playerPermissions` y `adminPermissions` si quieres que LuckPerms controle todos los permisos.
+3. Cambia los permisos fallback a `false`, o vacía `playerPermissions` y `adminPermissions`, si quieres que LuckPerms controle todos los permisos.
 4. Inicia el servidor.
 5. Ejecuta `/lp editor`.
 6. Agrega los permisos de jugador al grupo `default`.

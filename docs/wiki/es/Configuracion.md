@@ -53,31 +53,37 @@ Los dueños de servidor también pueden usar la UI vanilla de config:
   "vanillaTeleportEffect": "end",
   "modTeleportEffect": "lodestone",
   "networkMode": "discover",
-  "playerPermissions": [
-    "lodestone_teleport.use",
-    "lodestone_teleport.create",
-    "lodestone_teleport.create.private",
-    "lodestone_teleport.create.discoverable",
-    "lodestone_teleport.own.rename",
-    "lodestone_teleport.own.remove",
-    "lodestone_teleport.own.destroy",
-    "lodestone_teleport.own.visibility.private",
-    "lodestone_teleport.own.visibility.discoverable"
-  ],
-  "adminPermissions": [
-    "lodestone_teleport.admin",
-    "lodestone_teleport.config",
-    "lodestone_teleport.global",
-    "lodestone_teleport.rename",
-    "lodestone_teleport.remove",
-    "lodestone_teleport.mode.all",
-    "lodestone_teleport.create.global",
-    "lodestone_teleport.own.visibility.global",
-    "lodestone_teleport.bypass_cost",
-    "lodestone_teleport.bypass_cast",
-    "lodestone_teleport.bypass_cooldown",
-    "lodestone_teleport.bypass_max_warps"
-  ],
+  "playerPermissions": {
+    "lodestone_teleport.use": true,
+    "lodestone_teleport.rename": false,
+    "lodestone_teleport.create": true,
+    "lodestone_teleport.create.private": true,
+    "lodestone_teleport.create.discoverable": true,
+    "lodestone_teleport.create.global": false,
+    "lodestone_teleport.own.rename": true,
+    "lodestone_teleport.own.remove": true,
+    "lodestone_teleport.own.destroy": true,
+    "lodestone_teleport.own.visibility.private": true,
+    "lodestone_teleport.own.visibility.discoverable": true,
+    "lodestone_teleport.own.visibility.global": false,
+    "lodestone_teleport.mode.all": false,
+    "lodestone_teleport.mode.discover": false,
+    "lodestone_teleport.limit.10": false
+  },
+  "adminPermissions": {
+    "lodestone_teleport.admin": true,
+    "lodestone_teleport.config": true,
+    "lodestone_teleport.global": true,
+    "lodestone_teleport.rename": true,
+    "lodestone_teleport.remove": true,
+    "lodestone_teleport.mode.all": true,
+    "lodestone_teleport.create.global": true,
+    "lodestone_teleport.own.visibility.global": true,
+    "lodestone_teleport.bypass_cost": true,
+    "lodestone_teleport.bypass_cast": true,
+    "lodestone_teleport.bypass_cooldown": true,
+    "lodestone_teleport.bypass_max_warps": true
+  },
   "commandName": "warp",
   "fallbackCommandName": "lodestone_warp",
   "serverLanguage": "en_us",
@@ -302,6 +308,15 @@ Permisos default entregados a todos los jugadores cuando ningún administrador d
 `adminPermissions`
 
 Permisos default entregados a admins OP/gamemaster cuando ningún administrador de permisos responde.
+
+Ambas configs de permisos son mapas:
+
+```json
+"lodestone_teleport.use": true,
+"lodestone_teleport.rename": false
+```
+
+Esto permite desactivar un permiso sin eliminarlo. Cuando Lodestone Warps agregue permisos conocidos en el futuro, las claves faltantes pueden escribirse como `false` para mantener el archivo auditable.
 
 LuckPerms u otro administrador compatible con Fabric Permissions es lo recomendado para grupos, jugadores específicos e herencia. Si un administrador de permisos responde, esa respuesta gana sobre estos defaults.
 

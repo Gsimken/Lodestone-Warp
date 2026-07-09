@@ -23,6 +23,10 @@ public final class LodestoneCustomActions {
 
 		String action = payload.getStringOr("action", "");
 		String id = payload.getStringOr("id", "");
+		if (requiresConfigPermission(action) && !LodestonePermissions.canConfig(player)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.config", "You do not have permission to configure Lodestone Warps."));
+			return true;
+		}
 		if (id.isBlank() && requiresLodestoneId(action)) {
 			player.sendSystemMessage(LodestoneText.text("error.invalid_action", "Invalid lodestone action."));
 			return true;
@@ -97,9 +101,35 @@ public final class LodestoneCustomActions {
 					LodestoneConfigOptions.get(key).ifPresent(option -> LodestoneDialogs.showConfigEdit(player, option, payload.getStringOr("category", LodestoneConfigOptions.ALL), readField(payload, "query")));
 					yield true;
 				}
+				case "config_permissions" -> {
+					LodestoneDialogs.showConfigPermissions(player, payload.getStringOr("key", "player_permissions"), readField(payload, "query"));
+					yield true;
+				}
 				case "config_save" -> {
 					LodestoneCommands.setConfig(player.createCommandSourceStack(), payload.getStringOr("key", ""), readField(payload, "value"));
 					LodestoneDialogs.showConfig(player, payload.getStringOr("category", LodestoneConfigOptions.ALL), payload.getStringOr("query", ""));
+					yield true;
+				}
+				case "permission_search" -> {
+					LodestoneDialogs.showConfigPermissions(player, payload.getStringOr("key", "player_permissions"), readField(payload, "query"));
+					yield true;
+				}
+				case "permission_add" -> {
+					LodestoneConfig.putPermission(payload.getStringOr("key", "player_permissions"), readField(payload, "permission"), false);
+					LodestoneConfig.save();
+					LodestoneDialogs.showConfigPermissions(player, payload.getStringOr("key", "player_permissions"), readField(payload, "query"));
+					yield true;
+				}
+				case "permission_toggle" -> {
+					LodestoneConfig.togglePermission(payload.getStringOr("key", "player_permissions"), payload.getStringOr("permission", ""));
+					LodestoneConfig.save();
+					LodestoneDialogs.showConfigPermissions(player, payload.getStringOr("key", "player_permissions"), readField(payload, "query"));
+					yield true;
+				}
+				case "permission_remove" -> {
+					LodestoneConfig.removePermission(payload.getStringOr("key", "player_permissions"), payload.getStringOr("permission", ""));
+					LodestoneConfig.save();
+					LodestoneDialogs.showConfigPermissions(player, payload.getStringOr("key", "player_permissions"), readField(payload, "query"));
 					yield true;
 				}
 				default -> false;
@@ -112,9 +142,13 @@ public final class LodestoneCustomActions {
 
 	private static boolean requiresLodestoneId(String action) {
 		return switch (action) {
-			case "config_open", "config_reload", "config_toggle", "config_edit", "config_save" -> false;
+			case "config_open", "config_reload", "config_toggle", "config_edit", "config_save", "config_permissions", "permission_search", "permission_add", "permission_toggle", "permission_remove" -> false;
 			default -> true;
 		};
+	}
+
+	private static boolean requiresConfigPermission(String action) {
+		return action.startsWith("config_") || action.startsWith("permission_");
 	}
 
 	private static String readField(CompoundTag payload, String key) {

@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class LodestoneConfigWarnings {
 	private LodestoneConfigWarnings() {
@@ -56,12 +57,13 @@ public final class LodestoneConfigWarnings {
 		return LodestoneText.text(key, fallback).withStyle(ChatFormatting.RED);
 	}
 
-	private static boolean has(List<String> permissions, String node) {
+	private static boolean has(Map<String, Boolean> permissions, String node) {
 		if (permissions == null) {
 			return false;
 		}
 		String fullNode = LodestoneTeleportMod.MOD_ID + "." + node;
 		String namespaceWildcard = LodestoneTeleportMod.MOD_ID + ".*";
-		return permissions.stream().anyMatch(permission -> permission.equals("*") || permission.equals(namespaceWildcard) || permission.equals(fullNode) || permission.equals(node));
+		return permissions.entrySet().stream().anyMatch(entry -> Boolean.TRUE.equals(entry.getValue())
+			&& (entry.getKey().equals("*") || entry.getKey().equals(namespaceWildcard) || entry.getKey().equals(fullNode) || entry.getKey().equals(node)));
 	}
 }

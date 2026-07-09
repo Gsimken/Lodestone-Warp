@@ -18,8 +18,10 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public final class LodestoneConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -57,7 +59,8 @@ public final class LodestoneConfig {
 	public String modTeleportEffect = "lodestone";
 	public String networkMode = "discover";
 	public boolean resolveOwnerNames = true;
-	public List<String> playerPermissions = List.of(
+	public Map<String, Boolean> playerPermissions = permissionDefaults(
+		List.of(
 		"lodestone_teleport.use",
 		"lodestone_teleport.create",
 		"lodestone_teleport.create.private",
@@ -67,8 +70,10 @@ public final class LodestoneConfig {
 		"lodestone_teleport.own.destroy",
 		"lodestone_teleport.own.visibility.private",
 		"lodestone_teleport.own.visibility.discoverable"
+		)
 	);
-	public List<String> adminPermissions = List.of(
+	public Map<String, Boolean> adminPermissions = permissionDefaults(
+		List.of(
 		"lodestone_teleport.admin",
 		"lodestone_teleport.config",
 		"lodestone_teleport.global",
@@ -81,6 +86,7 @@ public final class LodestoneConfig {
 		"lodestone_teleport.bypass_cast",
 		"lodestone_teleport.bypass_cooldown",
 		"lodestone_teleport.bypass_max_warps"
+		)
 	);
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
@@ -144,7 +150,11 @@ public final class LodestoneConfig {
 		JsonObject loadedObject = loaded.getAsJsonObject();
 		boolean legacyCostConfig = isLegacyDefaultCostConfig(loadedObject);
 		for (var entry : loadedObject.entrySet()) {
-			merged.add(entry.getKey(), entry.getValue());
+			if ("playerPermissions".equals(entry.getKey()) || "adminPermissions".equals(entry.getKey())) {
+				merged.add(entry.getKey(), migratePermissionConfig(entry.getValue()));
+			} else {
+				merged.add(entry.getKey(), entry.getValue());
+			}
 		}
 		if (legacyCostConfig) {
 			merged.addProperty("blocksPerExtraCost", 1000);
@@ -208,8 +218,13 @@ public final class LodestoneConfig {
 		config.vanillaTeleportEffect = cleanEffect(config.vanillaTeleportEffect, "end");
 		config.modTeleportEffect = cleanEffect(config.modTeleportEffect, "lodestone");
 		config.networkMode = cleanNetworkMode(config.networkMode);
-		config.playerPermissions = cleanPermissionList(config.playerPermissions, defaults().playerPermissions);
-		config.adminPermissions = cleanPermissionList(config.adminPermissions, defaults().adminPermissions);
+		int missingPlayerPermissions = missingKnownPermissions(config.playerPermissions);
+		int missingAdminPermissions = missingKnownPermissions(config.adminPermissions);
+		config.playerPermissions = cleanPermissionMap(config.playerPermissions, permissionDefaults(List.of()));
+		config.adminPermissions = cleanPermissionMap(config.adminPermissions, permissionDefaults(List.of()));
+		if (missingPlayerPermissions > 0 || missingAdminPermissions > 0) {
+			LodestoneTeleportMod.LOGGER.info("Added missing fallback permission keys as disabled: {} player, {} admin.", missingPlayerPermissions, missingAdminPermissions);
+		}
 		addPermissionMigrationDefaults(config);
 		config.commandName = cleanCommandName(config.commandName, "warp");
 		config.fallbackCommandName = cleanCommandName(config.fallbackCommandName, "lodestone_warp");
@@ -217,29 +232,148 @@ public final class LodestoneConfig {
 		return config;
 	}
 
-	public static List<String> parsePermissionList(String value, List<String> fallback) {
+	public static Map<String, Boolean> parsePermissionList(String value, Map<String, Boolean> fallback) {
 		if (value == null) {
-			return new ArrayList<>(fallback);
+			return new LinkedHashMap<>(fallback);
 		}
-		return cleanPermissionList(List.of(value.split(",")), fallback);
+		return cleanPermissionMap(List.of(value.split(",")), fallback);
 	}
 
-	public static String permissionListToString(List<String> permissions) {
-		return String.join(", ", cleanPermissionList(permissions, List.of()));
+	public static String permissionListToString(Map<String, Boolean> permissions) {
+		return String.join(", ", enabledPermissions(permissions));
 	}
 
-	private static List<String> cleanPermissionList(List<String> permissions, List<String> fallback) {
+	public static Map<String, Boolean> permissionMap(String key) {
+		LodestoneConfig config = get();
+		return "admin_permissions".equals(key) ? config.adminPermissions : config.playerPermissions;
+	}
+
+	public static void putPermission(String key, String permission, boolean enabled) {
+		String clean = cleanPermission(permission);
+		if (!clean.isBlank()) {
+			permissionMap(key).put(clean, enabled);
+		}
+	}
+
+	public static void togglePermission(String key, String permission) {
+		Map<String, Boolean> permissions = permissionMap(key);
+		String clean = cleanPermission(permission);
+		if (!clean.isBlank() && permissions.containsKey(clean)) {
+			permissions.put(clean, !Boolean.TRUE.equals(permissions.get(clean)));
+		}
+	}
+
+	public static void removePermission(String key, String permission) {
+		permissionMap(key).remove(cleanPermission(permission));
+	}
+
+	private static Map<String, Boolean> cleanPermissionMap(Map<String, Boolean> permissions, Map<String, Boolean> fallback) {
 		if (permissions == null) {
-			return new ArrayList<>(fallback);
+			return new LinkedHashMap<>(fallback);
 		}
-		List<String> cleanPermissions = new ArrayList<>();
-		for (String permission : permissions) {
-			String clean = cleanPermission(permission);
-			if (!clean.isBlank() && !cleanPermissions.contains(clean)) {
-				cleanPermissions.add(clean);
+		Map<String, Boolean> cleanPermissions = new LinkedHashMap<>(fallback);
+		for (var entry : permissions.entrySet()) {
+			String clean = cleanPermission(entry.getKey());
+			if (!clean.isBlank()) {
+				cleanPermissions.put(clean, Boolean.TRUE.equals(entry.getValue()));
 			}
 		}
 		return cleanPermissions;
+	}
+
+	private static Map<String, Boolean> cleanPermissionMap(List<String> permissions, Map<String, Boolean> fallback) {
+		if (permissions == null) {
+			return new LinkedHashMap<>(fallback);
+		}
+		Map<String, Boolean> cleanPermissions = new LinkedHashMap<>(fallback);
+		for (String permission : permissions) {
+			String clean = cleanPermission(permission);
+			if (!clean.isBlank()) {
+				cleanPermissions.put(clean, true);
+			}
+		}
+		return cleanPermissions;
+	}
+
+	public static List<String> enabledPermissions(Map<String, Boolean> permissions) {
+		List<String> enabled = new ArrayList<>();
+		if (permissions == null) {
+			return enabled;
+		}
+		for (var entry : permissions.entrySet()) {
+			if (Boolean.TRUE.equals(entry.getValue())) {
+				enabled.add(entry.getKey());
+			}
+		}
+		return enabled;
+	}
+
+	private static Map<String, Boolean> permissionDefaults(List<String> enabledPermissions) {
+		Map<String, Boolean> map = new LinkedHashMap<>();
+		for (String permission : knownPermissionDefaults()) {
+			map.put(permission, enabledPermissions.contains(permission));
+		}
+		return map;
+	}
+
+	private static List<String> knownPermissionDefaults() {
+		return List.of(
+			"lodestone_teleport.use",
+			"lodestone_teleport.rename",
+			"lodestone_teleport.create",
+			"lodestone_teleport.create.private",
+			"lodestone_teleport.create.discoverable",
+			"lodestone_teleport.create.global",
+			"lodestone_teleport.remove",
+			"lodestone_teleport.own.rename",
+			"lodestone_teleport.own.remove",
+			"lodestone_teleport.own.destroy",
+			"lodestone_teleport.own.visibility.private",
+			"lodestone_teleport.own.visibility.discoverable",
+			"lodestone_teleport.own.visibility.global",
+			"lodestone_teleport.admin",
+			"lodestone_teleport.config",
+			"lodestone_teleport.global",
+			"lodestone_teleport.bypass_cost",
+			"lodestone_teleport.bypass_cast",
+			"lodestone_teleport.bypass_cooldown",
+			"lodestone_teleport.bypass_max_warps",
+			"lodestone_teleport.mode.all",
+			"lodestone_teleport.mode.discover",
+			"lodestone_teleport.limit.10"
+		);
+	}
+
+	private static int missingKnownPermissions(Map<String, Boolean> permissions) {
+		if (permissions == null) {
+			return knownPermissionDefaults().size();
+		}
+		int missing = 0;
+		for (String permission : knownPermissionDefaults()) {
+			if (!permissions.containsKey(permission)) {
+				missing++;
+			}
+		}
+		return missing;
+	}
+
+	private static JsonElement migratePermissionConfig(JsonElement element) {
+		JsonObject object = new JsonObject();
+		if (element == null || element.isJsonNull()) {
+			return object;
+		}
+		if (element.isJsonArray()) {
+			for (JsonElement permission : element.getAsJsonArray()) {
+				if (permission.isJsonPrimitive()) {
+					object.addProperty(permission.getAsString(), true);
+				}
+			}
+			return object;
+		}
+		if (element.isJsonObject()) {
+			return element;
+		}
+		return object;
 	}
 
 	private static String cleanPermission(String permission) {
@@ -263,31 +397,33 @@ public final class LodestoneConfig {
 	}
 
 	private static void addPermissionMigrationDefaults(LodestoneConfig config) {
-		if (config.playerPermissions.contains(LodestoneTeleportMod.MOD_ID + ".create")
-			&& config.playerPermissions.stream().noneMatch(permission -> permission.startsWith(LodestoneTeleportMod.MOD_ID + ".create."))) {
+		if (enabled(config.playerPermissions, LodestoneTeleportMod.MOD_ID + ".create")
+			&& enabledPermissions(config.playerPermissions).stream().noneMatch(permission -> permission.startsWith(LodestoneTeleportMod.MOD_ID + ".create."))) {
 			addPermission(config.playerPermissions, "create.private");
 			addPermission(config.playerPermissions, "create.discoverable");
 			addPermission(config.playerPermissions, "own.visibility.private");
 			addPermission(config.playerPermissions, "own.visibility.discoverable");
 		}
-		if (config.playerPermissions.contains(LodestoneTeleportMod.MOD_ID + ".rename")) {
+		if (enabled(config.playerPermissions, LodestoneTeleportMod.MOD_ID + ".rename")) {
 			addPermission(config.playerPermissions, "own.rename");
 		}
-		if (config.playerPermissions.contains(LodestoneTeleportMod.MOD_ID + ".remove")) {
+		if (enabled(config.playerPermissions, LodestoneTeleportMod.MOD_ID + ".remove")) {
 			addPermission(config.playerPermissions, "own.remove");
 			addPermission(config.playerPermissions, "own.destroy");
 		}
-		if (config.adminPermissions.contains(LodestoneTeleportMod.MOD_ID + ".global")) {
+		if (enabled(config.adminPermissions, LodestoneTeleportMod.MOD_ID + ".global")) {
 			addPermission(config.adminPermissions, "create.global");
 			addPermission(config.adminPermissions, "own.visibility.global");
 		}
 	}
 
-	private static void addPermission(List<String> permissions, String node) {
+	private static void addPermission(Map<String, Boolean> permissions, String node) {
 		String fullNode = LodestoneTeleportMod.MOD_ID + "." + node;
-		if (!permissions.contains(fullNode)) {
-			permissions.add(fullNode);
-		}
+		permissions.putIfAbsent(fullNode, true);
+	}
+
+	private static boolean enabled(Map<String, Boolean> permissions, String node) {
+		return permissions != null && Boolean.TRUE.equals(permissions.get(node));
 	}
 
 	private static String cleanCommandName(String value, String fallback) {

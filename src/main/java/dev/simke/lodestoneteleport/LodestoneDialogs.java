@@ -163,6 +163,10 @@ public final class LodestoneDialogs {
 		buttons.add(configActionButton(LodestoneText.serverText("config.server.button.reload", "Reload from disk").withStyle(ChatFormatting.GOLD), Optional.empty(), CONFIG_BUTTON_WIDTH, "config_reload", cleanCategory, "", cleanQuery));
 
 		for (LodestoneConfigOptions.Option option : LodestoneConfigOptions.filtered(cleanCategory, cleanQuery)) {
+			if (isPermissionOption(option.id())) {
+				buttons.add(configActionButton(configOptionLabel(option).copy().append(Component.literal(" \u2699").withStyle(ChatFormatting.GOLD)), Optional.of(configOptionTooltip(option)), CONFIG_BUTTON_WIDTH, "config_permissions", cleanCategory, option.id(), cleanQuery));
+				continue;
+			}
 			if (option.type() == LodestoneConfigOptions.Type.BOOLEAN) {
 				buttons.add(configActionButton(configOptionLabel(option), Optional.of(configOptionTooltip(option)), CONFIG_BUTTON_WIDTH, "config_toggle", cleanCategory, option.id(), cleanQuery));
 				continue;
@@ -180,6 +184,43 @@ public final class LodestoneDialogs {
 			List.of(new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.serverText("input.search", "Search"), true, cleanQuery, 48, Optional.empty())))
 		);
 		send(player, new MultiActionDialog(common, buttons, Optional.empty(), 1));
+	}
+
+	public static void showConfigPermissions(ServerPlayer player, String key, String query) {
+		String cleanKey = isPermissionOption(key) ? key : "player_permissions";
+		String cleanQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
+		List<ActionButton> buttons = new ArrayList<>();
+
+		buttons.add(permissionActionButton(LodestoneText.serverText("button.search", "Search location").withStyle(ChatFormatting.AQUA), "permission_search", cleanKey, "", cleanQuery));
+		buttons.add(permissionActionButton(LodestoneText.serverText("config.permission.add", "Add permission").withStyle(ChatFormatting.GOLD), "permission_add", cleanKey, "", cleanQuery));
+		buttons.add(configActionButton(Component.translatable("gui.back"), Optional.empty(), CONFIG_BUTTON_WIDTH, "config_open", LodestoneConfigOptions.ALL, "", ""));
+
+		for (var entry : LodestoneConfig.permissionMap(cleanKey).entrySet()) {
+			String permission = entry.getKey();
+			if (!cleanQuery.isBlank() && !permission.contains(cleanQuery)) {
+				continue;
+			}
+			boolean enabled = Boolean.TRUE.equals(entry.getValue());
+			Component toggle = LodestoneText.serverText(enabled ? "config.switch.on" : "config.switch.off", enabled ? "ON" : "OFF")
+				.withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED);
+			buttons.add(permissionActionButton(toggle, "permission_toggle", cleanKey, permission, cleanQuery, 64));
+			buttons.add(new ActionButton(new CommonButtonData(Component.literal(permission).withStyle(enabled ? ChatFormatting.WHITE : ChatFormatting.GRAY), CONFIG_BUTTON_WIDTH - 120), Optional.empty()));
+			buttons.add(permissionActionButton(LodestoneText.serverText("config.permission.remove", "Remove").withStyle(ChatFormatting.RED), "permission_remove", cleanKey, permission, cleanQuery, 80));
+		}
+
+		CommonDialogData common = new CommonDialogData(
+			LodestoneText.serverText("config.permission.title", "Permissions: %s", cleanKey),
+			Optional.empty(),
+			true,
+			false,
+			DialogAction.CLOSE,
+			List.of(new PlainMessage(permissionBody(cleanKey, cleanQuery), INPUT_WIDTH)),
+			List.of(
+				new Input("query", new TextInput(INPUT_WIDTH, LodestoneText.serverText("input.search", "Search"), true, cleanQuery, 64, Optional.empty())),
+				new Input("permission", new TextInput(INPUT_WIDTH, LodestoneText.serverText("config.permission.input", "Permission"), true, "", 128, Optional.empty()))
+			)
+		);
+		send(player, new MultiActionDialog(common, buttons, Optional.empty(), 3));
 	}
 
 	public static void showConfigEdit(ServerPlayer player, LodestoneConfigOptions.Option option, String category, String query) {
@@ -385,11 +426,41 @@ public final class LodestoneDialogs {
 		);
 	}
 
+	private static ActionButton permissionActionButton(Component label, String action, String key, String permission, String query) {
+		return permissionActionButton(label, action, key, permission, query, CONFIG_BUTTON_WIDTH);
+	}
+
+	private static ActionButton permissionActionButton(Component label, String action, String key, String permission, String query, int width) {
+		CompoundTag payload = new CompoundTag();
+		payload.putString("action", action);
+		payload.putString("key", key);
+		payload.putString("permission", permission);
+		payload.putString("query", query);
+		return new ActionButton(
+			new CommonButtonData(label, width),
+			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
+		);
+	}
+
+	private static boolean isPermissionOption(String key) {
+		return "player_permissions".equals(key) || "admin_permissions".equals(key);
+	}
+
 	private static Component configBody(String category, String query) {
 		if (query == null || query.isBlank()) {
 			return LodestoneText.serverText("config.server.body", "Search server config.\nWiki: %s", wikiUrl());
 		}
 		return LodestoneText.serverText("config.server.body.search", "Search server config.\nWiki: %s\nSearch: %s", wikiUrl(), query);
+	}
+
+	private static Component permissionBody(String key, String query) {
+		Component title = LodestoneText.serverText("config.permission.body", "Toggle, add, or remove fallback permissions.");
+		if (query == null || query.isBlank()) {
+			return title;
+		}
+		return title.copy()
+			.append(Component.literal("\n"))
+			.append(LodestoneText.serverText("config.permission.search", "Search: %s", query));
 	}
 
 	private static Component configOptionLabel(LodestoneConfigOptions.Option option) {
