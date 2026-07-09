@@ -74,6 +74,7 @@ public final class LodestoneText {
 			case "command_name" -> "Comando principal registrado por Lodestone Warps. Requiere reiniciar el servidor.";
 			case "fallback_command_name" -> "Comando fallback disponible cuando el comando principal entra en conflicto. Requiere reiniciar.";
 			case "server_language" -> "Idioma fallback para textos generados por servidor y visibles para clientes vanilla.";
+			case "pause_game_in_singleplayer_ui" -> "Pausa mundos singleplayer mientras la UI de teleport de cliente est\u00e1 abierta. Servidores dedicados ignoran esta opci\u00f3n.";
 			default -> fallback;
 		};
 	}
@@ -105,6 +106,7 @@ public final class LodestoneText {
 			case "network_mode" -> "all o discover.";
 			case "command_name", "fallback_command_name" -> "Letras, números, guion bajo, guion o punto. Requiere reiniciar.";
 			case "server_language" -> "en_us o es_es.";
+			case "pause_game_in_singleplayer_ui" -> "true o false.";
 			default -> fallback;
 		};
 	}
@@ -405,6 +407,7 @@ public final class LodestoneText {
 			case "config.field.command_name" -> "Nombre del comando";
 			case "config.field.fallback_command_name" -> "Comando fallback";
 			case "config.field.server_language" -> "Idioma del servidor";
+			case "config.field.pause_game_in_singleplayer_ui" -> "Pausar juego en UI singleplayer";
 			case "config.server.title" -> "Config del servidor";
 			case "config.server.body" -> "Busca en la configuración del servidor.\nWiki: %s";
 			case "config.server.body.search" -> "Busca en la configuración del servidor.\nWiki: %s\nBúsqueda: %s";

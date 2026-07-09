@@ -1,5 +1,6 @@
 package dev.simke.lodestoneteleport.client;
 
+import dev.simke.lodestoneteleport.LodestoneConfig;
 import dev.simke.lodestoneteleport.LodestoneText;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -29,6 +30,11 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 		this.parent = parent;
 		this.onDone = onDone;
 		this.columns = new ArrayList<>(LodestoneClientPreferences.get().columns());
+	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return LodestoneConfig.get().pauseGameInSingleplayerUi;
 	}
 
 	@Override

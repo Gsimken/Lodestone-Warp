@@ -23,6 +23,7 @@ import java.util.Locale;
 
 public final class LodestoneConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	public static final String CONFIG_DIR_NAME = "lodestone_warp_and_tp";
 	private static final String FILE_NAME = LodestoneTeleportMod.MOD_ID + ".json";
 	private static LodestoneConfig INSTANCE = defaults();
 
@@ -84,6 +85,7 @@ public final class LodestoneConfig {
 	public String commandName = "warp";
 	public String fallbackCommandName = "lodestone_warp";
 	public String serverLanguage = "en_us";
+	public boolean pauseGameInSingleplayerUi = true;
 
 	private LodestoneConfig() {
 	}
@@ -93,13 +95,18 @@ public final class LodestoneConfig {
 	}
 
 	public static void save() {
-		Path path = FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
+		Path path = path();
 		INSTANCE = sanitize(INSTANCE);
 		save(path, INSTANCE);
 	}
 
 	public static void load() {
-		Path path = FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
+		Path path = path();
+		Path legacyPath = legacyPath();
+		if (Files.notExists(path) && Files.exists(legacyPath)) {
+			loadFrom(path, legacyPath);
+			return;
+		}
 		if (Files.notExists(path)) {
 			INSTANCE = defaults();
 			save(path, INSTANCE);
@@ -158,6 +165,20 @@ public final class LodestoneConfig {
 			return loadedObject.get("blocksPerExtraCost").getAsInt() == 500;
 		} catch (RuntimeException exception) {
 			return false;
+		}
+	}
+
+	private static void loadFrom(Path targetPath, Path sourcePath) {
+		try (Reader reader = Files.newBufferedReader(sourcePath)) {
+			JsonObject merged = mergeDefaults(JsonParser.parseReader(reader));
+			LodestoneConfig loaded = GSON.fromJson(merged, LodestoneConfig.class);
+			INSTANCE = sanitize(loaded == null ? defaults() : loaded);
+			save(targetPath, INSTANCE);
+			LodestoneTeleportMod.LOGGER.info("Migrated Lodestone Warps config from {} to {}.", sourcePath, targetPath);
+		} catch (IOException | JsonSyntaxException exception) {
+			LodestoneTeleportMod.LOGGER.warn("Failed to migrate {}, using defaults.", sourcePath, exception);
+			INSTANCE = defaults();
+			save(targetPath, INSTANCE);
 		}
 	}
 
@@ -367,5 +388,13 @@ public final class LodestoneConfig {
 		} catch (IOException exception) {
 			LodestoneTeleportMod.LOGGER.warn("Failed to write default {}.", FILE_NAME, exception);
 		}
+	}
+
+	private static Path path() {
+		return FabricLoader.getInstance().getConfigDir().resolve(CONFIG_DIR_NAME).resolve(FILE_NAME);
+	}
+
+	private static Path legacyPath() {
+		return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
 	}
 }

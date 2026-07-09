@@ -97,6 +97,7 @@
   "text.lodestone_teleport.config.field.command_name": "Nombre del comando",
   "text.lodestone_teleport.config.field.fallback_command_name": "Comando fallback",
   "text.lodestone_teleport.config.field.server_language": "Idioma del servidor",
+  "text.lodestone_teleport.config.field.pause_game_in_singleplayer_ui": "Pausar juego en UI singleplayer",
   "text.lodestone_teleport.config.button.save": "Guardar",
   "text.lodestone_teleport.config.button.reload": "Recargar",
   "text.lodestone_teleport.config.switch.on": "ON",

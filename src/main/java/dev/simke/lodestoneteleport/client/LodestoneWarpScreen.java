@@ -2,6 +2,7 @@ package dev.simke.lodestoneteleport.client;
 
 import dev.simke.lodestoneteleport.LodestoneText;
 import dev.simke.lodestoneteleport.LodestoneTeleportMod;
+import dev.simke.lodestoneteleport.LodestoneConfig;
 import dev.simke.lodestoneteleport.network.LodestoneActionPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -73,6 +74,11 @@ public final class LodestoneWarpScreen extends Screen {
 		this.canEditCurrent = data.getBooleanOr("canEditCurrent", this.canRename);
 		this.viewingAll = data.getBooleanOr("viewingAll", false);
 		this.destinations = readDestinations(data.getListOrEmpty("destinations"));
+	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return LodestoneConfig.get().pauseGameInSingleplayerUi;
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import dev.simke.lodestoneteleport.LodestoneConfig;
 import dev.simke.lodestoneteleport.LodestoneTeleportMod;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -47,6 +48,11 @@ public final class LodestoneClientPreferences {
 
 	public static void load() {
 		Path path = path();
+		Path legacyPath = legacyPath();
+		if (Files.notExists(path) && Files.exists(legacyPath)) {
+			loadFrom(path, legacyPath);
+			return;
+		}
 		if (Files.notExists(path)) {
 			INSTANCE = defaults();
 			save();
@@ -63,11 +69,29 @@ public final class LodestoneClientPreferences {
 		}
 	}
 
+	private static void loadFrom(Path targetPath, Path sourcePath) {
+		try (Reader reader = Files.newBufferedReader(sourcePath)) {
+			JsonObject merged = mergeDefaults(JsonParser.parseReader(reader));
+			LodestoneClientPreferences loaded = GSON.fromJson(merged, LodestoneClientPreferences.class);
+			INSTANCE = sanitize(loaded == null ? defaults() : loaded);
+			save(targetPath);
+			LodestoneTeleportMod.LOGGER.info("Migrated Lodestone Warps client preferences from {} to {}.", sourcePath, targetPath);
+		} catch (IOException | JsonSyntaxException exception) {
+			LodestoneTeleportMod.LOGGER.warn("Failed to migrate {}, using defaults.", sourcePath, exception);
+			INSTANCE = defaults();
+			save(targetPath);
+		}
+	}
+
 	public static void save() {
 		INSTANCE = sanitize(INSTANCE);
+		save(path());
+	}
+
+	private static void save(Path path) {
 		try {
-			Files.createDirectories(path().getParent());
-			try (Writer writer = Files.newBufferedWriter(path())) {
+			Files.createDirectories(path.getParent());
+			try (Writer writer = Files.newBufferedWriter(path)) {
 				GSON.toJson(INSTANCE, writer);
 			}
 		} catch (IOException exception) {
@@ -156,6 +180,10 @@ public final class LodestoneClientPreferences {
 	}
 
 	private static Path path() {
+		return FabricLoader.getInstance().getConfigDir().resolve(LodestoneConfig.CONFIG_DIR_NAME).resolve(FILE_NAME);
+	}
+
+	private static Path legacyPath() {
 		return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
 	}
 }

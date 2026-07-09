@@ -1,5 +1,6 @@
 package dev.simke.lodestoneteleport.client;
 
+import dev.simke.lodestoneteleport.LodestoneConfig;
 import dev.simke.lodestoneteleport.LodestoneText;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -67,6 +68,11 @@ public final class LodestoneRenameScreen extends Screen {
 		addVisibilityOption("private", canPrivate);
 		addVisibilityOption("discoverable", canDiscoverable);
 		addVisibilityOption("global", canGlobal);
+	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return LodestoneConfig.get().pauseGameInSingleplayerUi;
 	}
 
 	@Override
