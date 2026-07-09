@@ -72,6 +72,7 @@ public final class LodestoneCommands {
 
 	private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> root(String command) {
 		return Commands.literal(command)
+				.executes(context -> openDefault(context.getSource()))
 				.then(Commands.literal("tp")
 					.requires(LodestonePermissions::canUse)
 					.then(Commands.argument("destination", StringArgumentType.greedyString())
@@ -147,6 +148,38 @@ public final class LodestoneCommands {
 							.suggests(LodestoneCommands::suggestConfigKeys)
 							.then(Commands.argument("value", StringArgumentType.greedyString())
 								.executes(context -> setConfig(context.getSource(), StringArgumentType.getString(context, "key"), StringArgumentType.getString(context, "value")))))));
+	}
+
+	private static int openDefault(CommandSourceStack source) {
+		if (!(source.getEntity() instanceof ServerPlayer player)) {
+			source.sendSystemMessage(helpMessage());
+			return 1;
+		}
+		if (!LodestonePermissions.canUse(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.use", "You do not have permission to use lodestones."));
+			return 0;
+		}
+		LodestoneSavedData data = LodestoneSavedData.from(player.level());
+		Optional<LodestoneLocation> nearby = data.nearestRegisteredLodestone(player.level().dimension(), player.blockPosition(), LodestoneConfig.get().teleportSourceRange)
+			.filter(location -> ((ServerLevel) player.level()).getBlockState(location.pos()).is(Blocks.LODESTONE));
+		if (nearby.isPresent()) {
+			LodestoneUi.showDestinations(player, nearby.get());
+			return 1;
+		}
+		source.sendSystemMessage(helpMessage());
+		return 1;
+	}
+
+	private static Component helpMessage() {
+		String command = "/" + LodestoneConfig.get().commandName;
+		return LodestoneText.text(
+			"command.help",
+			"Lodestone Warps commands: %s tp <id or name>, %s list, %s config. Stand near a registered lodestone and run %s to open the UI.",
+			command,
+			command,
+			command,
+			command
+		).withStyle(ChatFormatting.GRAY);
 	}
 
 	static int teleport(CommandSourceStack source, String destination) throws CommandSyntaxException {
@@ -490,7 +523,14 @@ public final class LodestoneCommands {
 		}
 		for (UUID uuid : discoverers) {
 			ServerPlayer online = source.getServer().getPlayerList().getPlayer(uuid);
-			String name = online == null ? uuid.toString() : online.getName().getString() + " (" + uuid + ")";
+			String name;
+			if (online != null) {
+				name = online.getName().getString() + " (" + uuid + ")";
+			} else {
+				name = data.knownPlayerName(uuid)
+					.map(knownName -> knownName + " (" + uuid + ")")
+					.orElse(uuid + " (offline player)");
+			}
 			source.sendSystemMessage(Component.literal("- " + name).withStyle(ChatFormatting.GRAY));
 		}
 		return discoverers.size();
@@ -660,20 +700,10 @@ public final class LodestoneCommands {
 		if (range <= 0) {
 			return true;
 		}
-		double maxDistance = range * range;
 		ServerLevel level = (ServerLevel) player.level();
-		for (LodestoneLocation location : data.all()) {
-			if (!location.dimension().equals(level.dimension())) {
-				continue;
-			}
-			if (player.blockPosition().distSqr(location.pos()) > maxDistance) {
-				continue;
-			}
-			if (level.getBlockState(location.pos()).is(Blocks.LODESTONE)) {
-				return true;
-			}
-		}
-		return false;
+		return data.nearestRegisteredLodestone(level.dimension(), player.blockPosition(), range)
+			.filter(location -> level.getBlockState(location.pos()).is(Blocks.LODESTONE))
+			.isPresent();
 	}
 
 	private static ServerPlayer teleportPlayer(ServerPlayer player, ServerLevel destinationLevel, LodestoneLocation location) {

@@ -170,12 +170,50 @@ public final class LodestoneSavedData extends SavedData {
 	}
 
 	public int revokeAllDiscoveries(UUID playerUuid) {
-		Set<String> removed = discoveredByPlayer.remove(playerUuid);
-		if (removed == null || removed.isEmpty()) {
+		Set<String> discovered = discoveredByPlayer.get(playerUuid);
+		if (discovered == null || discovered.isEmpty()) {
 			return 0;
 		}
-		setDirty();
-		return removed.size();
+		int before = discovered.size();
+		discovered.removeIf(id -> byId.get(id) == null || !byId.get(id).ownedBy(playerUuid));
+		int removed = before - discovered.size();
+		if (discovered.isEmpty()) {
+			discoveredByPlayer.remove(playerUuid);
+		}
+		if (removed > 0) {
+			setDirty();
+		}
+		return removed;
+	}
+
+	public Optional<String> knownPlayerName(UUID playerUuid) {
+		if (playerUuid == null) {
+			return Optional.empty();
+		}
+		for (LodestoneLocation location : byId.values()) {
+			if (location.ownedBy(playerUuid) && location.ownerName() != null && !location.ownerName().isBlank() && !"unknown".equalsIgnoreCase(location.ownerName())) {
+				return Optional.of(location.ownerName());
+			}
+		}
+		return Optional.empty();
+	}
+
+	public Optional<LodestoneLocation> nearestRegisteredLodestone(ResourceKey<Level> dimension, BlockPos pos, int range) {
+		LodestoneLocation nearest = null;
+		double nearestDistance = Double.MAX_VALUE;
+		double maxDistance = range <= 0 ? Double.MAX_VALUE : range * range;
+		for (LodestoneLocation location : byId.values()) {
+			if (!location.dimension().equals(dimension)) {
+				continue;
+			}
+			double distance = pos.distSqr(location.pos());
+			if (distance > maxDistance || distance >= nearestDistance) {
+				continue;
+			}
+			nearest = location;
+			nearestDistance = distance;
+		}
+		return Optional.ofNullable(nearest);
 	}
 
 	public Set<String> discoveredIds(UUID playerUuid) {
