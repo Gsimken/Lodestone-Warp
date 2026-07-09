@@ -3,12 +3,18 @@ package dev.simke.lodestoneteleport;
 import net.fabricmc.fabric.api.permission.v1.PermissionNode;
 import net.fabricmc.fabric.api.permission.v1.PermissionPredicates;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 public final class LodestonePermissions {
+	private static final String LEGACY_PERMISSION_PREFIX = LodestoneTeleportMod.MOD_ID + ".";
+	private static final String SHORT_PERMISSION_PREFIX = "lodestone.";
+	private static final int MAX_SCANNED_LIMIT_PERMISSION = 1000;
+
 	public static final PermissionNode<Boolean> USE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "use");
 	public static final PermissionNode<Boolean> RENAME = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "rename");
 	public static final PermissionNode<Boolean> CREATE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "create");
@@ -112,6 +118,14 @@ public final class LodestonePermissions {
 		};
 	}
 
+	public static boolean canEdit(ServerPlayer player, LodestoneLocation location) {
+		return canRename(player, location)
+			|| canRemove(player, location)
+			|| canSetVisibility(player, location, LodestoneVisibility.PRIVATE)
+			|| canSetVisibility(player, location, LodestoneVisibility.DISCOVERABLE)
+			|| canSetVisibility(player, location, LodestoneVisibility.GLOBAL);
+	}
+
 	public static boolean canAdmin(CommandSourceStack source) {
 		return has(source, ADMIN);
 	}
@@ -168,41 +182,150 @@ public final class LodestonePermissions {
 		return has(source, GLOBAL);
 	}
 
+	public static OptionalInt ownedLodestoneLimit(ServerPlayer player) {
+		if (canBypassMaxWarps(player)) {
+			return OptionalInt.empty();
+		}
+		CommandSourceStack source = player.createCommandSourceStack();
+		int configured = highestConfiguredLimit(source);
+		int debug = highestDebugLimit();
+		int external = highestExternalLimit(source);
+		int limit = Math.max(configured, Math.max(debug, external));
+		return limit >= 0 ? OptionalInt.of(limit) : OptionalInt.empty();
+	}
+
 	private static boolean has(CommandSourceStack source, PermissionNode<Boolean> permission) {
 		Boolean debugOverride = debugOverride(permission);
 		if (debugOverride != null) {
 			return debugOverride;
 		}
+		if (debugWildcardOverride() || hasConfiguredWildcard(source) || hasExternalWildcard(source)) {
+			return true;
+		}
 		return PermissionPredicates.require(permission, hasConfiguredPermission(source, permission)).test(source);
 	}
 
 	private static boolean hasConfiguredPermission(CommandSourceStack source, PermissionNode<Boolean> permission) {
-		String node = LodestoneTeleportMod.MOD_ID + "." + permissionName(permission);
+		String node = LEGACY_PERMISSION_PREFIX + permissionName(permission);
+		String shortNode = SHORT_PERMISSION_PREFIX + permissionName(permission);
 		LodestoneConfig config = LodestoneConfig.get();
-		if (containsPermission(config.playerPermissions, node)) {
+		if (containsPermission(config.playerPermissions, node) || containsPermission(config.playerPermissions, shortNode)) {
 			return true;
 		}
 		if (!source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
 			return false;
 		}
-		return containsPermission(config.adminPermissions, node);
+		return containsPermission(config.adminPermissions, node) || containsPermission(config.adminPermissions, shortNode);
 	}
 
 	private static boolean containsPermission(List<String> permissions, String node) {
 		if (permissions == null) {
 			return false;
 		}
-		String namespaceWildcard = LodestoneTeleportMod.MOD_ID + ".*";
+		String namespaceWildcard = LEGACY_PERMISSION_PREFIX + "*";
+		String shortWildcard = SHORT_PERMISSION_PREFIX + "*";
 		for (String permission : permissions) {
-			if (permission.equals("*") || permission.equals(namespaceWildcard) || permission.equals(node)) {
+			if (permission.equals("*") || permission.equals(namespaceWildcard) || permission.equals(shortWildcard) || permission.equals(node)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
+	private static boolean hasConfiguredWildcard(CommandSourceStack source) {
+		LodestoneConfig config = LodestoneConfig.get();
+		if (containsPermission(config.playerPermissions, LEGACY_PERMISSION_PREFIX + "*") || containsPermission(config.playerPermissions, SHORT_PERMISSION_PREFIX + "*")) {
+			return true;
+		}
+		return source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)
+			&& (containsPermission(config.adminPermissions, LEGACY_PERMISSION_PREFIX + "*") || containsPermission(config.adminPermissions, SHORT_PERMISSION_PREFIX + "*"));
+	}
+
+	private static boolean hasExternalWildcard(CommandSourceStack source) {
+		return checkExternal(source, LodestoneTeleportMod.MOD_ID + ":*")
+			|| checkExternal(source, "lodestone:*");
+	}
+
+	private static int highestConfiguredLimit(CommandSourceStack source) {
+		LodestoneConfig config = LodestoneConfig.get();
+		int limit = highestLimit(config.playerPermissions);
+		if (source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
+			limit = Math.max(limit, highestLimit(config.adminPermissions));
+		}
+		return limit;
+	}
+
+	private static int highestLimit(List<String> permissions) {
+		int limit = -1;
+		if (permissions == null) {
+			return limit;
+		}
+		for (String permission : permissions) {
+			limit = Math.max(limit, parseLimitPermission(permission));
+		}
+		return limit;
+	}
+
+	private static int highestDebugLimit() {
+		int limit = -1;
+		for (String property : System.getProperties().stringPropertyNames()) {
+			if (readBoolean(property) == Boolean.TRUE) {
+				limit = Math.max(limit, parseLimitPermission(property));
+			}
+		}
+		for (var entry : System.getenv().entrySet()) {
+			String key = entry.getKey().toLowerCase(java.util.Locale.ROOT).replace('_', '.');
+			String value = entry.getValue();
+			if (List.of("true", "1", "yes", "on").contains(value.trim().toLowerCase(java.util.Locale.ROOT))) {
+				limit = Math.max(limit, parseLimitPermission(key));
+			}
+		}
+		return limit;
+	}
+
+	private static int highestExternalLimit(CommandSourceStack source) {
+		int limit = -1;
+		for (int candidate = 0; candidate <= MAX_SCANNED_LIMIT_PERMISSION; candidate++) {
+			if (externalLimit(source, LodestoneTeleportMod.MOD_ID, candidate) || externalLimit(source, "lodestone", candidate)) {
+				limit = candidate;
+			}
+		}
+		return limit;
+	}
+
+	private static boolean externalLimit(CommandSourceStack source, String namespace, int limit) {
+		return checkExternal(source, namespace + ":limit." + limit);
+	}
+
+	private static boolean checkExternal(CommandSourceStack source, String permission) {
+		Identifier id = Identifier.tryParse(permission);
+		return id != null && PermissionPredicates.require(id, false).test(source);
+	}
+
+	private static int parseLimitPermission(String permission) {
+		if (permission == null) {
+			return -1;
+		}
+		String clean = permission.trim().toLowerCase(java.util.Locale.ROOT);
+		for (String prefix : List.of(LEGACY_PERMISSION_PREFIX + "limit.", SHORT_PERMISSION_PREFIX + "limit.")) {
+			if (!clean.startsWith(prefix)) {
+				continue;
+			}
+			try {
+				return Math.max(0, Integer.parseInt(clean.substring(prefix.length())));
+			} catch (NumberFormatException exception) {
+				return -1;
+			}
+		}
+		return -1;
+	}
+
 	private static Boolean debugOverride(PermissionNode<Boolean> permission) {
 		return readBoolean(LodestoneTeleportMod.MOD_ID + "." + permissionName(permission));
+	}
+
+	private static boolean debugWildcardOverride() {
+		return readBoolean(LEGACY_PERMISSION_PREFIX + "*") == Boolean.TRUE || readBoolean(SHORT_PERMISSION_PREFIX + "*") == Boolean.TRUE;
 	}
 
 	private static String permissionName(PermissionNode<Boolean> permission) {

@@ -36,7 +36,6 @@ public final class LodestoneConfig {
 	public boolean allowPersonalLodestones = true;
 	public String defaultLodestoneVisibility = "discoverable";
 	public int maxLodestonesGlobal = 0;
-	public int maxLodestonesPerPlayer = 0;
 	public boolean registerPlacedLodestonesOnlyWhenSneaking = true;
 	public boolean autoRegisterUntrackedLodestones = false;
 	public int maxDialogDestinations = 24;
@@ -173,7 +172,6 @@ public final class LodestoneConfig {
 		config.maxCost = Math.max(0, config.maxCost);
 		config.defaultLodestoneVisibility = cleanVisibility(config.defaultLodestoneVisibility);
 		config.maxLodestonesGlobal = Math.max(0, config.maxLodestonesGlobal);
-		config.maxLodestonesPerPlayer = Math.max(0, config.maxLodestonesPerPlayer);
 		config.maxDialogDestinations = Math.max(1, config.maxDialogDestinations);
 		config.vanillaDialogDestinationColumnWidth = clamp(config.vanillaDialogDestinationColumnWidth, 80, 500);
 		config.vanillaDialogCostColumnWidth = clamp(config.vanillaDialogCostColumnWidth, 30, 180);
@@ -233,6 +231,9 @@ public final class LodestoneConfig {
 		}
 		if ("*".equals(clean) || clean.endsWith(".*")) {
 			return clean;
+		}
+		if (clean.startsWith("limit.") || clean.startsWith("mode.") || clean.startsWith("own.") || clean.startsWith("create.") || clean.startsWith("bypass_")) {
+			return LodestoneTeleportMod.MOD_ID + "." + clean;
 		}
 		if (!clean.contains(".")) {
 			return LodestoneTeleportMod.MOD_ID + "." + clean;

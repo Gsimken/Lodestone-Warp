@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 public final class LodestoneEvents {
@@ -133,10 +134,8 @@ public final class LodestoneEvents {
 			LodestoneLocation location = data.register(level.dimension(), placed, player.getUUID(), player.getName().getString(), visibility.get());
 			LodestoneDiscovery.discover(player, data, location);
 			player.sendSystemMessage(LodestoneText.text("registered", "Registered lodestone: %s", location.displayName()));
-			if (pending.rename() && LodestonePermissions.canRename(player, location)) {
+			if (pending.rename() && LodestonePermissions.canEdit(player, location)) {
 				LodestoneUi.showEdit(player, location);
-			} else if (pending.rename()) {
-				player.sendSystemMessage(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
 			}
 		}
 	}
@@ -165,11 +164,12 @@ public final class LodestoneEvents {
 			player.sendSystemMessage(LodestoneText.text("error.max_lodestones_global", "The server has reached the maximum number of registered lodestones."));
 			return false;
 		}
-		if (config.maxLodestonesPerPlayer > 0) {
+		OptionalInt playerLimit = LodestonePermissions.ownedLodestoneLimit(player);
+		if (playerLimit.isPresent()) {
 			long owned = data.all().stream()
 				.filter(location -> location.ownerUuid().equals(player.getUUID()))
 				.count();
-			if (owned >= config.maxLodestonesPerPlayer) {
+			if (owned >= playerLimit.getAsInt()) {
 				player.sendSystemMessage(LodestoneText.text("error.max_lodestones_player", "You have reached your maximum number of registered lodestones."));
 				return false;
 			}
