@@ -35,6 +35,12 @@ public final class LodestoneDialogs {
 	private static final int DEFAULT_EDIT_BUTTON_WIDTH = 70;
 	private static final int FULL_ROW_BUTTON_WIDTH = 340;
 	private static final int CONFIG_BUTTON_WIDTH = 340;
+	private static final int PERMISSION_SEARCH_WIDTH = 44;
+	private static final int PERMISSION_ADD_WIDTH = 300;
+	private static final int PERMISSION_BACK_WIDTH = 44;
+	private static final int PERMISSION_TOGGLE_WIDTH = 64;
+	private static final int PERMISSION_NAME_WIDTH = 420;
+	private static final int PERMISSION_REMOVE_WIDTH = 80;
 	private static final int GRID_COLUMNS = 3;
 	private static final String WIKI_URL = "https://github.com/Gsimken/Lodestone-Warp/wiki";
 
@@ -191,9 +197,9 @@ public final class LodestoneDialogs {
 		String cleanQuery = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
 		List<ActionButton> buttons = new ArrayList<>();
 
-		buttons.add(permissionActionButton(LodestoneText.serverText("button.search", "Search location").withStyle(ChatFormatting.AQUA), "permission_search", cleanKey, "", cleanQuery));
-		buttons.add(permissionActionButton(LodestoneText.serverText("config.permission.add", "Add permission").withStyle(ChatFormatting.GOLD), "permission_add", cleanKey, "", cleanQuery));
-		buttons.add(configActionButton(Component.translatable("gui.back"), Optional.empty(), CONFIG_BUTTON_WIDTH, "config_open", LodestoneConfigOptions.ALL, "", ""));
+		buttons.add(permissionActionButton(Component.literal("\uD83D\uDD0D").withStyle(ChatFormatting.AQUA), "permission_search", cleanKey, "", cleanQuery, PERMISSION_SEARCH_WIDTH));
+		buttons.add(permissionActionButton(LodestoneText.serverText("config.permission.add", "Add permission").withStyle(ChatFormatting.GOLD), "permission_add", cleanKey, "", cleanQuery, PERMISSION_ADD_WIDTH));
+		buttons.add(configActionButton(Component.literal("\u2190").withStyle(ChatFormatting.WHITE), Optional.empty(), PERMISSION_BACK_WIDTH, "config_open", LodestoneConfigOptions.ALL, "", ""));
 
 		for (var entry : LodestoneConfig.permissionMap(cleanKey).entrySet()) {
 			String permission = entry.getKey();
@@ -203,9 +209,9 @@ public final class LodestoneDialogs {
 			boolean enabled = Boolean.TRUE.equals(entry.getValue());
 			Component toggle = LodestoneText.serverText(enabled ? "config.switch.on" : "config.switch.off", enabled ? "ON" : "OFF")
 				.withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED);
-			buttons.add(permissionActionButton(toggle, "permission_toggle", cleanKey, permission, cleanQuery, 64));
-			buttons.add(new ActionButton(new CommonButtonData(Component.literal(permission).withStyle(enabled ? ChatFormatting.WHITE : ChatFormatting.GRAY), CONFIG_BUTTON_WIDTH - 120), Optional.empty()));
-			buttons.add(permissionActionButton(LodestoneText.serverText("config.permission.remove", "Remove").withStyle(ChatFormatting.RED), "permission_remove", cleanKey, permission, cleanQuery, 80));
+			buttons.add(permissionStaticActionButton(toggle, "permission_toggle", cleanKey, permission, cleanQuery, PERMISSION_TOGGLE_WIDTH));
+			buttons.add(new ActionButton(new CommonButtonData(Component.literal(permission).withStyle(enabled ? ChatFormatting.WHITE : ChatFormatting.GRAY), PERMISSION_NAME_WIDTH), Optional.empty()));
+			buttons.add(permissionStaticActionButton(LodestoneText.serverText("config.permission.remove", "Remove").withStyle(ChatFormatting.RED), "permission_remove", cleanKey, permission, cleanQuery, PERMISSION_REMOVE_WIDTH));
 		}
 
 		CommonDialogData common = new CommonDialogData(
@@ -431,14 +437,25 @@ public final class LodestoneDialogs {
 	}
 
 	private static ActionButton permissionActionButton(Component label, String action, String key, String permission, String query, int width) {
+		return permissionActionButton(label, action, key, permission, query, width, true);
+	}
+
+	private static ActionButton permissionStaticActionButton(Component label, String action, String key, String permission, String query, int width) {
+		return permissionActionButton(label, action, key, permission, query, width, false);
+	}
+
+	private static ActionButton permissionActionButton(Component label, String action, String key, String permission, String query, int width, boolean includeInputs) {
 		CompoundTag payload = new CompoundTag();
 		payload.putString("action", action);
 		payload.putString("key", key);
 		payload.putString("permission", permission);
 		payload.putString("query", query);
+		Action actionHandler = includeInputs
+			? new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload))
+			: new StaticAction(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload)));
 		return new ActionButton(
 			new CommonButtonData(label, width),
-			Optional.of(new CustomAll(LodestoneCustomActions.ACTION_ID, Optional.of(payload)))
+			Optional.of(actionHandler)
 		);
 	}
 
