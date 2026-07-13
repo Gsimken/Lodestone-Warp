@@ -14,14 +14,37 @@ public record LodestoneLocation(
 	BlockPos pos,
 	UUID ownerUuid,
 	String ownerName,
-	long createdAt
+	long createdAt,
+	LodestoneVisibility visibility
 ) {
+	private static final String GLOBAL_PREFIX = "\u25ce ";
+
 	public String positionKey() {
 		return positionKey(dimension, pos);
 	}
 
 	public String displayName() {
 		return name == null || name.isBlank() ? autoName(dimension, pos) : name;
+	}
+
+	public String displayNameWithGlobalPrefix() {
+		return global() ? GLOBAL_PREFIX + displayName() : displayName();
+	}
+
+	public boolean global() {
+		return visibility == LodestoneVisibility.GLOBAL;
+	}
+
+	public boolean discoverable() {
+		return visibility == LodestoneVisibility.DISCOVERABLE;
+	}
+
+	public boolean privateWarp() {
+		return visibility == LodestoneVisibility.PRIVATE;
+	}
+
+	public boolean ownedBy(UUID uuid) {
+		return ownerUuid != null && ownerUuid.equals(uuid);
 	}
 
 	public static String positionKey(ResourceKey<Level> dimension, BlockPos pos) {

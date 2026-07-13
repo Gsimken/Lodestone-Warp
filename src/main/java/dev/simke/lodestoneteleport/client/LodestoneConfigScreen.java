@@ -20,13 +20,20 @@ import java.util.function.Supplier;
 public final class LodestoneConfigScreen extends Screen {
 	private static final int MARGIN = 28;
 	private static final int FIELD_WIDTH = 260;
+	private static final int RESET_WIDTH = 28;
+	private static final int RESET_GAP = 4;
 	private static final int ROW_HEIGHT = 24;
+	private static final long SEARCH_DEBOUNCE_MILLIS = 350L;
 
 	private final Screen parent;
 	private final Map<String, String> drafts = new HashMap<>();
 	private final List<ConfigField> fields = new ArrayList<>();
 	private Section section = Section.ALL;
 	private String query = "";
+	private String pendingQuery = "";
+	private long searchChangedAtMillis = 0L;
+	private boolean searchDirty = false;
+	private boolean refocusSearchAfterRebuild = false;
 	private int scrollOffset = 0;
 	private Component status = Component.empty();
 	private EditBox searchBox;
@@ -61,27 +68,34 @@ public final class LodestoneConfigScreen extends Screen {
 		this.searchBox = new EditBox(this.font, left, top + 72, contentWidth, 20, LodestoneText.text("input.search", "Search"));
 		this.searchBox.setHint(LodestoneText.text("input.search", "Search"));
 		this.searchBox.setMaxLength(64);
-		this.searchBox.setValue(this.query);
+		this.searchBox.setValue(this.pendingQuery);
 		this.searchBox.setResponder(value -> {
-			this.query = value;
-			this.scrollOffset = 0;
-			rebuildWidgets();
+			this.pendingQuery = value;
+			this.searchChangedAtMillis = System.currentTimeMillis();
+			this.searchDirty = true;
 		});
 		addRenderableWidget(this.searchBox);
+		if (this.refocusSearchAfterRebuild) {
+			this.searchBox.setFocused(true);
+			this.setFocused(this.searchBox);
+			this.refocusSearchAfterRebuild = false;
+		}
 
 		int y = top + 104;
 		int fieldX = Math.max(left + 220, right - FIELD_WIDTH);
+		int controlWidth = right - fieldX - RESET_WIDTH - RESET_GAP;
 		for (ConfigField field : filtered.stream().skip(this.scrollOffset).limit(visibleRows).toList()) {
 			if (field.booleanField()) {
 				ConfigField visibleField = field;
 				Button button = Button.builder(field.booleanTitle(), widget -> {
 					visibleField.toggle(this.drafts);
 					widget.setMessage(visibleField.booleanTitle());
-				}).bounds(fieldX, y + 4, right - fieldX, 18).build();
+				}).bounds(fieldX, y + 4, controlWidth, 18).build();
 				addRenderableWidget(button);
-				this.fields.add(field);
+				addResetButton(visibleField, right - RESET_WIDTH, y + 4);
+				this.fields.add(visibleField);
 			} else {
-				EditBox box = new EditBox(this.font, fieldX, y + 4, right - fieldX, 18, field.label());
+				EditBox box = new EditBox(this.font, fieldX, y + 4, controlWidth, 18, field.label());
 				box.setMaxLength(96);
 				box.setValue(field.get());
 				ConfigField visibleField = field.withBox(box);
@@ -90,6 +104,7 @@ public final class LodestoneConfigScreen extends Screen {
 					visibleField.setValue(value);
 				});
 				addRenderableWidget(box);
+				addResetButton(visibleField, right - RESET_WIDTH, y + 4);
 				this.fields.add(visibleField);
 			}
 			y += ROW_HEIGHT;
@@ -142,6 +157,14 @@ public final class LodestoneConfigScreen extends Screen {
 	}
 
 	@Override
+	public void tick() {
+		super.tick();
+		if (this.searchDirty && System.currentTimeMillis() - this.searchChangedAtMillis >= SEARCH_DEBOUNCE_MILLIS) {
+			applyPendingSearch();
+		}
+	}
+
+	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
 		int maxScroll = Math.max(0, filteredFields().size() - visibleRows());
 		if (maxScroll <= 0) {
@@ -177,6 +200,25 @@ public final class LodestoneConfigScreen extends Screen {
 		rebuildWidgets();
 	}
 
+	private void addResetButton(ConfigField field, int x, int y) {
+		addRenderableWidget(Button.builder(LodestoneText.text("config.button.default", "D"), button -> {
+			this.drafts.put(field.key(), field.defaultValue());
+			rebuildWidgets();
+		}).bounds(x, y, RESET_WIDTH, 18).build());
+	}
+
+	private void applyPendingSearch() {
+		if (this.query.equals(this.pendingQuery)) {
+			this.searchDirty = false;
+			return;
+		}
+		this.query = this.pendingQuery;
+		this.searchDirty = false;
+		this.scrollOffset = 0;
+		this.refocusSearchAfterRebuild = true;
+		rebuildWidgets();
+	}
+
 	private List<ConfigField> filteredFields() {
 		ACTIVE_SCREEN = this;
 		String cleanQuery = this.query.trim().toLowerCase(java.util.Locale.ROOT);
@@ -206,9 +248,10 @@ public final class LodestoneConfigScreen extends Screen {
 			@Override
 			List<ConfigField> fields() {
 				return List.of(
+					text("cost_type", "config.field.cost_type", "Cost type", "xp_levels", "Type of cost charged for each teleport.", "xp_levels or item.", () -> LodestoneConfig.get().costType, (config, value) -> config.costType = value),
 					text("cost_item", "config.field.cost_item", "Cost item", "minecraft:diamond", "Item id charged for each teleport.", "Item identifier, for example minecraft:diamond.", () -> LodestoneConfig.get().costItem, (config, value) -> config.costItem = value),
 					integer("base_cost", "config.field.base_cost", "Base cost", "1", "Minimum item cost for a teleport.", "Whole number, 0 or higher.", () -> LodestoneConfig.get().baseCost, (config, value) -> config.baseCost = value),
-					integer("blocks_per_extra_cost", "config.field.blocks_per_extra_cost", "Blocks per extra cost", "500", "Adds one extra cost step every configured blocks in the same dimension.", "Whole number, 0 disables distance scaling.", () -> LodestoneConfig.get().blocksPerExtraCost, (config, value) -> config.blocksPerExtraCost = value),
+					integer("blocks_per_extra_cost", "config.field.blocks_per_extra_cost", "Blocks per extra cost", "1000", "Adds one cost level every configured blocks in the same dimension.", "Whole number, 0 disables distance scaling.", () -> LodestoneConfig.get().blocksPerExtraCost, (config, value) -> config.blocksPerExtraCost = value),
 					decimal("cross_dimension_multiplier", "config.field.cross_dimension_multiplier", "Cross-dimension multiplier", "2.0", "Multiplies the calculated cost when teleporting between dimensions.", "Decimal number, 0 or higher.", () -> LodestoneConfig.get().crossDimensionMultiplier, (config, value) -> config.crossDimensionMultiplier = value),
 					integer("max_cost", "config.field.max_cost", "Max cost", "64", "Caps the final teleport cost.", "Whole number, 0 means no cap.", () -> LodestoneConfig.get().maxCost, (config, value) -> config.maxCost = value)
 				);
@@ -219,8 +262,9 @@ public final class LodestoneConfigScreen extends Screen {
 			List<ConfigField> fields() {
 				return List.of(
 					bool("allow_cross_dimension", "config.field.allow_cross_dimension", "Allow cross-dimension", "true", "Allows teleports between Overworld, Nether, End, and other dimensions.", "true or false.", () -> LodestoneConfig.get().allowCrossDimension, (config, value) -> config.allowCrossDimension = value),
+					bool("allow_personal_lodestones", "config.field.allow_personal_lodestones", "Allow personal Lodestones", "true", "Allows private personal Lodestones owned by the placing player.", "true or false.", () -> LodestoneConfig.get().allowPersonalLodestones, (config, value) -> config.allowPersonalLodestones = value),
+					text("default_lodestone_visibility", "config.field.default_lodestone_visibility", "Default Lodestone visibility", "discoverable", "Visibility assigned to newly registered Lodestones when the player can create that type.", "private, discoverable, or global.", () -> LodestoneConfig.get().defaultLodestoneVisibility, (config, value) -> config.defaultLodestoneVisibility = value),
 					integer("max_lodestones_global", "config.field.max_lodestones_global", "Max Lodestones global", "0", "Maximum registered Lodestones for the whole server.", "Whole number, 0 means unlimited.", () -> LodestoneConfig.get().maxLodestonesGlobal, (config, value) -> config.maxLodestonesGlobal = value),
-					integer("max_lodestones_per_player", "config.field.max_lodestones_per_player", "Max Lodestones per player", "0", "Maximum registered Lodestones owned by each player.", "Whole number, 0 means unlimited.", () -> LodestoneConfig.get().maxLodestonesPerPlayer, (config, value) -> config.maxLodestonesPerPlayer = value),
 					bool("sneak_place_only", "config.field.sneak_place_only", "Sneak-place only", "true", "Only registers newly placed Lodestones when the player is sneaking.", "true or false.", () -> LodestoneConfig.get().registerPlacedLodestonesOnlyWhenSneaking, (config, value) -> config.registerPlacedLodestonesOnlyWhenSneaking = value),
 					bool("auto_register_untracked", "config.field.auto_register_untracked", "Auto-register untracked", "false", "Registers old or unlinked Lodestones on normal right-click.", "true or false. Sneak-right-click can still register intentionally.", () -> LodestoneConfig.get().autoRegisterUntrackedLodestones, (config, value) -> config.autoRegisterUntrackedLodestones = value)
 				);
@@ -231,10 +275,19 @@ public final class LodestoneConfigScreen extends Screen {
 			List<ConfigField> fields() {
 				return List.of(
 					integer("teleport_source_range", "config.field.teleport_source_range", "Source range", "8", "Player must stand near a registered Lodestone to teleport.", "Whole number, 0 disables the range check.", () -> LodestoneConfig.get().teleportSourceRange, (config, value) -> config.teleportSourceRange = value),
+					integer("teleport_source_y_range", "config.field.teleport_source_y_range", "Source Y range", "3", "Vertical range around a registered Lodestone that still counts as nearby.", "Whole number, 0 disables the vertical range check.", () -> LodestoneConfig.get().teleportSourceYRange, (config, value) -> config.teleportSourceYRange = value),
 					integer("teleport_cast_seconds", "config.field.teleport_cast_seconds", "Cast seconds", "2", "Seconds the player must stand still before teleporting.", "Whole number, 0 disables casting.", () -> LodestoneConfig.get().teleportCastSeconds, (config, value) -> config.teleportCastSeconds = value),
 					decimal("teleport_cast_move_tolerance", "config.field.teleport_cast_move_tolerance", "Cast move tolerance", "0.2", "Maximum movement allowed during the teleport cast.", "Decimal number, 0 or higher.", () -> LodestoneConfig.get().teleportCastMoveTolerance, (config, value) -> config.teleportCastMoveTolerance = value),
 					integer("teleport_cooldown_seconds", "config.field.teleport_cooldown_seconds", "Cooldown seconds", "3", "Cooldown after a successful teleport.", "Whole number, 0 disables cooldown.", () -> LodestoneConfig.get().teleportCooldownSeconds, (config, value) -> config.teleportCooldownSeconds = value),
-					integer("max_dialog_destinations", "config.field.max_dialog_destinations", "Vanilla dialog destinations", "24", "Maximum destination buttons shown in the vanilla Dialog UI.", "Whole number, 1 or higher.", () -> LodestoneConfig.get().maxDialogDestinations, (config, value) -> config.maxDialogDestinations = value)
+					integer("max_dialog_destinations", "config.field.max_dialog_destinations", "Vanilla dialog destinations", "10", "Maximum destination buttons shown in the vanilla Dialog UI.", "Whole number, 1 or higher.", () -> LodestoneConfig.get().maxDialogDestinations, (config, value) -> config.maxDialogDestinations = value),
+					integer("vanilla_dialog_destination_column_width", "config.field.vanilla_dialog_destination_column_width", "Vanilla destination column width", "245", "Width of the destination column in the vanilla Dialog UI.", "Whole number, 80 to 500.", () -> LodestoneConfig.get().vanillaDialogDestinationColumnWidth, (config, value) -> config.vanillaDialogDestinationColumnWidth = value),
+					integer("vanilla_dialog_cost_column_width", "config.field.vanilla_dialog_cost_column_width", "Vanilla cost column width", "70", "Width of the cost column in the vanilla Dialog UI.", "Whole number, 30 to 180.", () -> LodestoneConfig.get().vanillaDialogCostColumnWidth, (config, value) -> config.vanillaDialogCostColumnWidth = value),
+					integer("vanilla_dialog_edit_column_width", "config.field.vanilla_dialog_edit_column_width", "Vanilla edit column width", "70", "Width of the edit/spacer column in the vanilla Dialog UI.", "Whole number, 20 to 120.", () -> LodestoneConfig.get().vanillaDialogEditColumnWidth, (config, value) -> config.vanillaDialogEditColumnWidth = value),
+					text("vanilla_dialog_column_order", "config.field.vanilla_dialog_column_order", "Vanilla column order", "c,d,e", "Column order for the vanilla Dialog destination grid.", "Comma-separated c,d,e. c=cost, d=destination, e=edit.", () -> LodestoneConfig.get().vanillaDialogColumnOrder, (config, value) -> config.vanillaDialogColumnOrder = value),
+					bool("show_vanilla_dialog_header_navigation", "config.field.show_vanilla_dialog_header_navigation", "Show vanilla header navigation", "true", "Shows clickable page arrows around the page label in the vanilla Dialog body.", "true or false.", () -> LodestoneConfig.get().showVanillaDialogHeaderNavigation, (config, value) -> config.showVanillaDialogHeaderNavigation = value),
+					bool("show_vanilla_dialog_button_navigation", "config.field.show_vanilla_dialog_button_navigation", "Show vanilla button navigation", "true", "Shows page arrow buttons beside Search and Edit this warp in the vanilla Dialog grid.", "true or false.", () -> LodestoneConfig.get().showVanillaDialogButtonNavigation, (config, value) -> config.showVanillaDialogButtonNavigation = value),
+					bool("show_vanilla_dialog_destination_suffix", "config.field.show_vanilla_dialog_destination_suffix", "Show vanilla destination suffix", "false", "Shows extra configured information after destination names in the vanilla Dialog UI.", "true or false.", () -> LodestoneConfig.get().showVanillaDialogDestinationSuffix, (config, value) -> config.showVanillaDialogDestinationSuffix = value),
+					text("vanilla_dialog_destination_suffix", "config.field.vanilla_dialog_destination_suffix", "Vanilla destination suffix", "[{x}, {y}, {z}, {dimension}]", "Suffix pattern appended to destination names when enabled.", "Placeholders: {x}, {y}, {z}, {dimension}, {owner}.", () -> LodestoneConfig.get().vanillaDialogDestinationSuffix, (config, value) -> config.vanillaDialogDestinationSuffix = value)
 				);
 			}
 		},
@@ -245,10 +298,14 @@ public final class LodestoneConfigScreen extends Screen {
 					bool("teleport_effects", "config.field.teleport_effects", "Teleport effects", "true", "Enables sounds and particles around teleport actions.", "true or false.", () -> LodestoneConfig.get().teleportEffects, (config, value) -> config.teleportEffects = value),
 					text("vanilla_teleport_effect", "config.field.vanilla_teleport_effect", "Vanilla effect", "end", "Effect preset used for players without the client mod.", "none, off, end, or lodestone.", () -> LodestoneConfig.get().vanillaTeleportEffect, (config, value) -> config.vanillaTeleportEffect = value),
 					text("mod_teleport_effect", "config.field.mod_teleport_effect", "Mod effect", "lodestone", "Effect preset used for players with the client mod installed.", "none, off, end, or lodestone.", () -> LodestoneConfig.get().modTeleportEffect, (config, value) -> config.modTeleportEffect = value),
-					bool("require_permissions", "config.field.require_permissions", "Require permissions", "false", "Uses Fabric Permissions API or LuckPerms permission checks.", "true or false.", () -> LodestoneConfig.get().requirePermissions, (config, value) -> config.requirePermissions = value),
+					text("network_mode", "config.field.network_mode", "Network mode", "discover", "Controls which Lodestones players can see and teleport to.", "all or discover.", () -> LodestoneConfig.get().networkMode, (config, value) -> config.networkMode = value),
+					bool("resolve_owner_names", "config.field.resolve_owner_names", "Resolve owner names", "true", "Sends stored owner names to Lodestone Warps UIs.", "true or false. false hides owners as unknown.", () -> LodestoneConfig.get().resolveOwnerNames, (config, value) -> config.resolveOwnerNames = value),
+					text("player_permissions", "config.field.player_permissions", "Player permissions", "lodestone_teleport.use, lodestone_teleport.create, lodestone_teleport.create.private, lodestone_teleport.create.discoverable, lodestone_teleport.own.rename, lodestone_teleport.own.remove, lodestone_teleport.own.destroy", "Default permissions used for every player when no permission manager answers.", "Use the permission manager UI, or type comma-separated enabled nodes. The config file stores permission: true/false. More info in the wiki.", () -> LodestoneConfig.permissionListToString(LodestoneConfig.get().playerPermissions), (config, value) -> config.playerPermissions = LodestoneConfig.parsePermissionList(value, Map.of())),
+					text("admin_permissions", "config.field.admin_permissions", "Admin permissions", "lodestone_teleport.admin, lodestone_teleport.config, lodestone_teleport.global, lodestone_teleport.mode.all, lodestone_teleport.bypass_cost, lodestone_teleport.bypass_cast, lodestone_teleport.bypass_cooldown, lodestone_teleport.bypass_max_warps", "Default permissions used for gamemaster-level admins when no permission manager answers.", "Use the permission manager UI, or type comma-separated enabled nodes. The config file stores permission: true/false. More info in the wiki.", () -> LodestoneConfig.permissionListToString(LodestoneConfig.get().adminPermissions), (config, value) -> config.adminPermissions = LodestoneConfig.parsePermissionList(value, Map.of())),
 					text("command_name", "config.field.command_name", "Command name", "warp", "Primary command registered by Lodestone Warps.", "Letters, numbers, underscore, dash, or dot.", () -> LodestoneConfig.get().commandName, (config, value) -> config.commandName = value),
 					text("fallback_command_name", "config.field.fallback_command_name", "Fallback command", "lodestone_warp", "Fallback command kept available when the primary command conflicts.", "Letters, numbers, underscore, dash, or dot.", () -> LodestoneConfig.get().fallbackCommandName, (config, value) -> config.fallbackCommandName = value),
-					text("server_language", "config.field.server_language", "Server language", "en_us", "Fallback language for server-generated text shown to vanilla clients.", "en_us or es_es.", () -> LodestoneConfig.get().serverLanguage, (config, value) -> config.serverLanguage = value)
+					text("server_language", "config.field.server_language", "Server language", "en_us", "Fallback language for server-generated text shown to vanilla clients.", "en_us or es_es.", () -> LodestoneConfig.get().serverLanguage, (config, value) -> config.serverLanguage = value),
+					bool("pause_game_in_singleplayer_ui", "config.field.pause_game_in_singleplayer_ui", "Pause game in singleplayer UI", "true", "Pauses singleplayer worlds while the client teleport UI is open. Dedicated servers ignore this.", "true or false.", () -> LodestoneConfig.get().pauseGameInSingleplayerUi, (config, value) -> config.pauseGameInSingleplayerUi = value)
 				);
 			}
 		};
@@ -296,15 +353,18 @@ public final class LodestoneConfigScreen extends Screen {
 		}
 
 		static ConfigField with(String id, String key, String fallback, String value, String defaultValue, String description, String acceptedValues, BiConsumer<LodestoneConfig, String> setter) {
+			Component label = LodestoneText.text(key, fallback);
+			String translatedDescription = LodestoneText.serverConfigDescription(id, description);
+			String translatedAcceptedValues = LodestoneText.serverConfigAcceptedValues(id, acceptedValues);
 			return new ConfigField(
 				id,
-				LodestoneText.text(key, fallback),
+				label,
 				LodestoneConfigScreen.currentValue(id, value),
 				value,
 				defaultValue,
 				Component.literal(description),
 				Component.literal(acceptedValues),
-				(id + " " + key + " " + fallback + " " + description + " " + acceptedValues).toLowerCase(java.util.Locale.ROOT),
+				(id + " " + key + " " + fallback + " " + label.getString() + " " + description + " " + acceptedValues + " " + translatedDescription + " " + translatedAcceptedValues).toLowerCase(java.util.Locale.ROOT),
 				setter,
 				null,
 				false
@@ -312,15 +372,18 @@ public final class LodestoneConfigScreen extends Screen {
 		}
 
 		static ConfigField bool(String id, String key, String fallback, String value, String defaultValue, String description, String acceptedValues, BiConsumer<LodestoneConfig, String> setter) {
+			Component label = LodestoneText.text(key, fallback);
+			String translatedDescription = LodestoneText.serverConfigDescription(id, description);
+			String translatedAcceptedValues = LodestoneText.serverConfigAcceptedValues(id, acceptedValues);
 			return new ConfigField(
 				id,
-				LodestoneText.text(key, fallback),
+				label,
 				LodestoneConfigScreen.currentValue(id, value),
 				value,
 				defaultValue,
 				Component.literal(description),
 				Component.literal(acceptedValues),
-				(id + " " + key + " " + fallback + " " + description + " " + acceptedValues).toLowerCase(java.util.Locale.ROOT),
+				(id + " " + key + " " + fallback + " " + label.getString() + " " + description + " " + acceptedValues + " " + translatedDescription + " " + translatedAcceptedValues).toLowerCase(java.util.Locale.ROOT),
 				setter,
 				null,
 				true
@@ -337,6 +400,10 @@ public final class LodestoneConfigScreen extends Screen {
 
 		String key() {
 			return this.id;
+		}
+
+		String defaultValue() {
+			return this.defaultValue;
 		}
 
 		void setValue(String value) {

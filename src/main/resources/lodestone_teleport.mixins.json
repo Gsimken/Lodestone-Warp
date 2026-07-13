@@ -3,7 +3,8 @@
 	"package": "dev.simke.lodestoneteleport.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ServerCommonPacketListenerImplMixin"
+		"ServerCommonPacketListenerImplMixin",
+		"ServerExplosionMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

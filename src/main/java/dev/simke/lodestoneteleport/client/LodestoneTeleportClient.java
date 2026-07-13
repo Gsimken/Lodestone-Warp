@@ -8,9 +8,16 @@ import net.minecraft.client.Minecraft;
 public final class LodestoneTeleportClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		LodestoneClientPreferences.load();
 		ClientPlayNetworking.registerGlobalReceiver(LodestoneOpenScreenPayload.TYPE, (payload, context) -> {
 			Minecraft client = context.client();
-			client.execute(() -> client.setScreenAndShow(new LodestoneWarpScreen(payload.data())));
+			client.execute(() -> {
+				if ("edit".equals(payload.data().getStringOr("screen", ""))) {
+					client.setScreenAndShow(new LodestoneRenameScreen(null, payload.data()));
+					return;
+				}
+				client.setScreenAndShow(new LodestoneWarpScreen(payload.data()));
+			});
 		});
 	}
 }

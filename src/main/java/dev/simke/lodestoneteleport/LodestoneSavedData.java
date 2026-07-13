@@ -15,9 +15,11 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public final class LodestoneSavedData extends SavedData {
@@ -30,6 +32,7 @@ public final class LodestoneSavedData extends SavedData {
 
 	private final Map<String, LodestoneLocation> byId = new LinkedHashMap<>();
 	private final Map<String, String> idByPosition = new LinkedHashMap<>();
+	private final Map<UUID, Set<String>> discoveredByPlayer = new LinkedHashMap<>();
 	private long nextId = 1L;
 
 	public static LodestoneSavedData from(Level level) {
@@ -52,6 +55,10 @@ public final class LodestoneSavedData extends SavedData {
 	}
 
 	public LodestoneLocation register(ResourceKey<Level> dimension, BlockPos pos, UUID ownerUuid, String ownerName) {
+		return register(dimension, pos, ownerUuid, ownerName, LodestoneConfig.get().defaultVisibility());
+	}
+
+	public LodestoneLocation register(ResourceKey<Level> dimension, BlockPos pos, UUID ownerUuid, String ownerName, LodestoneVisibility visibility) {
 		return at(dimension, pos).orElseGet(() -> {
 			String id = "lodestone_" + nextId++;
 			LodestoneLocation location = new LodestoneLocation(
@@ -61,7 +68,8 @@ public final class LodestoneSavedData extends SavedData {
 				pos.immutable(),
 				ownerUuid,
 				ownerName,
-				System.currentTimeMillis()
+				System.currentTimeMillis(),
+				visibility
 			);
 			put(location);
 			return location;
@@ -81,10 +89,150 @@ public final class LodestoneSavedData extends SavedData {
 			current.pos(),
 			current.ownerUuid(),
 			current.ownerName(),
-			current.createdAt()
+			current.createdAt(),
+			current.visibility()
 		);
 		put(renamed);
 		return true;
+	}
+
+	public boolean setGlobal(String id, boolean global) {
+		return setVisibility(id, global ? LodestoneVisibility.GLOBAL : LodestoneVisibility.DISCOVERABLE);
+	}
+
+	public boolean setVisibility(String id, LodestoneVisibility visibility) {
+		LodestoneLocation current = byId.get(id);
+		if (current == null || current.visibility() == visibility) {
+			return false;
+		}
+		LodestoneLocation updated = new LodestoneLocation(
+			current.id(),
+			current.name(),
+			current.dimension(),
+			current.pos(),
+			current.ownerUuid(),
+			current.ownerName(),
+			current.createdAt(),
+			visibility
+		);
+		put(updated);
+		return true;
+	}
+
+	public boolean isDiscovered(UUID playerUuid, String id) {
+		return discoveredByPlayer.getOrDefault(playerUuid, Set.of()).contains(id);
+	}
+
+	public boolean discover(UUID playerUuid, String id) {
+		if (!byId.containsKey(id)) {
+			return false;
+		}
+		boolean added = discoveredByPlayer.computeIfAbsent(playerUuid, ignored -> new HashSet<>()).add(id);
+		if (added) {
+			setDirty();
+		}
+		return added;
+	}
+
+	public int discoverAll(UUID playerUuid) {
+		return discoverAll(playerUuid, true);
+	}
+
+	public int discoverAll(UUID playerUuid, boolean includePrivate) {
+		Set<String> discovered = discoveredByPlayer.computeIfAbsent(playerUuid, ignored -> new HashSet<>());
+		int before = discovered.size();
+		for (LodestoneLocation location : byId.values()) {
+			if (!includePrivate && location.privateWarp()) {
+				continue;
+			}
+			discovered.add(location.id());
+		}
+		int added = discovered.size() - before;
+		if (added > 0) {
+			setDirty();
+		}
+		return added;
+	}
+
+	public boolean revokeDiscovery(UUID playerUuid, String id) {
+		Set<String> discovered = discoveredByPlayer.get(playerUuid);
+		if (discovered == null) {
+			return false;
+		}
+		boolean removed = discovered.remove(id);
+		if (discovered.isEmpty()) {
+			discoveredByPlayer.remove(playerUuid);
+		}
+		if (removed) {
+			setDirty();
+		}
+		return removed;
+	}
+
+	public int revokeAllDiscoveries(UUID playerUuid) {
+		Set<String> discovered = discoveredByPlayer.get(playerUuid);
+		if (discovered == null || discovered.isEmpty()) {
+			return 0;
+		}
+		int before = discovered.size();
+		discovered.removeIf(id -> byId.get(id) == null || !byId.get(id).ownedBy(playerUuid));
+		int removed = before - discovered.size();
+		if (discovered.isEmpty()) {
+			discoveredByPlayer.remove(playerUuid);
+		}
+		if (removed > 0) {
+			setDirty();
+		}
+		return removed;
+	}
+
+	public Optional<String> knownPlayerName(UUID playerUuid) {
+		if (playerUuid == null) {
+			return Optional.empty();
+		}
+		for (LodestoneLocation location : byId.values()) {
+			if (location.ownedBy(playerUuid) && location.ownerName() != null && !location.ownerName().isBlank() && !"unknown".equalsIgnoreCase(location.ownerName())) {
+				return Optional.of(location.ownerName());
+			}
+		}
+		return Optional.empty();
+	}
+
+	public Optional<LodestoneLocation> nearestRegisteredLodestone(ResourceKey<Level> dimension, BlockPos pos, int range, int yRange) {
+		LodestoneLocation nearest = null;
+		double nearestDistance = Double.MAX_VALUE;
+		double maxDistance = range <= 0 ? Double.MAX_VALUE : range * range;
+		for (LodestoneLocation location : byId.values()) {
+			if (!location.dimension().equals(dimension)) {
+				continue;
+			}
+			if (yRange > 0 && Math.abs(pos.getY() - location.pos().getY()) > yRange) {
+				continue;
+			}
+			double dx = pos.getX() - location.pos().getX();
+			double dz = pos.getZ() - location.pos().getZ();
+			double distance = dx * dx + dz * dz;
+			if (distance > maxDistance || distance >= nearestDistance) {
+				continue;
+			}
+			nearest = location;
+			nearestDistance = distance;
+		}
+		return Optional.ofNullable(nearest);
+	}
+
+	public Set<String> discoveredIds(UUID playerUuid) {
+		return Set.copyOf(discoveredByPlayer.getOrDefault(playerUuid, Set.of()));
+	}
+
+	public Set<UUID> discoverers(String id) {
+		Set<UUID> players = new HashSet<>();
+		for (Map.Entry<UUID, Set<String>> entry : discoveredByPlayer.entrySet()) {
+			if (entry.getValue().contains(id)) {
+				players.add(entry.getKey());
+			}
+		}
+		return Set.copyOf(players);
 	}
 
 	public boolean remove(ResourceKey<Level> dimension, BlockPos pos) {
@@ -94,6 +242,9 @@ public final class LodestoneSavedData extends SavedData {
 			return false;
 		}
 		byId.remove(id);
+		for (Set<String> discovered : discoveredByPlayer.values()) {
+			discovered.remove(id);
+		}
 		setDirty();
 		return true;
 	}
@@ -119,9 +270,25 @@ public final class LodestoneSavedData extends SavedData {
 			entry.putString("owner_uuid", location.ownerUuid().toString());
 			entry.putString("owner_name", location.ownerName());
 			entry.putLong("created_at", location.createdAt());
+			entry.putBoolean("global", location.global());
+			entry.putString("visibility", location.visibility().id());
 			list.add(entry);
 		}
 		tag.put("lodestones", list);
+		ListTag discoveries = new ListTag();
+		for (Map.Entry<UUID, Set<String>> playerEntry : discoveredByPlayer.entrySet()) {
+			CompoundTag entry = new CompoundTag();
+			entry.putString("player_uuid", playerEntry.getKey().toString());
+			ListTag ids = new ListTag();
+			for (String id : playerEntry.getValue()) {
+				CompoundTag idTag = new CompoundTag();
+				idTag.putString("id", id);
+				ids.add(idTag);
+			}
+			entry.put("ids", ids);
+			discoveries.add(entry);
+		}
+		tag.put("discoveries", discoveries);
 		return tag;
 	}
 
@@ -135,6 +302,9 @@ public final class LodestoneSavedData extends SavedData {
 			}
 			ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION, dimensionId);
 			UUID ownerUuid = parseUuid(entry.getStringOr("owner_uuid", "00000000-0000-0000-0000-000000000000"));
+			LodestoneVisibility visibility = entry.contains("visibility")
+				? LodestoneVisibility.from(entry.getStringOr("visibility", "discoverable"), LodestoneVisibility.DISCOVERABLE)
+				: (entry.getBooleanOr("global", false) ? LodestoneVisibility.GLOBAL : LodestoneVisibility.DISCOVERABLE);
 			LodestoneLocation location = new LodestoneLocation(
 				entry.getStringOr("id", ""),
 				entry.getStringOr("name", ""),
@@ -142,11 +312,25 @@ public final class LodestoneSavedData extends SavedData {
 				new BlockPos(entry.getIntOr("x", 0), entry.getIntOr("y", 0), entry.getIntOr("z", 0)),
 				ownerUuid,
 				entry.getStringOr("owner_name", "unknown"),
-				entry.getLongOr("created_at", 0L)
+				entry.getLongOr("created_at", 0L),
+				visibility
 			);
 			if (!location.id().isBlank()) {
 				data.byId.put(location.id(), location);
 				data.idByPosition.put(location.positionKey(), location.id());
+			}
+		}
+		for (CompoundTag entry : tag.getListOrEmpty("discoveries").compoundStream().toList()) {
+			UUID playerUuid = parseUuid(entry.getStringOr("player_uuid", "00000000-0000-0000-0000-000000000000"));
+			Set<String> ids = new HashSet<>();
+			for (CompoundTag idTag : entry.getListOrEmpty("ids").compoundStream().toList()) {
+				String id = idTag.getStringOr("id", "");
+				if (!id.isBlank()) {
+					ids.add(id);
+				}
+			}
+			if (!ids.isEmpty()) {
+				data.discoveredByPlayer.put(playerUuid, ids);
 			}
 		}
 		return data;

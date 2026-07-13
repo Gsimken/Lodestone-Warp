@@ -1,6 +1,6 @@
 # Lodestone Warps
 
-**Last updated:** 2026-06-28
+**Last updated:** 2026-07-13
 
 **Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
 
@@ -19,16 +19,16 @@ The most up-to-date documentation is kept in the wiki:
 
 - Server-side Lodestone warp network.
 - Vanilla client support through Minecraft Dialogs.
-- Optional enhanced UI for players with the mod installed client-side.
+- Optional enhanced UI for players with the mod installed client-side, including favorites, configurable columns, movable/resizable window controls, and local UI preferences.
 - Optional Mod Menu config screen when installed on the client.
 - Sneak-place Lodestones to register them as warps by default.
 - Optional auto-registration for old or untracked Lodestones when interacted with.
-- Configurable global and per-player Lodestone registration limits.
+- Configurable global Lodestone limit and permission-based per-player limits.
 - Removes registered Lodestones when broken.
 - Searchable destination list.
 - Pagination in the custom mod UI.
 - Rename Lodestones from the UI.
-- Teleport cost with configurable item and dynamic distance scaling.
+- Teleport cost with configurable XP-level or item payment and dynamic distance scaling.
 - Stand-still teleport cast before travel.
 - Server-side teleport cooldown.
 - Configurable teleport particles and sounds.
@@ -39,8 +39,12 @@ The most up-to-date documentation is kept in the wiki:
 - Configurable command name, defaulting to `/warp`.
 - Safe fallback command, defaulting to `/lodestone_warp`.
 - Server-side config commands and a vanilla Dialog quick config UI for server owners.
+- Vanilla Dialog destination pagination, defaulting to 10 destinations per page.
+- Configurable network mode: show all Lodestones or only discovered Lodestones.
+- Per-player Lodestone discovery storage.
+- Admin-managed global Lodestones for lobbies and shared hubs.
 - LuckPerms-compatible permissions through Fabric Permissions API.
-- Optional config to disable permission checks for open servers.
+- Config fallback permissions for open servers without LuckPerms.
 - Server-side language fallback for vanilla UI text.
 
 ## Requirements
@@ -84,7 +88,13 @@ Available subcommands:
 - `/warp edit <id>`
 - `/warp remove <id>`
 - `/warp unlink <id>`
+- `/warp visibility <id> <private|discoverable|global>`
 - `/warp list`
+- `/warp global <id> <true|false>`
+- `/warp discover grant <player> <id|all>`
+- `/warp discover revoke <player> <id|all>`
+- `/warp discover list <player>`
+- `/warp discover who <id>`
 - `/warp reload`
 - `/warp config`
 - `/warp config list`
@@ -95,31 +105,73 @@ If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` ava
 
 ## Permissions
 
-Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API.
+Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API. If LuckPerms is installed, Lodestone Warps treats LuckPerms as the source of truth and does not grant positive fallback permissions. Without LuckPerms, Lodestone Warps uses two config maps as defaults:
+
+- `playerPermissions`: default permissions granted to every player.
+- `adminPermissions`: extra default permissions granted to OP/gamemaster-level admins.
+
+Use LuckPerms or another permission manager for per-player, group, inheritance, or temporary permissions. OP/gamemaster players keep `playerPermissions` and additionally receive enabled `adminPermissions`; admin permissions do not subtract player permissions.
 
 Permission nodes:
 
 - `lodestone_teleport.use`
 - `lodestone_teleport.rename`
 - `lodestone_teleport.create`
+- `lodestone_teleport.create.private`
+- `lodestone_teleport.create.discoverable`
+- `lodestone_teleport.create.global`
 - `lodestone_teleport.remove`
+- `lodestone_teleport.own.rename`
+- `lodestone_teleport.own.remove`
+- `lodestone_teleport.own.destroy`
+- `lodestone_teleport.own.visibility.private`
+- `lodestone_teleport.own.visibility.discoverable`
+- `lodestone_teleport.own.visibility.global`
 - `lodestone_teleport.admin`
 - `lodestone_teleport.bypass_cost`
+- `lodestone_teleport.bypass_cast`
 - `lodestone_teleport.bypass_cooldown`
 - `lodestone_teleport.bypass_max_warps`
 - `lodestone_teleport.config`
+- `lodestone_teleport.global`
+- `lodestone_teleport.mode.all`
+- `lodestone_teleport.mode.discover`
+- `lodestone_teleport.limit.<number>`
 
-If permissions are enabled, players need `lodestone_teleport.use` to use warps, `lodestone_teleport.rename` to rename Lodestones, `lodestone_teleport.create` to register Lodestones, and `lodestone_teleport.remove` to unlink or remove registered Lodestones.
+Players need `lodestone_teleport.use` to use warps and `lodestone_teleport.create` plus a matching `lodestone_teleport.create.*` permission to register Lodestones. Use `lodestone_teleport.limit.10` style permissions to set per-player Lodestone limits; the highest matching limit wins. `lodestone_teleport.rename`, `lodestone_teleport.remove`, and `lodestone_teleport.global` are broad staff permissions. The `lodestone_teleport.own.*` permissions apply only to Lodestones owned by that player.
 
 Server owners need `lodestone_teleport.config` or OP-level access to use `/warp reload`, `/warp config`, and server config editing actions.
 
-Permission checks can be disabled in the server config.
+Admins need `lodestone_teleport.global` or OP-level access to mark any Lodestone as global. Players can be allowed to change their own visibility with `lodestone_teleport.own.visibility.*`.
+
+Visibility modes:
+
+- `private`: only the owner can use it, unless a player has `lodestone_teleport.mode.all`.
+- `discoverable`: other players can discover it by touching it.
+- `global`: visible to everyone.
+
+The config permission maps use `"permission.node": true/false`, so server owners can disable permissions without deleting them. They accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*`, `lodestone.*`, or `*`. Dynamic limit nodes such as `lodestone_teleport.limit.1` are not auto-added; add the exact limit keys you want to use.
+
+Permission compatibility warnings:
+
+- `lodestone_teleport.mode.all` + `lodestone_teleport.mode.discover` in `playerPermissions`: `mode.all` bypasses discovery for all players.
+- `lodestone_teleport.mode.all` + `lodestone_teleport.mode.discover` in `adminPermissions`: admins bypass discovery while also being marked as discovery users.
+- `networkMode: discover` + `lodestone_teleport.mode.all` in `playerPermissions`: discovery mode is effectively disabled for players.
+- `networkMode: discover` + `lodestone_teleport.mode.discover` without `lodestone_teleport.use` in `playerPermissions`: players can be in discovery mode but cannot use Lodestones.
 
 ## Configuration
 
 The config is generated on first run at:
 
-`config/lodestone_teleport.json`
+`config/lodestone_warp_and_tp/lodestone_teleport.json`
+
+Important defaults for new configs:
+
+- XP-level cost is enabled by default.
+- `baseCost` defaults to `1`.
+- `maxCost` defaults to `64`.
+- `maxDialogDestinations` defaults to `10`.
+- Existing config files are normalized with missing keys, but existing values are not overwritten.
 
 Full config reference:
 
@@ -127,7 +179,7 @@ Full config reference:
 
 ## Current Status
 
-Current release line: **0.4.x**
+Release target: **1.0.x**
 
 This is still an early mod, but the core gameplay loop is playable:
 
@@ -135,8 +187,10 @@ This is still an early mod, but the core gameplay loop is playable:
 - open UI
 - search destinations
 - teleport with cost
+- use discovery mode
 - rename destinations
 - use permissions
 - support vanilla and modded clients
+- use the optional client UI for favorites, column preferences, and a cleaner table view
 
 Feedback from real server usage is welcome.

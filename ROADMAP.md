@@ -4,40 +4,74 @@
 
 - [x] Require players to be near a registered lodestone before allowing teleport actions, including manual `/lodestone_warps tp <id>` usage.
 - [x] Add configurable cost item.
+- [x] Add configurable XP-level or item costs.
+- [ ] Add multi-cost support:
+  - [ ] Charge multiple item stacks at once.
+  - [ ] Combine XP levels and item costs.
+  - [ ] Allow per-dimension or per-distance cost rules.
 - [x] Add server-side cooldown.
 - [x] Add maximum possible warps.
 - [x] Add server-side config commands and vanilla Dialog quick config UI.
-- [ ] Add Lodestone discovery modes:
-  - [ ] `all`: players can see and teleport to every registered Lodestone.
-  - [ ] `discover`: players can only see and teleport to Lodestones they have discovered.
-  - [ ] Config option for the default network mode.
-  - [ ] Per-player discovered Lodestone storage.
-  - [ ] Auto-discover when placing a Lodestone.
-  - [ ] Auto-discover when interacting with a registered Lodestone.
-  - [ ] Optional admin command to grant or revoke discoveries.
+- [x] Add pagination to the vanilla Dialog destination list.
+- [ ] Add advanced destination list controls:
+  - [ ] Add primary and secondary sort buttons.
+  - [ ] Sort by name, id, cost, and visibility.
+  - [ ] Add search/filter keywords for fields such as owner, visibility, dimension, cost, id, and name.
+- [ ] Verify and polish custom mod UI parity with vanilla Dialog UI:
+  - [ ] Confirm discovery visibility, global/private icons, edit permissions, and admin view match vanilla behavior.
+  - [ ] Confirm any vanilla layout/config options that should apply to mod UI are either mirrored or intentionally documented as vanilla-only.
+  - [ ] Show the player's owned Lodestone count and limit in vanilla and mod UIs, for example `13/∞` when unlimited or `13/20` when limited.
+  - [ ] Decide whether global Lodestones should count against personal Lodestone limits in a future balance/config update.
+  - [x] Reduce extra vertical empty space between the last destination row and page controls while keeping footer controls anchored near the bottom.
+  - [x] Add a client-only settings button to the mod UI for local table preferences.
+  - [x] Allow players with the mod installed to reorder, hide, and add table columns.
+  - [x] Add client-side favorite Lodestones with a clickable star and local-only sorting/filtering.
+- [x] Add Lodestone discovery modes:
+  - [x] `all`: players can see and teleport to every registered Lodestone.
+  - [x] `discover`: players can only see and teleport to Lodestones they have discovered.
+  - [x] Config option for the default network mode.
+  - [x] Per-player discovered Lodestone storage.
+  - [x] Auto-discover when placing a Lodestone.
+  - [x] Auto-discover when interacting with a registered Lodestone.
+  - [x] Optional admin command to grant or revoke discoveries.
+  - [x] Admin-managed global Lodestones for lobbies and shared hubs.
 - [ ] Add teleport animations and configuration:
   - [x] Basic vanilla-style effects using existing particles.
   - [x] Separate server-side effect preset when the client has the mod installed.
   - [ ] Enhanced client-side screen/camera effects when the client has the mod installed.
+- [ ] Improve destination safety checks:
+  - [ ] Detect blocked destination headroom and avoid teleporting players into suffocation.
+  - [ ] Find or suggest a nearby safe landing spot when the Lodestone itself is valid but the arrival space is blocked.
+- [ ] Add configurable player feedback channels:
+  - [ ] Allow disabling or reducing chat messages for teleport/cast/cooldown/status feedback.
+  - [ ] Allow showing key feedback as title/subtitle/actionbar messages instead.
+  - [ ] Keep sensible defaults for vanilla clients and richer presentation for clients with the mod installed.
 - [x] Add basic permissions for use and rename.
-- [ ] Add permissions for all relevant actions.
+- [x] Add permissions for all relevant actions.
   - [x] `lodestone_teleport.create`
+  - [x] `lodestone_teleport.create.private`
+  - [x] `lodestone_teleport.create.discoverable`
+  - [x] `lodestone_teleport.create.global`
   - [x] `lodestone_teleport.remove`
+  - [x] `lodestone_teleport.own.rename`
+  - [x] `lodestone_teleport.own.remove`
+  - [x] `lodestone_teleport.own.destroy`
+  - [x] `lodestone_teleport.own.visibility.private`
+  - [x] `lodestone_teleport.own.visibility.discoverable`
+  - [x] `lodestone_teleport.own.visibility.global`
   - [x] `lodestone_teleport.admin`
   - [x] `lodestone_teleport.bypass_cost`
+  - [x] `lodestone_teleport.bypass_cast`
   - [x] `lodestone_teleport.bypass_cooldown`
   - [x] `lodestone_teleport.bypass_max_warps`
   - [x] `lodestone_teleport.config`
-  - [ ] `lodestone_teleport.mode.all`
-  - [ ] `lodestone_teleport.mode.discover`
-- [ ] Add configurable permission backend:
-  - [ ] `luckperms`: use Fabric Permissions API / LuckPerms.
-  - [ ] `own`: use Lodestone Warps' own permissions file.
-  - [ ] Keep LuckPerms as the default backend.
-  - [ ] Add fallback behavior when LuckPerms/Fabric permission checks are unavailable.
-- [ ] Add Lodestone Warps own permission file:
-  - [ ] Store player entries by username and UUID.
-  - [ ] Support entries like `"Username-UUID": ["lodestone.use", "lodestone.name", "lodestone.mode.discover"]`.
-  - [ ] Define final node naming before implementation.
-  - [ ] Add reload support for permission file.
-  - [ ] Add admin commands to inspect/set/remove own permissions.
+  - [x] `lodestone_teleport.global`
+  - [x] `lodestone_teleport.mode.all`
+  - [x] `lodestone_teleport.mode.discover`
+- [x] Add simple config permission fallback:
+  - [x] `playerPermissions` for permissions granted to every player.
+  - [x] `adminPermissions` for permissions granted to OP/gamemaster-level admins.
+  - [x] Keep LuckPerms/Fabric Permissions API as the recommended backend for groups and per-player control.
+- [ ] Document recommended LuckPerms setups for discovery servers, lobby/global warps, and staff-only management.
+- [ ] Polish Mod Menu config UX:
+  - [x] Keep the search box focused while typing filtered text.

@@ -1,13 +1,15 @@
 # Lodestone Warps Wiki
 
-**Last updated:** 2026-06-27
+[English](Home.md) | [Español](es/Inicio.md)
+
+**Last updated:** 2026-07-13
 
 Welcome to the Lodestone Warps wiki. This is the living documentation for server owners, pack makers, and contributors.
 
 ## Languages
 
 - [English](Home.md)
-- [Espanol](es/Inicio.md)
+- [Español](es/Inicio.md)
 
 ## Pages
 
@@ -21,15 +23,24 @@ Welcome to the Lodestone Warps wiki. This is the living documentation for server
 
 ## Quick Summary
 
-Lodestone Warps turns vanilla Lodestones into a warp network.
+Lodestone Warps turns vanilla Lodestones into a server-side warp network.
 
-- Vanilla clients use the vanilla Dialog UI.
-- Clients with the mod installed use the custom mod UI.
-- Teleports are validated server-side.
-- Costs, commands, permissions, and language fallbacks are configurable.
+- Vanilla clients use Minecraft's Dialog UI.
+- Clients with the mod installed use the custom mod UI with favorites, configurable columns, and a cleaner table view.
+- Teleports, costs, cast time, cooldowns, source range, and permissions are validated server-side.
+- Lodestones can be `private`, `discoverable`, or `global`.
+- Discovery mode stores which Lodestones each player has discovered.
+- Global Lodestones are useful for lobbies, hubs, and shared server locations.
+- Config, commands, permission defaults, and language fallbacks are configurable.
 
 ## Important Terms
 
-**UI vanilla:** Minecraft Dialog UI shown to clients without the mod installed.
+**Vanilla UI:** Minecraft Dialog UI shown to clients without the mod installed.
 
-**UI de mod / Mod UI:** Custom screen shown to clients with Lodestone Warps installed.
+**Mod UI:** Custom screen shown to clients with Lodestone Warps installed.
+
+**Private Lodestone:** visible and usable only by its owner unless a player has all-mode/admin access.
+
+**Discoverable Lodestone:** can be discovered by other players when they interact with it.
+
+**Global Lodestone:** visible to everyone, even in discovery mode.

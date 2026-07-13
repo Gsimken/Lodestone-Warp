@@ -1,6 +1,7 @@
 package dev.simke.lodestoneteleport;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -10,6 +11,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.MessageArgument;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -27,6 +29,8 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public final class LodestoneCommands {
@@ -68,27 +72,62 @@ public final class LodestoneCommands {
 
 	private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> root(String command) {
 		return Commands.literal(command)
+				.executes(context -> openDefault(context.getSource()))
 				.then(Commands.literal("tp")
 					.requires(LodestonePermissions::canUse)
 					.then(Commands.argument("destination", StringArgumentType.greedyString())
 						.executes(context -> teleport(context.getSource(), StringArgumentType.getString(context, "destination")))))
 				.then(Commands.literal("edit")
-					.requires(LodestonePermissions::canRename)
+					.requires(LodestonePermissions::canUse)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.executes(context -> edit(context.getSource(), StringArgumentType.getString(context, "id")))))
 				.then(Commands.literal("rename")
-					.requires(LodestonePermissions::canRename)
+					.requires(LodestonePermissions::canUse)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.then(Commands.argument("name", MessageArgument.message())
 							.executes(context -> rename(context.getSource(), StringArgumentType.getString(context, "id"), MessageArgument.getMessage(context, "name").getString())))))
 				.then(Commands.literal("remove")
-					.requires(LodestonePermissions::canRemove)
+					.requires(LodestonePermissions::canUse)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "id")))))
 				.then(Commands.literal("unlink")
-					.requires(LodestonePermissions::canRemove)
+					.requires(LodestonePermissions::canUse)
 					.then(Commands.argument("id", StringArgumentType.word())
 						.executes(context -> remove(context.getSource(), StringArgumentType.getString(context, "id")))))
+				.then(Commands.literal("visibility")
+					.requires(LodestonePermissions::canUse)
+					.then(Commands.argument("id", StringArgumentType.word())
+						.suggests(LodestoneCommands::suggestLodestoneIds)
+						.then(Commands.argument("visibility", StringArgumentType.word())
+							.suggests(LodestoneCommands::suggestVisibility)
+							.executes(context -> setVisibility(context.getSource(), StringArgumentType.getString(context, "id"), StringArgumentType.getString(context, "visibility"))))))
+				.then(Commands.literal("global")
+					.requires(LodestonePermissions::canSetGlobal)
+					.then(Commands.argument("id", StringArgumentType.word())
+						.suggests(LodestoneCommands::suggestLodestoneIds)
+						.then(Commands.argument("enabled", BoolArgumentType.bool())
+							.executes(context -> setGlobal(context.getSource(), StringArgumentType.getString(context, "id"), BoolArgumentType.getBool(context, "enabled"))))))
+				.then(Commands.literal("discover")
+					.requires(LodestonePermissions::canAdmin)
+					.then(Commands.literal("grant")
+						.then(Commands.argument("player", EntityArgument.player())
+							.then(Commands.argument("id", StringArgumentType.word())
+								.suggests(LodestoneCommands::suggestLodestoneIdsOrAll)
+								.executes(context -> grantDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"), false))
+								.then(Commands.literal("add_private=true")
+									.executes(context -> grantDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"), true))))))
+					.then(Commands.literal("revoke")
+						.then(Commands.argument("player", EntityArgument.player())
+							.then(Commands.argument("id", StringArgumentType.word())
+								.suggests(LodestoneCommands::suggestLodestoneIdsOrAll)
+								.executes(context -> revokeDiscovery(context.getSource(), EntityArgument.getPlayer(context, "player"), StringArgumentType.getString(context, "id"))))))
+					.then(Commands.literal("list")
+						.then(Commands.argument("player", EntityArgument.player())
+							.executes(context -> listDiscoveries(context.getSource(), EntityArgument.getPlayer(context, "player")))))
+					.then(Commands.literal("who")
+						.then(Commands.argument("id", StringArgumentType.word())
+							.suggests(LodestoneCommands::suggestLodestoneIds)
+							.executes(context -> listDiscoverers(context.getSource(), StringArgumentType.getString(context, "id"))))))
 				.then(Commands.literal("list")
 					.requires(LodestonePermissions::canAdmin)
 					.executes(context -> list(context.getSource())))
@@ -111,6 +150,39 @@ public final class LodestoneCommands {
 								.executes(context -> setConfig(context.getSource(), StringArgumentType.getString(context, "key"), StringArgumentType.getString(context, "value")))))));
 	}
 
+	private static int openDefault(CommandSourceStack source) {
+		if (!(source.getEntity() instanceof ServerPlayer player)) {
+			source.sendSystemMessage(helpMessage());
+			return 1;
+		}
+		if (!LodestonePermissions.canUse(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.use", "You do not have permission to use lodestones."));
+			return 0;
+		}
+		LodestoneSavedData data = LodestoneSavedData.from(player.level());
+		LodestoneConfig config = LodestoneConfig.get();
+		Optional<LodestoneLocation> nearby = data.nearestRegisteredLodestone(player.level().dimension(), player.blockPosition(), config.teleportSourceRange, config.teleportSourceYRange)
+			.filter(location -> ((ServerLevel) player.level()).getBlockState(location.pos()).is(Blocks.LODESTONE));
+		if (nearby.isPresent()) {
+			LodestoneUi.showDestinations(player, nearby.get());
+			return 1;
+		}
+		source.sendSystemMessage(helpMessage());
+		return 1;
+	}
+
+	private static Component helpMessage() {
+		String command = "/" + LodestoneConfig.get().commandName;
+		return LodestoneText.text(
+			"command.help",
+			"Lodestone Warps commands: %s tp <id or name>, %s list, %s config. Stand near a registered lodestone and run %s to open the UI.",
+			command,
+			command,
+			command,
+			command
+		).withStyle(ChatFormatting.GRAY);
+	}
+
 	static int teleport(CommandSourceStack source, String destination) throws CommandSyntaxException {
 		return teleport(source, destination, false);
 	}
@@ -130,7 +202,7 @@ public final class LodestoneCommands {
 			return 0;
 		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
-		Optional<LodestoneLocation> maybeLocation = resolveTeleportDestination(source, data, destination);
+		Optional<LodestoneLocation> maybeLocation = resolveTeleportDestination(source, player, data, destination);
 		if (maybeLocation.isEmpty()) {
 			return 0;
 		}
@@ -162,12 +234,12 @@ public final class LodestoneCommands {
 
 		boolean bypassCost = LodestonePermissions.canBypassCost(source);
 		LodestoneTeleportCost cost = LodestoneTeleportCost.between(player, location);
-		if (!hasCost(player, cost)) {
+		if (!bypassCost && !hasCost(player, cost)) {
 			source.sendFailure(LodestoneText.text("error.need_cost", "You need %s.", LodestoneText.cost(cost)));
 			return 0;
 		}
 
-		if (!fromCast && LodestoneConfig.get().teleportCastSeconds > 0) {
+		if (!fromCast && LodestoneConfig.get().teleportCastSeconds > 0 && !LodestonePermissions.canBypassCast(source)) {
 			if (LodestoneTeleportCasts.isCasting(player)) {
 				source.sendFailure(LodestoneText.text("teleport.cast_already", "You are already casting a teleport."));
 				return 0;
@@ -202,15 +274,22 @@ public final class LodestoneCommands {
 		return 1;
 	}
 
-	private static Optional<LodestoneLocation> resolveTeleportDestination(CommandSourceStack source, LodestoneSavedData data, String destination) {
+	private static Optional<LodestoneLocation> resolveTeleportDestination(CommandSourceStack source, ServerPlayer player, LodestoneSavedData data, String destination) {
 		String clean = destination.trim();
 		Optional<LodestoneLocation> byId = data.get(clean);
 		if (byId.isPresent()) {
+			if (!LodestoneDiscovery.canSee(player, data, byId.get())) {
+				source.sendFailure(LodestoneText.text("error.not_discovered", "You have not discovered that lodestone."));
+				return Optional.empty();
+			}
 			return byId;
 		}
 
 		List<LodestoneLocation> matches = new ArrayList<>();
 		for (LodestoneLocation location : data.all()) {
+			if (!LodestoneDiscovery.canSee(player, data, location)) {
+				continue;
+			}
 			if (location.displayName().equalsIgnoreCase(clean)) {
 				matches.add(location);
 			}
@@ -248,15 +327,20 @@ public final class LodestoneCommands {
 	}
 
 	static int rename(CommandSourceStack source, String id, String name) {
-		if (!LodestonePermissions.canRename(source)) {
-			source.sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
-			return 0;
-		}
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
-		if (!data.rename(id, name)) {
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
+		if (source.getEntity() instanceof ServerPlayer player && !LodestonePermissions.canRename(player, location.get())) {
+			source.sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
+			return 0;
+		} else if (!(source.getEntity() instanceof ServerPlayer) && !LodestonePermissions.canRename(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
+			return 0;
+		}
+		data.rename(id, name);
 		String cleanName = data.get(id).map(LodestoneLocation::displayName).orElse(name.trim());
 		source.sendSuccess(() -> LodestoneText.text("renamed", "Lodestone renamed to %s.", cleanName), false);
 		return 1;
@@ -264,34 +348,193 @@ public final class LodestoneCommands {
 
 	static int edit(CommandSourceStack source, String id) throws CommandSyntaxException {
 		ServerPlayer player = source.getPlayerOrException();
-		if (!LodestonePermissions.canRename(source)) {
-			source.sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
-			return 0;
-		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
 		Optional<LodestoneLocation> location = data.get(id);
 		if (location.isEmpty()) {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
-		LodestoneDialogs.showRename(player, location.get());
+		LodestoneUi.showEdit(player, location.get());
 		return 1;
 	}
 
 	static int remove(CommandSourceStack source, String id) {
-		if (!LodestonePermissions.canRemove(source)) {
-			source.sendFailure(LodestoneText.text("error.no_permission.remove", "You do not have permission to remove registered lodestones."));
-			return 0;
-		}
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		Optional<LodestoneLocation> location = data.get(id);
 		if (location.isEmpty()) {
 			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "Could not find that lodestone."));
 			return 0;
 		}
+		if (source.getEntity() instanceof ServerPlayer player && !LodestonePermissions.canRemove(player, location.get())) {
+			source.sendFailure(LodestoneText.text("error.no_permission.remove", "You do not have permission to remove registered lodestones."));
+			return 0;
+		} else if (!(source.getEntity() instanceof ServerPlayer) && !LodestonePermissions.canRemove(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.remove", "You do not have permission to remove registered lodestones."));
+			return 0;
+		}
 		data.remove(location.get().dimension(), location.get().pos());
 		source.sendSuccess(() -> LodestoneText.text("removed", "Unlinked lodestone warp: %s.", location.get().displayName()), false);
 		return 1;
+	}
+
+	static int setGlobal(CommandSourceStack source, String id, boolean global) {
+		if (!LodestonePermissions.canSetGlobal(source)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.global", "You do not have permission to manage global lodestones."));
+			return 0;
+		}
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return 0;
+		}
+		data.setGlobal(id, global);
+		source.sendSuccess(() -> LodestoneText.text(global ? "global.enabled" : "global.disabled", global ? "Lodestone marked global: %s" : "Lodestone is no longer global: %s", location.get().displayName()), true);
+		return 1;
+	}
+
+	static int setVisibility(CommandSourceStack source, String id, String value) throws CommandSyntaxException {
+		ServerPlayer player = source.getPlayerOrException();
+		LodestoneVisibility visibility = LodestoneVisibility.from(value, null);
+		if (visibility == null) {
+			source.sendFailure(LodestoneText.text("error.invalid_visibility", "Invalid visibility. Use private, discoverable, or global."));
+			return 0;
+		}
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return 0;
+		}
+		if (!LodestonePermissions.canSetVisibility(player, location.get(), visibility)) {
+			source.sendFailure(LodestoneText.text("error.no_permission.visibility", "You do not have permission to change that lodestone visibility."));
+			return 0;
+		}
+		data.setVisibility(id, visibility);
+		source.sendSuccess(() -> LodestoneText.text("visibility.changed", "Lodestone visibility changed to %s.", visibility.id()), true);
+		return 1;
+	}
+
+	static boolean saveEdit(ServerPlayer player, String id, String name, String visibilityValue) {
+		LodestoneSavedData data = LodestoneSavedData.from(player.level());
+		LodestoneLocation location = data.get(id).orElse(null);
+		if (location == null) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return false;
+		}
+
+		String requestedName = name == null ? "" : name.trim();
+		String storedName = location.name() == null ? "" : location.name().trim();
+		boolean nameChanged = !requestedName.equals(storedName) && !(storedName.isBlank() && requestedName.equals(location.displayName()));
+		LodestoneVisibility requestedVisibility = LodestoneVisibility.from(visibilityValue, null);
+		if (requestedVisibility == null) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.invalid_visibility", "Invalid visibility. Use private, discoverable, or global."));
+			return false;
+		}
+		boolean visibilityChanged = requestedVisibility != location.visibility();
+
+		if (nameChanged && !LodestonePermissions.canRename(player, location)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.rename", "You do not have permission to rename lodestones."));
+			return false;
+		}
+		if (visibilityChanged && !LodestonePermissions.canSetVisibility(player, location, requestedVisibility)) {
+			player.createCommandSourceStack().sendFailure(LodestoneText.text("error.no_permission.visibility", "You do not have permission to change that lodestone visibility."));
+			return false;
+		}
+
+		if (nameChanged) {
+			data.rename(id, requestedName);
+		}
+		if (visibilityChanged) {
+			data.setVisibility(id, requestedVisibility);
+		}
+		player.sendSystemMessage(LodestoneText.text("edit.saved", "Lodestone changes saved."));
+		return true;
+	}
+
+	static int grantDiscovery(CommandSourceStack source, ServerPlayer target, String id, boolean includePrivate) {
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		if ("all".equalsIgnoreCase(id)) {
+			int added = data.discoverAll(target.getUUID(), includePrivate);
+			source.sendSuccess(() -> LodestoneText.text(
+				includePrivate ? "discover.granted_all_with_private" : "discover.granted_all",
+				includePrivate ? "Granted %s discovery of all lodestones, including private ones (%s new)." : "Granted %s discovery of all discoverable and global lodestones (%s new).",
+				target.getName().getString(),
+				added
+			), true);
+			return Math.max(1, added);
+		}
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return 0;
+		}
+		data.discover(target.getUUID(), id);
+		source.sendSuccess(() -> LodestoneText.text("discover.granted", "Granted %s discovery of %s.", target.getName().getString(), location.get().displayName()), true);
+		return 1;
+	}
+
+	static int revokeDiscovery(CommandSourceStack source, ServerPlayer target, String id) {
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		if ("all".equalsIgnoreCase(id)) {
+			int removed = data.revokeAllDiscoveries(target.getUUID());
+			source.sendSuccess(() -> LodestoneText.text("discover.revoked_all", "Revoked %s discovery of all lodestones (%s removed).", target.getName().getString(), removed), true);
+			return Math.max(1, removed);
+		}
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return 0;
+		}
+		data.revokeDiscovery(target.getUUID(), id);
+		source.sendSuccess(() -> LodestoneText.text("discover.revoked", "Revoked %s discovery of %s.", target.getName().getString(), location.get().displayName()), true);
+		return 1;
+	}
+
+	static int listDiscoveries(CommandSourceStack source, ServerPlayer target) {
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		source.sendSystemMessage(LodestoneText.text("discover.list_header", "%s has discovered:", target.getName().getString()));
+		int count = 0;
+		for (String id : data.discoveredIds(target.getUUID())) {
+			Optional<LodestoneLocation> location = data.get(id);
+			if (location.isEmpty()) {
+				continue;
+			}
+			source.sendSystemMessage(LodestoneText.text("list.entry", "- %s: %s (%s)", location.get().id(), location.get().displayName(), LodestoneText.dimension(location.get().dimension())));
+			count++;
+		}
+		if (count == 0) {
+			source.sendSystemMessage(LodestoneText.text("discover.list_empty", "No discovered lodestones."));
+		}
+		return Math.max(1, count);
+	}
+
+	static int listDiscoverers(CommandSourceStack source, String id) {
+		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
+		Optional<LodestoneLocation> location = data.get(id);
+		if (location.isEmpty()) {
+			source.sendFailure(LodestoneText.text("error.lodestone_not_found", "I could not find that lodestone."));
+			return 0;
+		}
+		Set<UUID> discoverers = data.discoverers(id);
+		source.sendSystemMessage(LodestoneText.text("discover.who_header", "%s has been discovered by:", location.get().displayName()));
+		if (discoverers.isEmpty()) {
+			source.sendSystemMessage(LodestoneText.text("discover.who_empty", "No players have discovered this lodestone."));
+			return 1;
+		}
+		for (UUID uuid : discoverers) {
+			ServerPlayer online = source.getServer().getPlayerList().getPlayer(uuid);
+			String name;
+			if (online != null) {
+				name = online.getName().getString() + " (" + uuid + ")";
+			} else {
+				name = data.knownPlayerName(uuid)
+					.map(knownName -> knownName + " (" + uuid + ")")
+					.orElse(uuid + " (offline player)");
+			}
+			source.sendSystemMessage(Component.literal("- " + name).withStyle(ChatFormatting.GRAY));
+		}
+		return discoverers.size();
 	}
 
 	static int reloadConfig(CommandSourceStack source) {
@@ -301,6 +544,7 @@ public final class LodestoneCommands {
 		}
 		LodestoneConfig.load();
 		source.sendSuccess(() -> LodestoneText.text("config.server.reloaded", "Lodestone Warps config reloaded."), true);
+		LodestoneConfigWarnings.sendTo(source);
 		return 1;
 	}
 
@@ -358,6 +602,7 @@ public final class LodestoneCommands {
 			return 0;
 		}
 		source.sendSuccess(() -> LodestoneText.text("config.server.changed", "Set %s to %s.", option.get().id(), option.get().currentValue()), true);
+		LodestoneConfigWarnings.sendTo(source);
 		if (option.get().id().equals("command_name") || option.get().id().equals("fallback_command_name")) {
 			source.sendSystemMessage(LodestoneText.text("config.server.restart_required", "Restart the server for command name changes to take effect."));
 		}
@@ -389,6 +634,34 @@ public final class LodestoneCommands {
 		return builder.buildFuture();
 	}
 
+	private static CompletableFuture<Suggestions> suggestLodestoneIds(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+		String remaining = builder.getRemaining().toLowerCase(java.util.Locale.ROOT);
+		for (LodestoneLocation location : LodestoneSavedData.from(context.getSource().getLevel()).all()) {
+			if (location.id().startsWith(remaining)) {
+				builder.suggest(location.id());
+			}
+		}
+		return builder.buildFuture();
+	}
+
+	private static CompletableFuture<Suggestions> suggestLodestoneIdsOrAll(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+		String remaining = builder.getRemaining().toLowerCase(java.util.Locale.ROOT);
+		if ("all".startsWith(remaining)) {
+			builder.suggest("all");
+		}
+		return suggestLodestoneIds(context, builder);
+	}
+
+	private static CompletableFuture<Suggestions> suggestVisibility(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+		String remaining = builder.getRemaining().toLowerCase(java.util.Locale.ROOT);
+		for (LodestoneVisibility visibility : LodestoneVisibility.values()) {
+			if (visibility.id().startsWith(remaining)) {
+				builder.suggest(visibility.id());
+			}
+		}
+		return builder.buildFuture();
+	}
+
 	private static int list(CommandSourceStack source) {
 		LodestoneSavedData data = LodestoneSavedData.from(source.getLevel());
 		if (data.all().isEmpty()) {
@@ -403,7 +676,7 @@ public final class LodestoneCommands {
 	}
 
 	private static Component listEntry(LodestoneLocation location) {
-		return LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayName(), LodestoneText.dimension(location.dimension()))
+		return LodestoneText.text("list.entry", "- %s: %s (%s)", location.id(), location.displayNameWithGlobalPrefix(), LodestoneText.dimension(location.dimension()))
 			.copy()
 			.append(Component.literal(" "))
 			.append(actionButton("button.teleport", "[TP]", ChatFormatting.AQUA, "tp", location.id()))
@@ -423,25 +696,17 @@ public final class LodestoneCommands {
 			.withClickEvent(new ClickEvent.Custom(LodestoneCustomActions.ACTION_ID, Optional.of(payload))));
 	}
 
-	private static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
-		int range = LodestoneConfig.get().teleportSourceRange;
-		if (range <= 0) {
+	static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
+		LodestoneConfig config = LodestoneConfig.get();
+		int range = config.teleportSourceRange;
+		int yRange = config.teleportSourceYRange;
+		if (range <= 0 && yRange <= 0) {
 			return true;
 		}
-		double maxDistance = range * range;
 		ServerLevel level = (ServerLevel) player.level();
-		for (LodestoneLocation location : data.all()) {
-			if (!location.dimension().equals(level.dimension())) {
-				continue;
-			}
-			if (player.blockPosition().distSqr(location.pos()) > maxDistance) {
-				continue;
-			}
-			if (level.getBlockState(location.pos()).is(Blocks.LODESTONE)) {
-				return true;
-			}
-		}
-		return false;
+		return data.nearestRegisteredLodestone(level.dimension(), player.blockPosition(), range, yRange)
+			.filter(location -> level.getBlockState(location.pos()).is(Blocks.LODESTONE))
+			.isPresent();
 	}
 
 	private static ServerPlayer teleportPlayer(ServerPlayer player, ServerLevel destinationLevel, LodestoneLocation location) {
@@ -461,9 +726,12 @@ public final class LodestoneCommands {
 		return player.teleport(transition);
 	}
 
-	private static boolean hasCost(ServerPlayer player, LodestoneTeleportCost cost) {
+	static boolean hasCost(ServerPlayer player, LodestoneTeleportCost cost) {
 		if (cost.amount() <= 0 || player.isCreative() || LodestonePermissions.canBypassCost(player)) {
 			return true;
+		}
+		if (cost.usesXpLevels()) {
+			return player.experienceLevel >= cost.amount();
 		}
 		Item costItem = cost.item();
 		Inventory inventory = player.getInventory();
@@ -486,6 +754,10 @@ public final class LodestoneCommands {
 
 	private static void consumeCost(ServerPlayer player, LodestoneTeleportCost cost) {
 		if (cost.amount() <= 0 || player.isCreative()) {
+			return;
+		}
+		if (cost.usesXpLevels()) {
+			player.giveExperienceLevels(-cost.amount());
 			return;
 		}
 		Inventory inventory = player.getInventory();

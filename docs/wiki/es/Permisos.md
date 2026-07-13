@@ -1,8 +1,19 @@
 # Permisos
 
-**Última actualización:** 2026-06-27
+[English](../Permissions.md) | [Español](Permisos.md)
+
+**Última actualización:** 2026-07-13
 
 Lodestone Warps usa Fabric Permissions API y es compatible con LuckPerms.
+
+Si LuckPerms está instalado, Lodestone Warps lo trata como fuente de verdad y no concede permisos positivos desde el fallback. Sin LuckPerms, Lodestone Warps usa:
+
+- `playerPermissions`: mapa de permisos fallback para todos los jugadores.
+- `adminPermissions`: mapa de permisos fallback extra para admins OP/gamemaster.
+
+Los OP/gamemaster mantienen `playerPermissions` y además reciben los `adminPermissions` activos; los permisos admin no restan permisos de jugador.
+
+Si LuckPerms está instalado pero un grupo/jugador no tiene permisos de Lodestone Warps, ese grupo/jugador debe considerarse sin acceso a Lodestone Warps hasta que los permisos sean asignados en LuckPerms. La config fallback está pensada para servidores sin administrador de permisos.
 
 ## Nodos
 
@@ -10,14 +21,64 @@ Lodestone Warps usa Fabric Permissions API y es compatible con LuckPerms.
 lodestone_teleport.use
 lodestone_teleport.rename
 lodestone_teleport.create
+lodestone_teleport.create.private
+lodestone_teleport.create.discoverable
+lodestone_teleport.create.global
 lodestone_teleport.remove
+lodestone_teleport.own.rename
+lodestone_teleport.own.remove
+lodestone_teleport.own.destroy
+lodestone_teleport.own.visibility.private
+lodestone_teleport.own.visibility.discoverable
+lodestone_teleport.own.visibility.global
 lodestone_teleport.admin
+lodestone_teleport.config
+lodestone_teleport.global
 lodestone_teleport.bypass_cost
+lodestone_teleport.bypass_cast
 lodestone_teleport.bypass_cooldown
 lodestone_teleport.bypass_max_warps
 lodestone_teleport.mode.all
 lodestone_teleport.mode.discover
+lodestone_teleport.limit.<numero>
 ```
+
+## Defaults Recomendados
+
+Jugadores normales:
+
+```text
+lodestone_teleport.use
+lodestone_teleport.create
+lodestone_teleport.create.private
+lodestone_teleport.create.discoverable
+lodestone_teleport.own.rename
+lodestone_teleport.own.remove
+lodestone_teleport.own.destroy
+lodestone_teleport.own.visibility.private
+lodestone_teleport.own.visibility.discoverable
+lodestone_teleport.mode.discover
+lodestone_teleport.limit.10
+```
+
+Admins:
+
+```text
+lodestone_teleport.admin
+lodestone_teleport.config
+lodestone_teleport.global
+lodestone_teleport.rename
+lodestone_teleport.remove
+lodestone_teleport.mode.all
+lodestone_teleport.create.global
+lodestone_teleport.own.visibility.global
+lodestone_teleport.bypass_cost
+lodestone_teleport.bypass_cast
+lodestone_teleport.bypass_cooldown
+lodestone_teleport.bypass_max_warps
+```
+
+`lodestone_teleport.rename` y `lodestone_teleport.remove` son permisos amplios de staff. Pueden afectar cualquier Lodestone registrada. Para jugadores normales usa permisos `own.*`.
 
 ## Uso
 
@@ -30,103 +91,182 @@ Permite:
 - teletransportarse desde UI de mod
 - usar `/warp tp <id o nombre>`
 
-## Renombrar
-
-`lodestone_teleport.rename`
-
-Permite:
-
-- renombrar desde UI vanilla
-- renombrar desde UI de mod
-- usar `/warp rename <id> <nombre>`
-- usar `/warp edit <id>`
-
 ## Crear
 
 `lodestone_teleport.create`
 
-Permite:
+Permite registrar Lodestones, pero el jugador también necesita un permiso de visibilidad compatible:
 
-- registrar Lodestones al colocarlas
-- auto-registrar Lodestones antiguas o no registradas al interactuar con ellas, si está activado en la config
+- `lodestone_teleport.create.private`
+- `lodestone_teleport.create.discoverable`
+- `lodestone_teleport.create.global`
 
-## Remover
+`create.global` normalmente debería ser solo para admins.
+
+## Editar y Remover
+
+`lodestone_teleport.rename`
+
+Permiso amplio de staff. Permite renombrar cualquier Lodestone registrada.
 
 `lodestone_teleport.remove`
 
-Permite:
+Permiso amplio de staff. Permite desvincular o romper cualquier Lodestone registrada.
 
-- romper Lodestones registradas y removerlas de la red de warps
-- desvincular warps registrados con `/warp remove <id>` o `/warp unlink <id>`
+`lodestone_teleport.own.rename`
 
-## Admin
+Permite renombrar Lodestones propias.
+
+`lodestone_teleport.own.remove`
+
+Permite desvincular Lodestones propias.
+
+`lodestone_teleport.own.destroy`
+
+Permite romper Lodestones registradas propias.
+
+## Visibilidad
+
+`lodestone_teleport.own.visibility.private`
+
+Permite marcar Lodestones propias como privadas.
+
+`lodestone_teleport.own.visibility.discoverable`
+
+Permite marcar Lodestones propias como descubribles.
+
+`lodestone_teleport.own.visibility.global`
+
+Permite marcar Lodestones propias como globales. Normalmente debería ser admin-only.
+
+`lodestone_teleport.global`
+
+Permiso amplio de staff para administrar Lodestones globales.
+
+## Modos
+
+`lodestone_teleport.mode.discover`
+
+Fuerza reglas de discovery para ese jugador. El jugador ve Lodestones globales, propias y descubiertas. Puede forzar discovery incluso cuando `networkMode` es `all`.
+
+`lodestone_teleport.mode.all`
+
+Ignora discovery y permite ver todas las Lodestones registradas. Es útil para admins.
+
+Si ambos están configurados, `mode.all` gana en la práctica.
+
+## Admin y Config
 
 `lodestone_teleport.admin`
 
-Permite:
+Permite comandos de diagnóstico/admin como `/warp list`.
 
-- usar comandos de diagnóstico/admin como `/warp list`
+`lodestone_teleport.config`
+
+Permite comandos de config y la UI vanilla de config:
+
+```mcfunction
+/warp config
+/warp reload
+```
 
 ## Bypass
 
 `lodestone_teleport.bypass_cost`
 
-Permite teletransportarse sin pagar el costo configurado.
+Permite teletransportarse sin pagar costo.
+
+`lodestone_teleport.bypass_cast`
+
+Permite teletransportarse sin casteo quieto.
 
 `lodestone_teleport.bypass_cooldown`
 
-Permite teletransportarse sin esperar el cooldown.
+Permite teletransportarse sin cooldown.
 
 `lodestone_teleport.bypass_max_warps`
 
-Permite registrar Lodestones incluso cuando se alcanzó `maxLodestonesGlobal` o `maxLodestonesPerPlayer`.
+Permite registrar Lodestones aunque se alcance `maxLodestonesGlobal` o el límite por permiso del jugador.
 
-## Modos
+## Permisos de Límite
 
-`lodestone_teleport.mode.all`
+`lodestone_teleport.limit.<numero>`
 
-Reservado para el futuro modo de visibilidad `all`.
+Define la cantidad máxima de Lodestones que un jugador puede tener. Se usa el número más alto que coincida.
 
-`lodestone_teleport.mode.discover`
+Ejemplos:
 
-Reservado para el futuro modo de visibilidad `discover`.
+- `lodestone_teleport.limit.3`
+- `lodestone_teleport.limit.10`
+- `lodestone.limit.25`
+
+Usa `lodestone_teleport.bypass_max_warps` para staff o grupos que deban ignorar este límite.
+
+Los valores de límite son dinámicos. Puedes usar cualquier número positivo, por ejemplo `lodestone_teleport.limit.1`, `lodestone_teleport.limit.3` o `lodestone_teleport.limit.50`.
+
+## Permisos Fallback de Config
+
+Los mapas de config usan valores booleanos:
+
+```json
+"lodestone_teleport.use": true,
+"lodestone_teleport.rename": false
+```
+
+Esto permite desactivar permisos sin eliminarlos. Los permisos conocidos que falten pueden volver a escribirse como `false`, lo que facilita auditar el archivo. Los nodos dinámicos como `lodestone_teleport.limit.1` no se agregan automáticamente; agrega las claves exactas que quieras usar.
+
+Los mapas de config aceptan:
+
+- nodos completos, como `lodestone_teleport.use`
+- nodos cortos, como `use`
+- wildcards, como `lodestone_teleport.*`, `lodestone.*` o `*`
+
+Si usas LuckPerms, Lodestone Warps ignora permisos fallback positivos y deja que LuckPerms decida. Puedes mantener claves de límite como `"lodestone_teleport.limit.1": false` en la config como entradas de auditoría/candidatas.
+
+El prefijo alias `lodestone.*` está soportado por comodidad, pero el prefijo canónico es `lodestone_teleport.*`.
 
 ## Ejemplos con LuckPerms
 
-Permitir que todos usen warps:
+Setup recomendado inicial:
+
+1. Detén el servidor.
+2. Abre `config/lodestone_warp_and_tp/lodestone_teleport.json`.
+3. Cambia los permisos fallback a `false`, o vacía `playerPermissions` y `adminPermissions`, si quieres que LuckPerms controle todos los permisos.
+4. Inicia el servidor.
+5. Ejecuta `/lp editor`.
+6. Agrega los permisos de jugador al grupo `default`.
+7. Crea un grupo `admin` y agrega los permisos de admin.
+8. Guarda y aplica los cambios del editor de LuckPerms.
+
+Permitir gameplay básico con discovery:
 
 ```mcfunction
 /lp group default permission set lodestone_teleport.use true
+/lp group default permission set lodestone_teleport.create true
+/lp group default permission set lodestone_teleport.create.private true
+/lp group default permission set lodestone_teleport.create.discoverable true
+/lp group default permission set lodestone_teleport.own.rename true
+/lp group default permission set lodestone_teleport.own.destroy true
+/lp group default permission set lodestone_teleport.mode.discover true
+/lp group default permission set lodestone_teleport.limit.10 true
 ```
 
-Permitir que admins renombren:
+Permitir administración global:
 
 ```mcfunction
+/lp group admin permission set lodestone_teleport.admin true
+/lp group admin permission set lodestone_teleport.config true
+/lp group admin permission set lodestone_teleport.global true
 /lp group admin permission set lodestone_teleport.rename true
+/lp group admin permission set lodestone_teleport.remove true
+/lp group admin permission set lodestone_teleport.mode.all true
 ```
 
-Permitir ambos permisos a un jugador:
+## Advertencias de Compatibilidad
 
-```mcfunction
-/lp user PlayerName permission set lodestone_teleport.use true
-/lp user PlayerName permission set lodestone_teleport.rename true
-```
+Evita estas combinaciones en jugadores normales salvo que sea intencional:
 
-Permitir que admins ignoren costo y cooldown:
-
-```mcfunction
-/lp group admin permission set lodestone_teleport.bypass_cost true
-/lp group admin permission set lodestone_teleport.bypass_cooldown true
-```
-
-## Desactivar Permisos
-
-Para servidores pequeños o abiertos:
-
-```json
-"requirePermissions": false
-```
-
-Cuando está desactivado, todos pueden usar, renombrar, crear y remover Lodestones.
-
-Los permisos de bypass y admin no se entregan a jugadores normales al desactivar permisos. Los operadores siguen teniendo acceso fallback de operador.
+- `lodestone_teleport.mode.all` con `networkMode: discover`: los jugadores ven todas las Lodestones.
+- `lodestone_teleport.rename`: pueden renombrar Lodestones ajenas.
+- `lodestone_teleport.remove`: pueden desvincular o romper Lodestones ajenas.
+- `lodestone_teleport.create.global`: pueden crear Lodestones globales.

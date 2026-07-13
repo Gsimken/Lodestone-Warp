@@ -1,6 +1,8 @@
 # Comandos
 
-**Última actualización:** 2026-06-27
+[English](../Commands.md) | [Español](Comandos.md)
+
+**Última actualización:** 2026-07-13
 
 ## Comando Principal
 
@@ -14,9 +16,17 @@
 /lodestone_warp
 ```
 
-El fallback ayuda a evitar conflictos con otros mods de warps.
+El fallback ayuda a evitar conflictos con otros mods de warps. Si otro mod ya usa `/warp`, usa `/lodestone_warp`.
 
 ## Subcomandos
+
+Abrir la UI de Lodestone desde la Lodestone registrada más cercana:
+
+```mcfunction
+/warp
+```
+
+El jugador necesita `lodestone_teleport.use` y debe estar dentro del rango configurado de una Lodestone registrada.
 
 Teleport:
 
@@ -40,15 +50,22 @@ Desvincular un warp de Lodestone de la red:
 
 ```mcfunction
 /warp remove <id>
-```
-
-Alias:
-
-```mcfunction
 /warp unlink <id>
 ```
 
-El bloque fisico de Lodestone queda en el mundo. Por defecto, no se volvera a registrar con click normal; usa click derecho agachado con la mano vacia para registrarlo otra vez de forma intencional.
+El bloque físico de Lodestone queda en el mundo. Por defecto, no se volverá a registrar con click normal; usa click derecho agachado con la mano vacía para registrarlo otra vez de forma intencional.
+
+Cambiar visibilidad:
+
+```mcfunction
+/warp visibility <id> <private|discoverable|global>
+```
+
+Helper global:
+
+```mcfunction
+/warp global <id> <true|false>
+```
 
 Listar Lodestones registradas:
 
@@ -59,8 +76,73 @@ Listar Lodestones registradas:
 `/warp list` muestra acciones clicables compactas después de cada entrada:
 
 - `[TP]`: teletransportarse a la Lodestone.
-- `[✎]`: abrir el flujo de renombrado.
+- `[✎]`: abrir el flujo de edición.
 - `[X]`: desvincular el warp y dejar el bloque físico de Lodestone en su lugar.
+
+## Comandos de Discovery
+
+Dar discovery:
+
+```mcfunction
+/warp discover grant <jugador> <id|all>
+```
+
+Cuando usas `all`, las Lodestones privadas quedan excluidas por defecto. Para incluir Lodestones privadas intencionalmente, usa:
+
+```mcfunction
+/warp discover grant <jugador> all add_private=true
+```
+
+Quitar discovery:
+
+```mcfunction
+/warp discover revoke <jugador> <id|all>
+```
+
+Ver qué descubrió un jugador:
+
+```mcfunction
+/warp discover list <jugador>
+```
+
+Ver quién descubrió una Lodestone:
+
+```mcfunction
+/warp discover who <id>
+```
+
+## Comandos de Config
+
+Recargar config:
+
+```mcfunction
+/warp reload
+```
+
+Requiere `lodestone_teleport.config` o acceso OP/gamemaster.
+
+Abrir UI vanilla de config:
+
+```mcfunction
+/warp config
+```
+
+Requiere `lodestone_teleport.config` o acceso OP/gamemaster.
+
+Listar claves de config:
+
+```mcfunction
+/warp config list
+```
+
+Leer o cambiar un valor:
+
+```mcfunction
+/warp config get <key>
+/warp config set <key> <value>
+```
+
+Cambiar `commandName` o `fallbackCommandName` requiere reiniciar el servidor porque los comandos se registran durante el inicio.
 
 ## Teleport por Nombre
 

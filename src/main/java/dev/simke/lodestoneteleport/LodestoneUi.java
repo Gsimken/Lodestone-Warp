@@ -15,6 +15,14 @@ public final class LodestoneUi {
 	}
 
 	public static void showRename(ServerPlayer player, LodestoneLocation location) {
-		LodestoneDialogs.showRename(player, location);
+		showEdit(player, location);
+	}
+
+	public static void showEdit(ServerPlayer player, LodestoneLocation location) {
+		if (LodestoneNetworking.canUseClientScreen(player)) {
+			LodestoneNetworking.openClientRenameScreen(player, location);
+			return;
+		}
+		LodestoneDialogs.showEdit(player, location);
 	}
 }
