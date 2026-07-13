@@ -20,6 +20,9 @@
 - [ ] Verify and polish custom mod UI parity with vanilla Dialog UI:
   - [ ] Confirm discovery visibility, global/private icons, edit permissions, and admin view match vanilla behavior.
   - [ ] Confirm any vanilla layout/config options that should apply to mod UI are either mirrored or intentionally documented as vanilla-only.
+  - [ ] Show the player's owned Lodestone count and limit in vanilla and mod UIs, for example `13/∞` when unlimited or `13/20` when limited.
+  - [ ] Decide whether global Lodestones should count against personal Lodestone limits in a future balance/config update.
+  - [x] Reduce extra vertical empty space between the last destination row and page controls while keeping footer controls anchored near the bottom.
   - [x] Add a client-only settings button to the mod UI for local table preferences.
   - [x] Allow players with the mod installed to reorder, hide, and add table columns.
   - [x] Add client-side favorite Lodestones with a clickable star and local-only sorting/filtering.
@@ -36,6 +39,9 @@
   - [x] Basic vanilla-style effects using existing particles.
   - [x] Separate server-side effect preset when the client has the mod installed.
   - [ ] Enhanced client-side screen/camera effects when the client has the mod installed.
+- [ ] Improve destination safety checks:
+  - [ ] Detect blocked destination headroom and avoid teleporting players into suffocation.
+  - [ ] Find or suggest a nearby safe landing spot when the Lodestone itself is valid but the arrival space is blocked.
 - [ ] Add configurable player feedback channels:
   - [ ] Allow disabling or reducing chat messages for teleport/cast/cooldown/status feedback.
   - [ ] Allow showing key feedback as title/subtitle/actionbar messages instead.
@@ -67,3 +73,5 @@
   - [x] `adminPermissions` for permissions granted to OP/gamemaster-level admins.
   - [x] Keep LuckPerms/Fabric Permissions API as the recommended backend for groups and per-player control.
 - [ ] Document recommended LuckPerms setups for discovery servers, lobby/global warps, and staff-only management.
+- [ ] Polish Mod Menu config UX:
+  - [x] Keep the search box focused while typing filtered text.

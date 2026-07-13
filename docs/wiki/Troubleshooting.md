@@ -2,7 +2,7 @@
 
 [English](Troubleshooting.md) | [Español](es/Solucion-de-problemas.md)
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-13
 
 ## Vanilla UI Shows English or Spanish Unexpectedly
 

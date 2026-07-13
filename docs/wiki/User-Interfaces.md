@@ -2,7 +2,7 @@
 
 [English](User-Interfaces.md) | [Español](es/Interfaces.md)
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-13
 
 Lodestone Warps has two user interfaces. The server chooses automatically depending on whether the player has the client mod installed.
 
@@ -41,11 +41,20 @@ Features:
 - pagination
 - XP/item cost icon display
 - destination edit buttons
+- favorite stars, stored locally on the client
+- configurable table columns and column order
+- movable, resizable, center, maximize, and close controls
+- disabled destinations when the player cannot currently pay or is on cooldown
+- tooltip details for unavailable teleports and compact buttons
 - visibility icons:
   - 🌐 global
   - 🔒 private
 - current Lodestone visibility icon in the header
 - instant refresh after save/remove actions
+
+The favorite column is fixed to the left when enabled. It can be hidden from the mod UI settings screen, and when re-enabled it returns to the first column.
+
+The mod UI is intentionally richer than the vanilla UI. It is optional, but it gives players local preferences without requiring extra server data.
 
 ## Mod Edit Screen
 
@@ -70,6 +79,8 @@ The server validates permissions again before applying any change.
 When Mod Menu is installed, Lodestone Warps exposes a client-side config editor.
 
 This screen edits the local config file. Remote servers still use their own server-side config.
+
+The config search waits briefly after typing before filtering, so the input keeps focus while the player types.
 
 ## Notes
 

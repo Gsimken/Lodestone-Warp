@@ -2,7 +2,7 @@
 
 [English](../User-Interfaces.md) | [Español](Interfaces.md)
 
-**Última actualización:** 2026-07-01
+**Última actualización:** 2026-07-13
 
 Lodestone Warps tiene dos interfaces. El servidor elige automáticamente según si el jugador tiene instalado el mod en el cliente.
 
@@ -47,11 +47,20 @@ Incluye:
 - paginación
 - iconos de costo por XP/item
 - botones de edición
+- favoritos guardados localmente en el cliente
+- columnas configurables y orden local de columnas
+- controles para mover, redimensionar, centrar, maximizar y cerrar la ventana
+- destinos deshabilitados cuando el jugador no puede pagar o está en cooldown
+- tooltips para teleports no disponibles y botones compactos
 - iconos de visibilidad:
   - 🌐 global
   - 🔒 privada
 - icono de visibilidad en el nombre de la Lodestone actual
 - actualización instantánea después de guardar/remover
+
+La columna de favoritos queda fija a la izquierda cuando está activa. Se puede ocultar desde la pantalla de configuración de la UI de mod y, al activarla de nuevo, vuelve al primer lugar.
+
+La UI de mod es intencionalmente más completa que la UI vanilla. Es opcional, pero entrega preferencias locales sin pedir más datos al servidor.
 
 ## Pantalla de Edición del Mod
 
@@ -76,6 +85,8 @@ El servidor vuelve a validar permisos antes de aplicar cualquier cambio.
 Cuando Mod Menu está instalado, Lodestone Warps expone un editor de config client-side.
 
 Esta pantalla edita el archivo local. Los servidores remotos siguen usando su propia config server-side.
+
+La búsqueda de config espera brevemente después de escribir antes de filtrar, para que el input mantenga el foco mientras el jugador escribe.
 
 ## Notas
 

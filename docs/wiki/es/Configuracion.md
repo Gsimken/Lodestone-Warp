@@ -2,7 +2,7 @@
 
 [English](../Configuration.md) | [Español](Configuracion.md)
 
-**Última actualización:** 2026-07-08
+**Última actualización:** 2026-07-13
 
 La configuración se genera en el primer inicio:
 
@@ -36,7 +36,7 @@ Los dueños de servidor también pueden usar la UI vanilla de config:
   "maxLodestonesGlobal": 0,
   "registerPlacedLodestonesOnlyWhenSneaking": true,
   "autoRegisterUntrackedLodestones": false,
-  "maxDialogDestinations": 24,
+  "maxDialogDestinations": 10,
   "vanillaDialogDestinationColumnWidth": 245,
   "vanillaDialogCostColumnWidth": 70,
   "vanillaDialogEditColumnWidth": 70,
@@ -46,6 +46,7 @@ Los dueños de servidor también pueden usar la UI vanilla de config:
   "showVanillaDialogDestinationSuffix": false,
   "vanillaDialogDestinationSuffix": "[{x}, {y}, {z}, {dimension}]",
   "teleportSourceRange": 8,
+  "teleportSourceYRange": 3,
   "teleportCastSeconds": 2,
   "teleportCastMoveTolerance": 0.2,
   "teleportCooldownSeconds": 3,
@@ -67,8 +68,7 @@ Los dueños de servidor también pueden usar la UI vanilla de config:
     "lodestone_teleport.own.visibility.discoverable": true,
     "lodestone_teleport.own.visibility.global": false,
     "lodestone_teleport.mode.all": false,
-    "lodestone_teleport.mode.discover": false,
-    "lodestone_teleport.limit.10": false
+    "lodestone_teleport.mode.discover": false
   },
   "adminPermissions": {
     "lodestone_teleport.admin": true,
@@ -191,10 +191,17 @@ Permite o bloquea teleports entre dimensiones.
 
 `teleportSourceRange`
 
-El jugador debe estar cerca de una Lodestone registrada para teletransportarse.
+Rango horizontal X/Z alrededor de una Lodestone registrada para teletransportarse.
 
 - `8`: radio por defecto en bloques.
-- `0`: desactiva esta restricción.
+- `0`: desactiva la validación horizontal.
+
+`teleportSourceYRange`
+
+Rango vertical Y alrededor de una Lodestone registrada para teletransportarse.
+
+- `3`: rango vertical por defecto en bloques.
+- `0`: desactiva la validación vertical.
 
 `teleportCastSeconds`
 
@@ -240,6 +247,8 @@ Presets soportados:
 `maxDialogDestinations`
 
 Cantidad máxima de destinos mostrados en la UI vanilla.
+
+Default: `10`.
 
 La UI de mod tiene paginación.
 
@@ -307,7 +316,7 @@ Permisos default entregados a todos los jugadores cuando ningún administrador d
 
 `adminPermissions`
 
-Permisos default entregados a admins OP/gamemaster cuando ningún administrador de permisos responde.
+Permisos default extra entregados a admins OP/gamemaster cuando ningún administrador de permisos responde. Son aditivos: los OP/gamemaster mantienen `playerPermissions` y además reciben los `adminPermissions` activos.
 
 Ambas configs de permisos son mapas:
 
@@ -318,7 +327,7 @@ Ambas configs de permisos son mapas:
 
 Esto permite desactivar un permiso sin eliminarlo. Cuando Lodestone Warps agregue permisos conocidos en el futuro, las claves faltantes pueden escribirse como `false` para mantener el archivo auditable.
 
-LuckPerms u otro administrador compatible con Fabric Permissions es lo recomendado para grupos, jugadores específicos e herencia. Si un administrador de permisos responde, esa respuesta gana sobre estos defaults.
+LuckPerms u otro administrador compatible con Fabric Permissions es lo recomendado para grupos, jugadores específicos e herencia. Si LuckPerms está instalado, Lodestone Warps trata LuckPerms como fuente de verdad y no concede permisos positivos desde estos mapas fallback.
 
 `pauseGameInSingleplayerUi`
 

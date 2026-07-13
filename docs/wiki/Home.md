@@ -2,7 +2,7 @@
 
 [English](Home.md) | [Español](es/Inicio.md)
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-13
 
 Welcome to the Lodestone Warps wiki. This is the living documentation for server owners, pack makers, and contributors.
 
@@ -26,7 +26,7 @@ Welcome to the Lodestone Warps wiki. This is the living documentation for server
 Lodestone Warps turns vanilla Lodestones into a server-side warp network.
 
 - Vanilla clients use Minecraft's Dialog UI.
-- Clients with the mod installed use the custom mod UI.
+- Clients with the mod installed use the custom mod UI with favorites, configurable columns, and a cleaner table view.
 - Teleports, costs, cast time, cooldowns, source range, and permissions are validated server-side.
 - Lodestones can be `private`, `discoverable`, or `global`.
 - Discovery mode stores which Lodestones each player has discovered.

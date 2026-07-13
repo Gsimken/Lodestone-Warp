@@ -1,6 +1,6 @@
 # Lodestone Warps
 
-**Last updated:** 2026-07-08
+**Last updated:** 2026-07-13
 
 **Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
 
@@ -19,7 +19,7 @@ The most up-to-date documentation is kept in the wiki:
 
 - Server-side Lodestone warp network.
 - Vanilla client support through Minecraft Dialogs.
-- Optional enhanced UI for players with the mod installed client-side.
+- Optional enhanced UI for players with the mod installed client-side, including favorites, configurable columns, movable/resizable window controls, and local UI preferences.
 - Optional Mod Menu config screen when installed on the client.
 - Sneak-place Lodestones to register them as warps by default.
 - Optional auto-registration for old or untracked Lodestones when interacted with.
@@ -39,6 +39,7 @@ The most up-to-date documentation is kept in the wiki:
 - Configurable command name, defaulting to `/warp`.
 - Safe fallback command, defaulting to `/lodestone_warp`.
 - Server-side config commands and a vanilla Dialog quick config UI for server owners.
+- Vanilla Dialog destination pagination, defaulting to 10 destinations per page.
 - Configurable network mode: show all Lodestones or only discovered Lodestones.
 - Per-player Lodestone discovery storage.
 - Admin-managed global Lodestones for lobbies and shared hubs.
@@ -104,12 +105,12 @@ If another mod already uses `/warp`, Lodestone Warps keeps `/lodestone_warp` ava
 
 ## Permissions
 
-Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API. If a permission manager answers a permission request, that answer wins. If no permission manager answers, Lodestone Warps uses two config maps as defaults:
+Lodestone Warps supports LuckPerms-compatible permissions through Fabric Permissions API. If LuckPerms is installed, Lodestone Warps treats LuckPerms as the source of truth and does not grant positive fallback permissions. Without LuckPerms, Lodestone Warps uses two config maps as defaults:
 
 - `playerPermissions`: default permissions granted to every player.
-- `adminPermissions`: default permissions granted to OP/gamemaster-level admins.
+- `adminPermissions`: extra default permissions granted to OP/gamemaster-level admins.
 
-Use LuckPerms or another permission manager for per-player, group, inheritance, or temporary permissions.
+Use LuckPerms or another permission manager for per-player, group, inheritance, or temporary permissions. OP/gamemaster players keep `playerPermissions` and additionally receive enabled `adminPermissions`; admin permissions do not subtract player permissions.
 
 Permission nodes:
 
@@ -149,7 +150,7 @@ Visibility modes:
 - `discoverable`: other players can discover it by touching it.
 - `global`: visible to everyone.
 
-The config permission maps use `"permission.node": true/false`, so server owners can disable permissions without deleting them. They accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*`, `lodestone.*`, or `*`.
+The config permission maps use `"permission.node": true/false`, so server owners can disable permissions without deleting them. They accept full nodes such as `lodestone_teleport.use`, bare names such as `use`, and wildcards such as `lodestone_teleport.*`, `lodestone.*`, or `*`. Dynamic limit nodes such as `lodestone_teleport.limit.1` are not auto-added; add the exact limit keys you want to use.
 
 Permission compatibility warnings:
 
@@ -164,13 +165,21 @@ The config is generated on first run at:
 
 `config/lodestone_warp_and_tp/lodestone_teleport.json`
 
+Important defaults for new configs:
+
+- XP-level cost is enabled by default.
+- `baseCost` defaults to `1`.
+- `maxCost` defaults to `64`.
+- `maxDialogDestinations` defaults to `10`.
+- Existing config files are normalized with missing keys, but existing values are not overwritten.
+
 Full config reference:
 
 [Configuration Wiki](https://github.com/Gsimken/Lodestone-Warp/wiki/Configuration)
 
 ## Current Status
 
-Current release line: **0.5.x**
+Release target: **1.0.x**
 
 This is still an early mod, but the core gameplay loop is playable:
 
@@ -182,5 +191,6 @@ This is still an early mod, but the core gameplay loop is playable:
 - rename destinations
 - use permissions
 - support vanilla and modded clients
+- use the optional client UI for favorites, column preferences, and a cleaner table view
 
 Feedback from real server usage is welcome.

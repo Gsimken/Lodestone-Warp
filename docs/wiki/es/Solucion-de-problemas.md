@@ -2,7 +2,7 @@
 
 [English](../Troubleshooting.md) | [Español](Solucion-de-problemas.md)
 
-**Última actualización:** 2026-07-01
+**Última actualización:** 2026-07-13
 
 ## La UI Vanilla Sale en Inglés o Español
 

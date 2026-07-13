@@ -2,7 +2,7 @@
 
 [English](Configuration.md) | [Español](es/Configuracion.md)
 
-**Last updated:** 2026-07-08
+**Last updated:** 2026-07-13
 
 The config is generated on first run:
 
@@ -36,7 +36,7 @@ Server owners can also use the vanilla Dialog config UI:
   "maxLodestonesGlobal": 0,
   "registerPlacedLodestonesOnlyWhenSneaking": true,
   "autoRegisterUntrackedLodestones": false,
-  "maxDialogDestinations": 24,
+  "maxDialogDestinations": 10,
   "vanillaDialogDestinationColumnWidth": 245,
   "vanillaDialogCostColumnWidth": 70,
   "vanillaDialogEditColumnWidth": 70,
@@ -46,6 +46,7 @@ Server owners can also use the vanilla Dialog config UI:
   "showVanillaDialogDestinationSuffix": false,
   "vanillaDialogDestinationSuffix": "[{x}, {y}, {z}, {dimension}]",
   "teleportSourceRange": 8,
+  "teleportSourceYRange": 3,
   "teleportCastSeconds": 2,
   "teleportCastMoveTolerance": 0.2,
   "teleportCooldownSeconds": 3,
@@ -67,8 +68,7 @@ Server owners can also use the vanilla Dialog config UI:
     "lodestone_teleport.own.visibility.discoverable": true,
     "lodestone_teleport.own.visibility.global": false,
     "lodestone_teleport.mode.all": false,
-    "lodestone_teleport.mode.discover": false,
-    "lodestone_teleport.limit.10": false
+    "lodestone_teleport.mode.discover": false
   },
   "adminPermissions": {
     "lodestone_teleport.admin": true,
@@ -203,10 +203,17 @@ Allows or blocks teleports between dimensions.
 
 `teleportSourceRange`
 
-Players must be near a registered Lodestone before teleporting.
+Horizontal X/Z range around a registered Lodestone before teleporting.
 
 - `8`: default radius in blocks.
-- `0`: disables this requirement.
+- `0`: disables horizontal range checking.
+
+`teleportSourceYRange`
+
+Vertical Y range around a registered Lodestone before teleporting.
+
+- `3`: default vertical range in blocks.
+- `0`: disables vertical range checking.
 
 `teleportCastSeconds`
 
@@ -269,6 +276,8 @@ Supported presets:
 `maxDialogDestinations`
 
 Maximum destinations shown in the vanilla Dialog UI.
+
+Default: `10`.
 
 The custom mod UI has pagination.
 
@@ -336,7 +345,7 @@ Default permissions granted to every player when no permission manager answers a
 
 `adminPermissions`
 
-Default permissions granted to OP/gamemaster-level admins when no permission manager answers a permission request.
+Extra default permissions granted to OP/gamemaster-level admins when no permission manager answers a permission request. Admin permissions are additive: OP/gamemaster players keep `playerPermissions` and additionally receive enabled `adminPermissions`.
 
 Both permission configs are maps:
 
@@ -347,7 +356,7 @@ Both permission configs are maps:
 
 This lets you disable a permission without deleting it. When Lodestone Warps adds known permissions later, missing known keys can be written back as `false` so the file remains auditable.
 
-LuckPerms or another Fabric Permissions-compatible manager is recommended for real group/player management. If a permission manager answers, its answer wins over these config defaults.
+LuckPerms or another Fabric Permissions-compatible manager is recommended for real group/player management. If LuckPerms is installed, Lodestone Warps treats LuckPerms as the source of truth and does not grant positive fallback permissions from these maps.
 
 `pauseGameInSingleplayerUi`
 

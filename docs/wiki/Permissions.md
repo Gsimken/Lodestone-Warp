@@ -2,14 +2,18 @@
 
 [English](Permissions.md) | [Español](es/Permisos.md)
 
-**Last updated:** 2026-07-08
+**Last updated:** 2026-07-13
 
 Lodestone Warps uses Fabric Permissions API and is compatible with LuckPerms.
 
-If a permission manager answers a permission request, that answer wins. If no permission manager answers, Lodestone Warps falls back to:
+If LuckPerms is installed, Lodestone Warps treats LuckPerms as the source of truth and does not grant positive fallback permissions. Without LuckPerms, Lodestone Warps falls back to:
 
 - `playerPermissions`: fallback permission map for every player.
-- `adminPermissions`: fallback permission map for OP/gamemaster-level admins.
+- `adminPermissions`: extra fallback permission map for OP/gamemaster-level admins.
+
+OP/gamemaster players keep `playerPermissions` and additionally receive enabled `adminPermissions`; admin permissions do not subtract player permissions.
+
+If LuckPerms is installed but a group/player has no Lodestone Warps permissions, that group/player should be treated as having no Lodestone Warps access until permissions are granted in LuckPerms. The fallback config is intended for servers without a permission manager.
 
 ## Permission Nodes
 
@@ -200,6 +204,8 @@ Examples:
 
 Use `lodestone_teleport.bypass_max_warps` for staff or groups that should ignore this limit.
 
+Limit values are dynamic. You can use any positive number, such as `lodestone_teleport.limit.1`, `lodestone_teleport.limit.3`, or `lodestone_teleport.limit.50`.
+
 ## Config Fallback Permissions
 
 The config maps use boolean values:
@@ -209,7 +215,7 @@ The config maps use boolean values:
 "lodestone_teleport.rename": false
 ```
 
-This lets you disable permissions without deleting them. Known missing permissions can be written back as `false`, which makes auditing easier.
+This lets you disable permissions without deleting them. Known missing permissions can be written back as `false`, which makes auditing easier. Dynamic limit nodes such as `lodestone_teleport.limit.1` are not auto-added; add the exact limit keys you want to use.
 
 The config maps accept:
 
@@ -217,7 +223,9 @@ The config maps accept:
 - short nodes, such as `use`
 - wildcards, such as `lodestone_teleport.*`, `lodestone.*`, or `*`
 
-If you use LuckPerms, keep `playerPermissions` and `adminPermissions` disabled or empty so the permission manager is the single source of truth.
+If you use LuckPerms, Lodestone Warps ignores positive fallback grants and lets LuckPerms decide. You can still keep limit keys such as `"lodestone_teleport.limit.1": false` in the config as audit/candidate entries.
+
+The alias prefix `lodestone.*` is supported for convenience, but the canonical permission prefix is `lodestone_teleport.*`.
 
 ## LuckPerms Examples
 

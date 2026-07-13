@@ -2,7 +2,7 @@
 
 [English](Commands.md) | [Español](es/Comandos.md)
 
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-13
 
 ## Default Command
 
@@ -19,6 +19,14 @@
 The fallback command exists to reduce conflicts with other warp mods. If another mod already owns `/warp`, use `/lodestone_warp`.
 
 ## Subcommands
+
+Open the Lodestone UI from the nearest registered Lodestone:
+
+```mcfunction
+/warp
+```
+
+The player must have `lodestone_teleport.use` and must be within the configured source range of a registered Lodestone.
 
 Teleport:
 
@@ -111,11 +119,15 @@ Reload config:
 /warp reload
 ```
 
+Requires `lodestone_teleport.config` or OP/gamemaster-level access.
+
 Open vanilla Dialog config UI:
 
 ```mcfunction
 /warp config
 ```
+
+Requires `lodestone_teleport.config` or OP/gamemaster-level access.
 
 List config keys:
 
