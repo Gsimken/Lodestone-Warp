@@ -23,12 +23,17 @@ public final class LodestoneConfigScreen extends Screen {
 	private static final int RESET_WIDTH = 28;
 	private static final int RESET_GAP = 4;
 	private static final int ROW_HEIGHT = 24;
+	private static final long SEARCH_DEBOUNCE_MILLIS = 350L;
 
 	private final Screen parent;
 	private final Map<String, String> drafts = new HashMap<>();
 	private final List<ConfigField> fields = new ArrayList<>();
 	private Section section = Section.ALL;
 	private String query = "";
+	private String pendingQuery = "";
+	private long searchChangedAtMillis = 0L;
+	private boolean searchDirty = false;
+	private boolean refocusSearchAfterRebuild = false;
 	private int scrollOffset = 0;
 	private Component status = Component.empty();
 	private EditBox searchBox;
@@ -63,13 +68,18 @@ public final class LodestoneConfigScreen extends Screen {
 		this.searchBox = new EditBox(this.font, left, top + 72, contentWidth, 20, LodestoneText.text("input.search", "Search"));
 		this.searchBox.setHint(LodestoneText.text("input.search", "Search"));
 		this.searchBox.setMaxLength(64);
-		this.searchBox.setValue(this.query);
+		this.searchBox.setValue(this.pendingQuery);
 		this.searchBox.setResponder(value -> {
-			this.query = value;
-			this.scrollOffset = 0;
-			rebuildWidgets();
+			this.pendingQuery = value;
+			this.searchChangedAtMillis = System.currentTimeMillis();
+			this.searchDirty = true;
 		});
 		addRenderableWidget(this.searchBox);
+		if (this.refocusSearchAfterRebuild) {
+			this.searchBox.setFocused(true);
+			this.setFocused(this.searchBox);
+			this.refocusSearchAfterRebuild = false;
+		}
 
 		int y = top + 104;
 		int fieldX = Math.max(left + 220, right - FIELD_WIDTH);
@@ -147,6 +157,14 @@ public final class LodestoneConfigScreen extends Screen {
 	}
 
 	@Override
+	public void tick() {
+		super.tick();
+		if (this.searchDirty && System.currentTimeMillis() - this.searchChangedAtMillis >= SEARCH_DEBOUNCE_MILLIS) {
+			applyPendingSearch();
+		}
+	}
+
+	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
 		int maxScroll = Math.max(0, filteredFields().size() - visibleRows());
 		if (maxScroll <= 0) {
@@ -187,6 +205,18 @@ public final class LodestoneConfigScreen extends Screen {
 			this.drafts.put(field.key(), field.defaultValue());
 			rebuildWidgets();
 		}).bounds(x, y, RESET_WIDTH, 18).build());
+	}
+
+	private void applyPendingSearch() {
+		if (this.query.equals(this.pendingQuery)) {
+			this.searchDirty = false;
+			return;
+		}
+		this.query = this.pendingQuery;
+		this.searchDirty = false;
+		this.scrollOffset = 0;
+		this.refocusSearchAfterRebuild = true;
+		rebuildWidgets();
 	}
 
 	private List<ConfigField> filteredFields() {
@@ -245,10 +275,11 @@ public final class LodestoneConfigScreen extends Screen {
 			List<ConfigField> fields() {
 				return List.of(
 					integer("teleport_source_range", "config.field.teleport_source_range", "Source range", "8", "Player must stand near a registered Lodestone to teleport.", "Whole number, 0 disables the range check.", () -> LodestoneConfig.get().teleportSourceRange, (config, value) -> config.teleportSourceRange = value),
+					integer("teleport_source_y_range", "config.field.teleport_source_y_range", "Source Y range", "3", "Vertical range around a registered Lodestone that still counts as nearby.", "Whole number, 0 disables the vertical range check.", () -> LodestoneConfig.get().teleportSourceYRange, (config, value) -> config.teleportSourceYRange = value),
 					integer("teleport_cast_seconds", "config.field.teleport_cast_seconds", "Cast seconds", "2", "Seconds the player must stand still before teleporting.", "Whole number, 0 disables casting.", () -> LodestoneConfig.get().teleportCastSeconds, (config, value) -> config.teleportCastSeconds = value),
 					decimal("teleport_cast_move_tolerance", "config.field.teleport_cast_move_tolerance", "Cast move tolerance", "0.2", "Maximum movement allowed during the teleport cast.", "Decimal number, 0 or higher.", () -> LodestoneConfig.get().teleportCastMoveTolerance, (config, value) -> config.teleportCastMoveTolerance = value),
 					integer("teleport_cooldown_seconds", "config.field.teleport_cooldown_seconds", "Cooldown seconds", "3", "Cooldown after a successful teleport.", "Whole number, 0 disables cooldown.", () -> LodestoneConfig.get().teleportCooldownSeconds, (config, value) -> config.teleportCooldownSeconds = value),
-					integer("max_dialog_destinations", "config.field.max_dialog_destinations", "Vanilla dialog destinations", "24", "Maximum destination buttons shown in the vanilla Dialog UI.", "Whole number, 1 or higher.", () -> LodestoneConfig.get().maxDialogDestinations, (config, value) -> config.maxDialogDestinations = value),
+					integer("max_dialog_destinations", "config.field.max_dialog_destinations", "Vanilla dialog destinations", "10", "Maximum destination buttons shown in the vanilla Dialog UI.", "Whole number, 1 or higher.", () -> LodestoneConfig.get().maxDialogDestinations, (config, value) -> config.maxDialogDestinations = value),
 					integer("vanilla_dialog_destination_column_width", "config.field.vanilla_dialog_destination_column_width", "Vanilla destination column width", "245", "Width of the destination column in the vanilla Dialog UI.", "Whole number, 80 to 500.", () -> LodestoneConfig.get().vanillaDialogDestinationColumnWidth, (config, value) -> config.vanillaDialogDestinationColumnWidth = value),
 					integer("vanilla_dialog_cost_column_width", "config.field.vanilla_dialog_cost_column_width", "Vanilla cost column width", "70", "Width of the cost column in the vanilla Dialog UI.", "Whole number, 30 to 180.", () -> LodestoneConfig.get().vanillaDialogCostColumnWidth, (config, value) -> config.vanillaDialogCostColumnWidth = value),
 					integer("vanilla_dialog_edit_column_width", "config.field.vanilla_dialog_edit_column_width", "Vanilla edit column width", "70", "Width of the edit/spacer column in the vanilla Dialog UI.", "Whole number, 20 to 120.", () -> LodestoneConfig.get().vanillaDialogEditColumnWidth, (config, value) -> config.vanillaDialogEditColumnWidth = value),

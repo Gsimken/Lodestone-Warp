@@ -156,12 +156,20 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 			}
 			return;
 		}
-		this.columns.add(column);
+		if ("favorite".equals(column)) {
+			this.columns.add(0, column);
+		} else {
+			this.columns.add(column);
+		}
 	}
 
 	private void addLast(String column) {
 		if (!this.columns.contains(column)) {
-			this.columns.add(column);
+			if ("favorite".equals(column)) {
+				this.columns.add(0, column);
+			} else {
+				this.columns.add(column);
+			}
 		}
 	}
 

@@ -67,6 +67,9 @@ public final class LodestoneWarpScreen extends Screen {
 	private int tableScrollDragOffset;
 	private boolean pageHasEditButtons;
 	private long lastCooldownSecond = -1L;
+	private int tableRowsBottomY;
+	private int tableScrollBarY;
+	private int paginationY;
 
 	public LodestoneWarpScreen(CompoundTag data) {
 		super(LodestoneText.title());
@@ -81,6 +84,9 @@ public final class LodestoneWarpScreen extends Screen {
 		this.initialCooldownSeconds = data.getIntOr("cooldownSeconds", 0);
 		this.openedAtMillis = System.currentTimeMillis();
 		this.destinations = readDestinations(data.getListOrEmpty("destinations"));
+		this.tableRowsBottomY = 0;
+		this.tableScrollBarY = 0;
+		this.paginationY = 0;
 	}
 
 	@Override
@@ -204,6 +210,7 @@ public final class LodestoneWarpScreen extends Screen {
 		int left = tableLeft();
 		int y = panelTop() + 143;
 		int panelWidth = contentWidth();
+		updateFooterPositions();
 		int bottom = tableRowsBottom();
 		String needle = this.query.toLowerCase(Locale.ROOT).trim();
 		List<Destination> filtered = filteredDestinations(needle);
@@ -270,6 +277,7 @@ public final class LodestoneWarpScreen extends Screen {
 			empty.active = false;
 			this.destinationButtons.add(empty);
 			addRenderableWidget(empty);
+			y += ROW_HEIGHT + GAP;
 		}
 		addPaginationButtons(left, totalPages);
 	}
@@ -309,7 +317,7 @@ public final class LodestoneWarpScreen extends Screen {
 
 	private void addPaginationButtons(int left, int totalPages) {
 		int panelWidth = contentWidth();
-		int y = panelBottom() - 60;
+		int y = this.paginationY;
 		Button previous = Button.builder(LodestoneText.text("client.page.previous", "Previous"), button -> {
 			this.page = Math.max(0, this.page - 1);
 			refreshDestinations();
@@ -761,11 +769,22 @@ public final class LodestoneWarpScreen extends Screen {
 	}
 
 	private int tableRowsBottom() {
-		return panelBottom() - 100;
+		return this.tableRowsBottomY > 0 ? this.tableRowsBottomY : maxTableRowsBottom();
+	}
+
+	private int maxTableRowsBottom() {
+		return tableScrollY() - 8;
 	}
 
 	private int tableScrollY() {
-		return panelBottom() - 84;
+		return this.tableScrollBarY > 0 ? this.tableScrollBarY : panelBottom() - 84;
+	}
+
+	private void updateFooterPositions() {
+		int fixedPaginationY = this.canEditCurrent ? panelBottom() - 60 : panelBottom() - 32;
+		this.paginationY = fixedPaginationY;
+		this.tableScrollBarY = this.paginationY - 16;
+		this.tableRowsBottomY = this.tableScrollBarY - 8;
 	}
 
 	private int tableScrollThumbWidth() {

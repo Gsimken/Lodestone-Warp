@@ -163,7 +163,11 @@ public final class LodestoneClientPreferences {
 		if (clean.isEmpty()) {
 			clean.addAll(DEFAULT_COLUMNS);
 		}
-		return new ArrayList<>(clean);
+		List<String> ordered = new ArrayList<>(clean);
+		if (ordered.remove("favorite")) {
+			ordered.add(0, "favorite");
+		}
+		return ordered;
 	}
 
 	private static List<String> cleanStrings(List<String> values) {
