@@ -76,6 +76,7 @@
   "text.lodestone_teleport.config.field.sneak_place_only": "Sneak-place only",
   "text.lodestone_teleport.config.field.auto_register_untracked": "Auto-register untracked",
   "text.lodestone_teleport.config.field.teleport_source_range": "Source range",
+  "text.lodestone_teleport.config.field.teleport_source_y_range": "Source Y range",
   "text.lodestone_teleport.config.field.teleport_cast_seconds": "Cast seconds",
   "text.lodestone_teleport.config.field.teleport_cast_move_tolerance": "Cast move tolerance",
   "text.lodestone_teleport.config.field.teleport_cooldown_seconds": "Cooldown seconds",

@@ -71,6 +71,14 @@ tasks.withType(JavaExec).configureEach {
 			systemProperty permissionProperty, value.get()
 		}
 	}
+	for (String propertyName : providers.gradlePropertiesPrefixedBy("lodestone_teleport.limit.").get().keySet()) {
+		systemProperty propertyName, providers.gradleProperty(propertyName).get()
+	}
+	for (String propertyName : System.getProperties().stringPropertyNames()) {
+		if (propertyName.startsWith("lodestone_teleport.limit.")) {
+			systemProperty propertyName, System.getProperty(propertyName)
+		}
+	}
 }
 
 tasks.named("runClient", JavaExec).configure {

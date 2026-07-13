@@ -198,7 +198,7 @@ public final class LodestoneSavedData extends SavedData {
 		return Optional.empty();
 	}
 
-	public Optional<LodestoneLocation> nearestRegisteredLodestone(ResourceKey<Level> dimension, BlockPos pos, int range) {
+	public Optional<LodestoneLocation> nearestRegisteredLodestone(ResourceKey<Level> dimension, BlockPos pos, int range, int yRange) {
 		LodestoneLocation nearest = null;
 		double nearestDistance = Double.MAX_VALUE;
 		double maxDistance = range <= 0 ? Double.MAX_VALUE : range * range;
@@ -206,7 +206,12 @@ public final class LodestoneSavedData extends SavedData {
 			if (!location.dimension().equals(dimension)) {
 				continue;
 			}
-			double distance = pos.distSqr(location.pos());
+			if (yRange > 0 && Math.abs(pos.getY() - location.pos().getY()) > yRange) {
+				continue;
+			}
+			double dx = pos.getX() - location.pos().getX();
+			double dz = pos.getZ() - location.pos().getZ();
+			double distance = dx * dx + dz * dz;
 			if (distance > maxDistance || distance >= nearestDistance) {
 				continue;
 			}

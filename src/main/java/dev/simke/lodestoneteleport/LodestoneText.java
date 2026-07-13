@@ -51,7 +51,8 @@ public final class LodestoneText {
 			case "max_lodestones_per_player" -> "Máximo de lodestones registradas por cada jugador.";
 			case "sneak_place_only" -> "Solo registra lodestones nuevas cuando el jugador las coloca agachado.";
 			case "auto_register_untracked" -> "Registra lodestones antiguas o desvinculadas al hacer click derecho normal.";
-			case "teleport_source_range" -> "El jugador debe estar cerca de una lodestone registrada para teletransportarse.";
+			case "teleport_source_range" -> "Distancia horizontal maxima alrededor de una lodestone registrada.";
+			case "teleport_source_y_range" -> "Distancia vertical maxima alrededor de una lodestone registrada.";
 			case "teleport_cast_seconds" -> "Segundos que el jugador debe quedarse quieto antes del teleport.";
 			case "teleport_cast_move_tolerance" -> "Movimiento máximo permitido durante la canalización del teleport.";
 			case "teleport_cooldown_seconds" -> "Cooldown después de un teleport exitoso.";
@@ -89,7 +90,7 @@ public final class LodestoneText {
 		return switch (id) {
 			case "cost_type" -> "xp_levels o item.";
 			case "cost_item" -> "Identificador de item, por ejemplo minecraft:diamond.";
-			case "base_cost", "teleport_source_range", "teleport_cast_seconds", "teleport_cooldown_seconds" -> "Número entero, 0 o mayor.";
+			case "base_cost", "teleport_source_range", "teleport_source_y_range", "teleport_cast_seconds", "teleport_cooldown_seconds" -> "Número entero, 0 o mayor.";
 			case "blocks_per_extra_cost" -> "Número entero, 0 desactiva el escalado por distancia.";
 			case "cross_dimension_multiplier", "teleport_cast_move_tolerance" -> "Número decimal, 0 o mayor.";
 			case "max_cost", "max_lodestones_global", "max_lodestones_per_player" -> "Número entero, 0 significa sin límite.";
@@ -396,6 +397,7 @@ public final class LodestoneText {
 			case "config.field.sneak_place_only" -> "Solo colocar agachado";
 			case "config.field.auto_register_untracked" -> "Auto-registrar no registradas";
 			case "config.field.teleport_source_range" -> "Rango de origen";
+			case "config.field.teleport_source_y_range" -> "Rango Y de origen";
 			case "config.field.teleport_cast_seconds" -> "Segundos de canalización";
 			case "config.field.teleport_cast_move_tolerance" -> "Tolerancia de movimiento";
 			case "config.field.teleport_cooldown_seconds" -> "Segundos de cooldown";

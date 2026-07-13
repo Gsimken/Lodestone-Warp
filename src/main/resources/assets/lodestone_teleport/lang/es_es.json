@@ -76,6 +76,7 @@
   "text.lodestone_teleport.config.field.sneak_place_only": "Solo colocar agachado",
   "text.lodestone_teleport.config.field.auto_register_untracked": "Auto-registrar no registradas",
   "text.lodestone_teleport.config.field.teleport_source_range": "Rango de origen",
+  "text.lodestone_teleport.config.field.teleport_source_y_range": "Rango Y de origen",
   "text.lodestone_teleport.config.field.teleport_cast_seconds": "Segundos de canalización",
   "text.lodestone_teleport.config.field.teleport_cast_move_tolerance": "Tolerancia de movimiento",
   "text.lodestone_teleport.config.field.teleport_cooldown_seconds": "Segundos de cooldown",

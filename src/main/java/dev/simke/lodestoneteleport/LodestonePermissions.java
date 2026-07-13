@@ -2,19 +2,21 @@ package dev.simke.lodestoneteleport;
 
 import net.fabricmc.fabric.api.permission.v1.PermissionNode;
 import net.fabricmc.fabric.api.permission.v1.PermissionPredicates;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 
 public final class LodestonePermissions {
 	private static final String LEGACY_PERMISSION_PREFIX = LodestoneTeleportMod.MOD_ID + ".";
 	private static final String SHORT_PERMISSION_PREFIX = "lodestone.";
-	private static final int MAX_SCANNED_LIMIT_PERMISSION = 1000;
 
 	public static final PermissionNode<Boolean> USE = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "use");
 	public static final PermissionNode<Boolean> RENAME = PermissionNode.of(LodestoneTeleportMod.MOD_ID, "rename");
@@ -190,7 +192,7 @@ public final class LodestonePermissions {
 		CommandSourceStack source = player.createCommandSourceStack();
 		int configured = highestConfiguredLimit(source);
 		int debug = highestDebugLimit();
-		int external = highestExternalLimit(source);
+		int external = permissionBackendInstalled() ? highestLuckPermsLimit(source) : highestExternalLimit(source);
 		int limit = Math.max(configured, Math.max(debug, external));
 		return limit >= 0 ? OptionalInt.of(limit) : OptionalInt.empty();
 	}
@@ -203,7 +205,12 @@ public final class LodestonePermissions {
 		if (debugWildcardOverride() || hasConfiguredWildcard(source) || hasExternalWildcard(source)) {
 			return true;
 		}
-		return PermissionPredicates.require(permission, hasConfiguredPermission(source, permission)).test(source);
+		Boolean luckPerms = luckPermsPermission(source, permission);
+		if (luckPerms != null) {
+			return luckPerms;
+		}
+		boolean fallback = permissionBackendInstalled() ? false : hasConfiguredPermission(source, permission);
+		return PermissionPredicates.require(permission, fallback).test(source);
 	}
 
 	private static boolean hasConfiguredPermission(CommandSourceStack source, PermissionNode<Boolean> permission) {
@@ -235,6 +242,9 @@ public final class LodestonePermissions {
 	}
 
 	private static boolean hasConfiguredWildcard(CommandSourceStack source) {
+		if (permissionBackendInstalled()) {
+			return false;
+		}
 		LodestoneConfig config = LodestoneConfig.get();
 		if (containsPermission(config.playerPermissions, LEGACY_PERMISSION_PREFIX + "*") || containsPermission(config.playerPermissions, SHORT_PERMISSION_PREFIX + "*")) {
 			return true;
@@ -249,6 +259,9 @@ public final class LodestonePermissions {
 	}
 
 	private static int highestConfiguredLimit(CommandSourceStack source) {
+		if (permissionBackendInstalled()) {
+			return -1;
+		}
 		LodestoneConfig config = LodestoneConfig.get();
 		int limit = highestLimit(config.playerPermissions);
 		if (source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
@@ -289,12 +302,49 @@ public final class LodestonePermissions {
 
 	private static int highestExternalLimit(CommandSourceStack source) {
 		int limit = -1;
-		for (int candidate = 0; candidate <= MAX_SCANNED_LIMIT_PERMISSION; candidate++) {
+		for (int candidate : knownLimitCandidates()) {
 			if (externalLimit(source, LodestoneTeleportMod.MOD_ID, candidate) || externalLimit(source, "lodestone", candidate)) {
 				limit = candidate;
 			}
 		}
 		return limit;
+	}
+
+	private static int highestLuckPermsLimit(CommandSourceStack source) {
+		Map<String, Boolean> permissions = luckPermsPermissionMap(source);
+		int limit = -1;
+		for (var entry : permissions.entrySet()) {
+			if (Boolean.TRUE.equals(entry.getValue())) {
+				limit = Math.max(limit, parseLimitPermission(entry.getKey()));
+			}
+		}
+		return limit;
+	}
+
+	private static Set<Integer> knownLimitCandidates() {
+		Set<Integer> candidates = new HashSet<>();
+		LodestoneConfig config = LodestoneConfig.get();
+		addLimitCandidates(candidates, config.playerPermissions);
+		addLimitCandidates(candidates, config.adminPermissions);
+		for (String property : System.getProperties().stringPropertyNames()) {
+			int limit = parseLimitPermission(property);
+			if (limit >= 0) {
+				candidates.add(limit);
+			}
+		}
+		return candidates;
+	}
+
+	private static void addLimitCandidates(Set<Integer> candidates, Map<String, Boolean> permissions) {
+		if (permissions == null) {
+			return;
+		}
+		for (String permission : permissions.keySet()) {
+			int limit = parseLimitPermission(permission);
+			if (limit >= 0) {
+				candidates.add(limit);
+			}
+		}
 	}
 
 	private static boolean externalLimit(CommandSourceStack source, String namespace, int limit) {
@@ -304,6 +354,70 @@ public final class LodestonePermissions {
 	private static boolean checkExternal(CommandSourceStack source, String permission) {
 		Identifier id = Identifier.tryParse(permission);
 		return id != null && PermissionPredicates.require(id, false).test(source);
+	}
+
+	private static boolean permissionBackendInstalled() {
+		return FabricLoader.getInstance().isModLoaded("luckperms");
+	}
+
+	private static Boolean luckPermsPermission(CommandSourceStack source, PermissionNode<Boolean> permission) {
+		if (!permissionBackendInstalled()) {
+			return null;
+		}
+		String node = LEGACY_PERMISSION_PREFIX + permissionName(permission);
+		String shortNode = SHORT_PERMISSION_PREFIX + permissionName(permission);
+		Map<String, Boolean> permissions = luckPermsPermissionMap(source);
+		Boolean exact = permissions.get(node);
+		if (exact != null) {
+			return exact;
+		}
+		exact = permissions.get(shortNode);
+		if (exact != null) {
+			return exact;
+		}
+		return wildcardPermission(permissions, node, shortNode);
+	}
+
+	private static Boolean wildcardPermission(Map<String, Boolean> permissions, String node, String shortNode) {
+		for (var entry : permissions.entrySet()) {
+			String permission = entry.getKey();
+			if ("*".equals(permission)
+				|| (permission.endsWith(".*") && (node.startsWith(permission.substring(0, permission.length() - 1)) || shortNode.startsWith(permission.substring(0, permission.length() - 1))))) {
+				return Boolean.TRUE.equals(entry.getValue());
+			}
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Boolean> luckPermsPermissionMap(CommandSourceStack source) {
+		if (!(source.getEntity() instanceof ServerPlayer player)) {
+			return Map.of();
+		}
+		try {
+			Class<?> providerClass = Class.forName("net.luckperms.api.LuckPermsProvider");
+			Object api = providerClass.getMethod("get").invoke(null);
+			Object userManager = api.getClass().getMethod("getUserManager").invoke(api);
+			Object user = userManager.getClass().getMethod("getUser", java.util.UUID.class).invoke(userManager, player.getUUID());
+			if (user == null) {
+				return Map.of();
+			}
+			Object cachedData = user.getClass().getMethod("getCachedData").invoke(user);
+			Object permissionData = cachedData.getClass().getMethod("getPermissionData").invoke(cachedData);
+			Object permissionMap = permissionData.getClass().getMethod("getPermissionMap").invoke(permissionData);
+			if (permissionMap instanceof Map<?, ?> map) {
+				Map<String, Boolean> result = new java.util.LinkedHashMap<>();
+				for (var entry : map.entrySet()) {
+					if (entry.getKey() instanceof String key && entry.getValue() instanceof Boolean value) {
+						result.put(key.toLowerCase(java.util.Locale.ROOT), value);
+					}
+				}
+				return result;
+			}
+		} catch (ReflectiveOperationException | LinkageError exception) {
+			return Map.of();
+		}
+		return Map.of();
 	}
 
 	private static int parseLimitPermission(String permission) {

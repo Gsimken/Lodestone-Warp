@@ -41,7 +41,7 @@ public final class LodestoneConfig {
 	public int maxLodestonesGlobal = 0;
 	public boolean registerPlacedLodestonesOnlyWhenSneaking = true;
 	public boolean autoRegisterUntrackedLodestones = false;
-	public int maxDialogDestinations = 24;
+	public int maxDialogDestinations = 10;
 	public int vanillaDialogDestinationColumnWidth = 245;
 	public int vanillaDialogCostColumnWidth = 70;
 	public int vanillaDialogEditColumnWidth = 70;
@@ -51,6 +51,7 @@ public final class LodestoneConfig {
 	public boolean showVanillaDialogDestinationSuffix = false;
 	public String vanillaDialogDestinationSuffix = "[{x}, {y}, {z}, {dimension}]";
 	public int teleportSourceRange = 8;
+	public int teleportSourceYRange = 3;
 	public int teleportCastSeconds = 2;
 	public double teleportCastMoveTolerance = 0.2D;
 	public int teleportCooldownSeconds = 3;
@@ -212,6 +213,7 @@ public final class LodestoneConfig {
 			config.vanillaDialogDestinationSuffix = "[{x}, {y}, {z}, {dimension}]";
 		}
 		config.teleportSourceRange = Math.max(0, config.teleportSourceRange);
+		config.teleportSourceYRange = Math.max(0, config.teleportSourceYRange);
 		config.teleportCastSeconds = Math.max(0, config.teleportCastSeconds);
 		config.teleportCastMoveTolerance = Math.max(0.0D, config.teleportCastMoveTolerance);
 		config.teleportCooldownSeconds = Math.max(0, config.teleportCooldownSeconds);
@@ -339,8 +341,7 @@ public final class LodestoneConfig {
 			"lodestone_teleport.bypass_cooldown",
 			"lodestone_teleport.bypass_max_warps",
 			"lodestone_teleport.mode.all",
-			"lodestone_teleport.mode.discover",
-			"lodestone_teleport.limit.10"
+			"lodestone_teleport.mode.discover"
 		);
 	}
 

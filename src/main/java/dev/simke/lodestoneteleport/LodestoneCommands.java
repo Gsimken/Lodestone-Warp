@@ -160,7 +160,8 @@ public final class LodestoneCommands {
 			return 0;
 		}
 		LodestoneSavedData data = LodestoneSavedData.from(player.level());
-		Optional<LodestoneLocation> nearby = data.nearestRegisteredLodestone(player.level().dimension(), player.blockPosition(), LodestoneConfig.get().teleportSourceRange)
+		LodestoneConfig config = LodestoneConfig.get();
+		Optional<LodestoneLocation> nearby = data.nearestRegisteredLodestone(player.level().dimension(), player.blockPosition(), config.teleportSourceRange, config.teleportSourceYRange)
 			.filter(location -> ((ServerLevel) player.level()).getBlockState(location.pos()).is(Blocks.LODESTONE));
 		if (nearby.isPresent()) {
 			LodestoneUi.showDestinations(player, nearby.get());
@@ -696,12 +697,14 @@ public final class LodestoneCommands {
 	}
 
 	static boolean isNearRegisteredLodestone(ServerPlayer player, LodestoneSavedData data) {
-		int range = LodestoneConfig.get().teleportSourceRange;
-		if (range <= 0) {
+		LodestoneConfig config = LodestoneConfig.get();
+		int range = config.teleportSourceRange;
+		int yRange = config.teleportSourceYRange;
+		if (range <= 0 && yRange <= 0) {
 			return true;
 		}
 		ServerLevel level = (ServerLevel) player.level();
-		return data.nearestRegisteredLodestone(level.dimension(), player.blockPosition(), range)
+		return data.nearestRegisteredLodestone(level.dimension(), player.blockPosition(), range, yRange)
 			.filter(location -> level.getBlockState(location.pos()).is(Blocks.LODESTONE))
 			.isPresent();
 	}
