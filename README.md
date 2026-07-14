@@ -13,7 +13,7 @@ The mod is designed for servers that want immersive teleportation without requir
 The most up-to-date documentation is kept in the wiki:
 
 - [English Wiki](https://github.com/Gsimken/Lodestone-Warp/wiki)
-- [Wiki en Español](https://github.com/Gsimken/Lodestone-Warp/wiki/Inicio)
+- [Wiki en Español](https://github.com/Gsimken/Lodestone-Warp/wiki/es-home)
 
 ## Features
 
@@ -179,9 +179,9 @@ Full config reference:
 
 ## Current Status
 
-Release target: **1.0.x**
+Current stable release: **1.0.0**
 
-This is still an early mod, but the core gameplay loop is playable:
+The core gameplay loop is ready for real server testing:
 
 - register Lodestones
 - open UI
