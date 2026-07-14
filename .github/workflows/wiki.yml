@@ -42,13 +42,13 @@ jobs:
           cp docs/wiki/Troubleshooting.md build/wiki/Troubleshooting.md
           cp ROADMAP.md build/wiki/Roadmap.md
 
-          cp docs/wiki/es/Inicio.md build/wiki/Inicio.md
-          cp docs/wiki/es/Instalacion.md build/wiki/Espanol-Instalacion.md
-          cp docs/wiki/es/Configuracion.md build/wiki/Espanol-Configuracion.md
-          cp docs/wiki/es/Comandos.md build/wiki/Espanol-Comandos.md
-          cp docs/wiki/es/Permisos.md build/wiki/Espanol-Permisos.md
-          cp docs/wiki/es/Interfaces.md build/wiki/Espanol-Interfaces.md
-          cp docs/wiki/es/Solucion-de-problemas.md build/wiki/Espanol-Solucion-de-problemas.md
+          cp docs/wiki/es/Inicio.md build/wiki/es-home.md
+          cp docs/wiki/es/Instalacion.md build/wiki/es-installation.md
+          cp docs/wiki/es/Configuracion.md build/wiki/es-configuration.md
+          cp docs/wiki/es/Comandos.md build/wiki/es-commands.md
+          cp docs/wiki/es/Permisos.md build/wiki/es-permissions.md
+          cp docs/wiki/es/Interfaces.md build/wiki/es-interfaces.md
+          cp docs/wiki/es/Solucion-de-problemas.md build/wiki/es-troubleshooting.md
 
           python3 .github/wiki/rewrite_links.py build/wiki
 
