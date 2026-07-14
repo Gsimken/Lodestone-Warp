@@ -365,22 +365,6 @@ Client-side option used only when the mod UI is opened in singleplayer. Dedicate
 - `true`: the singleplayer world pauses while the client UI is open.
 - `false`: the singleplayer world keeps ticking while the client UI is open.
 
-## Development Permission Overrides
-
-For local debugging, use JVM system properties. Put the `-D...` flags before `--args` if you use extra run arguments.
-
-```powershell
-.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.rename=false
-```
-
-Example with granular permissions:
-
-```powershell
-.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.create=true -Dlodestone_teleport.create.private=true -Dlodestone_teleport.own.rename=true -Dlodestone_teleport.own.destroy=false
-```
-
-These overrides are intended for development only and take priority over config defaults.
-
 ## Commands
 
 `commandName`

@@ -191,18 +191,13 @@ public final class LodestonePermissions {
 		}
 		CommandSourceStack source = player.createCommandSourceStack();
 		int configured = highestConfiguredLimit(source);
-		int debug = highestDebugLimit();
 		int external = permissionBackendInstalled() ? highestLuckPermsLimit(source) : highestExternalLimit(source);
-		int limit = Math.max(configured, Math.max(debug, external));
+		int limit = Math.max(configured, external);
 		return limit >= 0 ? OptionalInt.of(limit) : OptionalInt.empty();
 	}
 
 	private static boolean has(CommandSourceStack source, PermissionNode<Boolean> permission) {
-		Boolean debugOverride = debugOverride(permission);
-		if (debugOverride != null) {
-			return debugOverride;
-		}
-		if (debugWildcardOverride() || hasConfiguredWildcard(source) || hasExternalWildcard(source)) {
+		if (hasConfiguredWildcard(source) || hasExternalWildcard(source)) {
 			return true;
 		}
 		Boolean luckPerms = luckPermsPermission(source, permission);
@@ -283,23 +278,6 @@ public final class LodestonePermissions {
 		return limit;
 	}
 
-	private static int highestDebugLimit() {
-		int limit = -1;
-		for (String property : System.getProperties().stringPropertyNames()) {
-			if (readBoolean(property) == Boolean.TRUE) {
-				limit = Math.max(limit, parseLimitPermission(property));
-			}
-		}
-		for (var entry : System.getenv().entrySet()) {
-			String key = entry.getKey().toLowerCase(java.util.Locale.ROOT).replace('_', '.');
-			String value = entry.getValue();
-			if (List.of("true", "1", "yes", "on").contains(value.trim().toLowerCase(java.util.Locale.ROOT))) {
-				limit = Math.max(limit, parseLimitPermission(key));
-			}
-		}
-		return limit;
-	}
-
 	private static int highestExternalLimit(CommandSourceStack source) {
 		int limit = -1;
 		for (int candidate : knownLimitCandidates()) {
@@ -326,12 +304,6 @@ public final class LodestonePermissions {
 		LodestoneConfig config = LodestoneConfig.get();
 		addLimitCandidates(candidates, config.playerPermissions);
 		addLimitCandidates(candidates, config.adminPermissions);
-		for (String property : System.getProperties().stringPropertyNames()) {
-			int limit = parseLimitPermission(property);
-			if (limit >= 0) {
-				candidates.add(limit);
-			}
-		}
 		return candidates;
 	}
 
@@ -438,14 +410,6 @@ public final class LodestonePermissions {
 		return -1;
 	}
 
-	private static Boolean debugOverride(PermissionNode<Boolean> permission) {
-		return readBoolean(LodestoneTeleportMod.MOD_ID + "." + permissionName(permission));
-	}
-
-	private static boolean debugWildcardOverride() {
-		return readBoolean(LEGACY_PERMISSION_PREFIX + "*") == Boolean.TRUE || readBoolean(SHORT_PERMISSION_PREFIX + "*") == Boolean.TRUE;
-	}
-
 	private static String permissionName(PermissionNode<Boolean> permission) {
 		if (permission == USE) return "use";
 		if (permission == RENAME) return "rename";
@@ -470,20 +434,5 @@ public final class LodestonePermissions {
 		if (permission == CONFIG) return "config";
 		if (permission == GLOBAL) return "global";
 		return "";
-	}
-
-	private static Boolean readBoolean(String property) {
-		String value = System.getProperty(property);
-		if (value == null || value.isBlank()) {
-			value = System.getenv(property.toUpperCase(java.util.Locale.ROOT).replace('.', '_'));
-		}
-		if (value == null || value.isBlank()) {
-			return null;
-		}
-		return switch (value.trim().toLowerCase(java.util.Locale.ROOT)) {
-			case "true", "1", "yes", "on" -> true;
-			case "false", "0", "no", "off" -> false;
-			default -> null;
-		};
 	}
 }

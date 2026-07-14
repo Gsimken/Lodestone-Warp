@@ -336,22 +336,6 @@ Opción de cliente usada solo cuando la UI de mod se abre en singleplayer. Los s
 - `true`: el mundo singleplayer se pausa mientras la UI de cliente está abierta.
 - `false`: el mundo singleplayer sigue avanzando mientras la UI de cliente está abierta.
 
-## Overrides de Permisos para Desarrollo
-
-Para debug local usa system properties de JVM:
-
-```powershell
-.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.rename=false
-```
-
-Ejemplo con permisos granulares:
-
-```powershell
-.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.create=true -Dlodestone_teleport.create.private=true -Dlodestone_teleport.own.rename=true -Dlodestone_teleport.own.destroy=false
-```
-
-Estos overrides son solo para desarrollo y tienen prioridad sobre los defaults de config.
-
 ## Comandos
 
 `commandName`

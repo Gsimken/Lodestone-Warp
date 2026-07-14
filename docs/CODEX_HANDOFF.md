@@ -110,12 +110,6 @@ lodestone_teleport.bypass_cooldown
 lodestone_teleport.bypass_max_warps
 ```
 
-Debug permissions for local testing should use JVM system properties:
-
-```powershell
-.\gradlew.bat runClient -Dlodestone_teleport.use=true -Dlodestone_teleport.create=true -Dlodestone_teleport.create.private=true -Dlodestone_teleport.own.rename=true -Dlodestone_teleport.own.destroy=false
-```
-
 ## Config
 
 Current important defaults:
