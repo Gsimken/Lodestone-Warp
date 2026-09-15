@@ -1,6 +1,6 @@
 # Codex Handoff - Lodestone Warps
 
-**Updated:** 2026-07-03
+**Updated:** 2026-09-15
 
 Use this as context when continuing work in a new Codex session.
 
@@ -8,10 +8,10 @@ Use this as context when continuing work in a new Codex session.
 
 - Repo path: `C:\Users\simke\Documents\Github\Lodestone-Warp`
 - GitHub: `https://github.com/Gsimken/Lodestone-Warp`
-- Current working branch: `codex/discovery-mode-0.5.0`
+- Current working branch: `pre-update/26.3`
 - Mod name: `Lodestone Warps`
 - Mod id/package theme: `lodestone_teleport`
-- Minecraft target: `26.2`
+- Minecraft target: `26.3`
 - Fabric project, Java 25+
 
 ## Current Product Shape

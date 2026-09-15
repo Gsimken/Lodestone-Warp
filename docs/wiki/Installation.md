@@ -6,9 +6,9 @@
 
 ## Server Requirements
 
-- Minecraft `26.2`
+- Minecraft `26.3`
 - Java `25+`
-- Fabric Loader `0.19.3+`
+- Fabric Loader `0.19.5+`
 - Fabric API
 
 ## Optional

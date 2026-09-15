@@ -1,8 +1,8 @@
 # Lodestone Warps
 
-**Last updated:** 2026-07-13
+**Last updated:** 2026-09-15
 
-**Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.2**.
+**Lodestone Warps** turns vanilla Lodestones into a server-side warp network for Minecraft **26.3**.
 
 Players can place Lodestones to register warp points, then use those Lodestones to travel through a shared network. Vanilla clients use Minecraft's built-in Dialog UI, while players who install the mod on their client get an enhanced custom interface with search, pagination, item-cost icons, destination editing, and cleaner table-style information.
 
@@ -49,9 +49,9 @@ The most up-to-date documentation is kept in the wiki:
 
 ## Requirements
 
-- Minecraft **26.2**
+- Minecraft **26.3**
 - Java **25+**
-- Fabric Loader **0.19.3+**
+- Fabric Loader **0.19.5+**
 - Fabric API
 - Optional: LuckPerms for permission management
 - Optional client-side: Mod Menu for an in-game local config editor
@@ -179,7 +179,7 @@ Full config reference:
 
 ## Current Status
 
-Current stable release: **1.0.0**
+Planned Minecraft 26.3 build: **1.0.0-26.3**
 
 The core gameplay loop is ready for real server testing:
 
