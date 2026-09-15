@@ -11,7 +11,7 @@ on:
         required: false
         type: string
   schedule:
-    - cron: '15 */3 * * *'
+    - cron: '15 * * * *'
 
 permissions:
   contents: read
