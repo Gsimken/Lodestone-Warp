@@ -10,10 +10,8 @@ on:
         description: 'Tag to publish; leave empty to use the latest GitHub release'
         required: false
         type: string
-  schedule:
-    - cron: '15 * * * *'
-
 permissions:
+  actions: write
   contents: read
 
 concurrency:
@@ -27,6 +25,11 @@ jobs:
       MODRINTH_ID: ${{ vars.MODRINTH_ID }}
       MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
     steps:
+      - name: Enable scheduled retries
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable retry-modrinth.yml
+
       - name: Resolve release tag
         id: release
         env:
@@ -82,6 +85,7 @@ jobs:
         run: |
           if [ -z "$MODRINTH_ID" ] || [ -z "$MODRINTH_TOKEN" ]; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "complete=false" >> "$GITHUB_OUTPUT"
             echo "Modrinth credentials are not configured; skipping."
             exit 0
           fi
@@ -89,9 +93,11 @@ jobs:
             "https://api.modrinth.com/v2/project/$MODRINTH_ID/version?include_changelog=false")
           if jq -e --arg version "$MOD_VERSION" '.[] | select(.version_number == $version)' <<< "$VERSIONS" >/dev/null; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "complete=true" >> "$GITHUB_OUTPUT"
             echo "Modrinth already contains version $MOD_VERSION; skipping."
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "complete=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build release artifact
@@ -99,6 +105,7 @@ jobs:
         run: ./gradlew build --no-daemon
 
       - name: Publish to Modrinth
+        id: publish
         if: steps.existing.outputs.publish == 'true'
         uses: Kir-Antipov/mc-publish@v3.3
         with:
@@ -117,3 +124,9 @@ jobs:
             fabric-api(required)
           retry-attempts: 1
           fail-mode: fail
+
+      - name: Stop scheduled retries after publication
+        if: always() && (steps.existing.outputs.complete == 'true' || steps.publish.outcome == 'success')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow disable retry-modrinth.yml
