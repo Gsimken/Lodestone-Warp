@@ -1,5 +1,6 @@
 package dev.simke.lodestoneteleport.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.simke.lodestoneteleport.LodestoneConfig;
 import dev.simke.lodestoneteleport.LodestoneText;
 import net.minecraft.ChatFormatting;
@@ -123,7 +124,7 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		if (event.button() == 0) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
 			String column = rowAt(event.y());
 			if (column != null && this.columns.contains(column) && canMoveColumn(column) && event.x() >= dragHandleLeft() && event.x() <= dragHandleLeft() + DRAG_HANDLE_WIDTH) {
 				this.draggingColumn = column;
@@ -135,7 +136,7 @@ public final class LodestoneWarpSettingsScreen extends Screen {
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
-		if (event.button() == 0 && this.draggingColumn != null) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.draggingColumn != null) {
 			String target = rowAt(event.y());
 			if (target != null && this.columns.contains(target) && canMoveColumn(target) && !target.equals(this.draggingColumn)) {
 				moveColumnTo(this.draggingColumn, target);

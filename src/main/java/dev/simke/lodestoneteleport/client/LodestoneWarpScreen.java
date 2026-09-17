@@ -1,5 +1,6 @@
 package dev.simke.lodestoneteleport.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.simke.lodestoneteleport.LodestoneText;
 import dev.simke.lodestoneteleport.LodestoneTeleportMod;
 import dev.simke.lodestoneteleport.LodestoneConfig;
@@ -543,7 +544,7 @@ public final class LodestoneWarpScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		if (event.button() == 0 && inTableScrollBar(event.x(), event.y())) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && inTableScrollBar(event.x(), event.y())) {
 			this.draggingTableScroll = true;
 			this.tableScrollDragOffset = (int) event.x() - tableScrollThumbX();
 			if (this.tableScrollDragOffset < 0 || this.tableScrollDragOffset > tableScrollThumbWidth()) {
@@ -552,11 +553,11 @@ public final class LodestoneWarpScreen extends Screen {
 			updateTableScrollFromMouse(event.x());
 			return true;
 		}
-		if (event.button() == 0 && inResizeHandle(event.x(), event.y())) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && inResizeHandle(event.x(), event.y())) {
 			this.resizingPanel = true;
 			return true;
 		}
-		if (event.button() == 0 && inDragArea(event.x(), event.y())) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && inDragArea(event.x(), event.y())) {
 			this.draggingPanel = true;
 			this.dragOffsetX = event.x() - panelLeft();
 			this.dragOffsetY = event.y() - panelTop();
@@ -578,18 +579,18 @@ public final class LodestoneWarpScreen extends Screen {
 
 	@Override
 	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-		if (event.button() == 0 && this.draggingTableScroll) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.draggingTableScroll) {
 			updateTableScrollFromMouse(event.x());
 			return true;
 		}
-		if (event.button() == 0 && this.resizingPanel) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.resizingPanel) {
 			LodestoneClientPreferences preferences = LodestoneClientPreferences.get();
 			preferences.modUiPanelWidth = clamp((int) event.x() - panelLeft(), MIN_PANEL_WIDTH, this.width - panelLeft() - 8);
 			preferences.modUiPanelHeight = clamp((int) event.y() - panelTop(), MIN_PANEL_HEIGHT, this.height - panelTop() - 8);
 			rebuildWidgets();
 			return true;
 		}
-		if (event.button() == 0 && this.draggingPanel) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.draggingPanel) {
 			LodestoneClientPreferences preferences = LodestoneClientPreferences.get();
 			preferences.modUiPanelX = clamp((int) (event.x() - this.dragOffsetX), 8, this.width - panelWidth() - 8);
 			preferences.modUiPanelY = clamp((int) (event.y() - this.dragOffsetY), 8, this.height - panelHeight() - 8);
@@ -601,11 +602,11 @@ public final class LodestoneWarpScreen extends Screen {
 
 	@Override
 	public boolean mouseReleased(MouseButtonEvent event) {
-		if (event.button() == 0 && this.draggingTableScroll) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && this.draggingTableScroll) {
 			this.draggingTableScroll = false;
 			return true;
 		}
-		if (event.button() == 0 && (this.draggingPanel || this.resizingPanel)) {
+		if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && (this.draggingPanel || this.resizingPanel)) {
 			this.draggingPanel = false;
 			this.resizingPanel = false;
 			LodestoneClientPreferences.save();
