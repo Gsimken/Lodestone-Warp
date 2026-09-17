@@ -6,6 +6,9 @@
 		"ServerCommonPacketListenerImplMixin",
 		"ServerExplosionMixin"
 	],
+	"client": [
+		"client.GuiMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	}
